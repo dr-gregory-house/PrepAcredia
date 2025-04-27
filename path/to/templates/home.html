@@ -1,0 +1,66 @@
+<div class="form-group mt-4">
+  <label class="form-label">Filter by Tags</label>
+  <div class="d-flex flex-wrap gap-2">
+    {% for tag in tags %}
+      <div class="tag-wrapper">
+        <input type="checkbox"
+               class="btn-check"
+               name="tags"
+               id="tag{{ tag.id }}"
+               value="{{ tag.id }}"
+               autocomplete="off">
+        <label class="btn btn-outline-primary m-1" for="tag{{ tag.id }}">
+          {{ tag.name }}
+          <span class="badge bg-secondary ms-1 tag-count"
+                data-tag-id="{{ tag.id }}"
+                data-global-count="{{ tag.question_count }}">
+            {{ tag.question_count }}
+          </span>
+        </label>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+  // … existing chapter toggle & count code …
+
+  function updateTagCounts() {
+    const selected = Array.from(
+      document.querySelectorAll('input[name="chapters"]:checked')
+    ).map(cb => Number(cb.value));
+
+    document.querySelectorAll('.tag-count').forEach(span => {
+      const id = Number(span.dataset.tagId);
+      let cnt = 0;
+
+      if (selected.length > 0) {
+        // sum only counts in the checked chapters
+        if (tagChapterCounts[id]) {
+          selected.forEach(ch => {
+            if (tagChapterCounts[id][ch]) cnt += tagChapterCounts[id][ch];
+          });
+        }
+      } else {
+        // no chapters selected → show global total
+        cnt = Number(span.dataset.globalCount);
+      }
+
+      span.textContent = cnt;
+      const wrap = span.closest('.tag-wrapper');
+      // hide only when chapters selected AND count is zero
+      wrap.classList.toggle('d-none', selected.length > 0 && cnt === 0);
+    });
+  }
+
+  // re-run whenever chapters change
+  document.querySelectorAll('input[name="chapters"]')
+          .forEach(cb => cb.addEventListener('change', () => {
+            updateSelectedCount();
+            updateTagCounts();
+          }));
+
+  // initial invocation on load
+  updateSelectedCount();
+  updateTagCounts();
+</script> 
