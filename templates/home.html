@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Practice - Select Chapters</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background: #f4f8fb; }
+        .container { max-width: 600px; margin-top: 60px; background: #fff; border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,0.08); padding: 40px; }
+        .form-label { font-weight: 700; }
+        .chapter-list { max-height: 300px; overflow-y: auto; margin-bottom: 1rem; }
+        .btn-primary { background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); border: none; }
+        .btn-primary:hover { background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%); }
+        .error { color: #e74c3c; font-weight: 600; }
+        .parent-chapter { font-weight: 600; margin-top: 10px; }
+        .subchapter { margin-left: 25px; }
+        .question-count {
+            display: inline-block;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #fff;
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            border-radius: 12px;
+            padding: 1px 8px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        .empty-count {
+            background: #e0e0e0;
+            color: #757575;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="mb-4 text-center">MCQ Practice</h2>
+        {% if error %}<div class="error mb-3">{{ error }}</div>{% endif %}
+        <form method="post">
+            <label class="form-label">Select Chapters:</label>
+            <div class="chapter-list border rounded p-2 mb-3">
+                {% for parent_chapter in parent_chapters %}
+                <div class="parent-chapter">
+                    <div class="form-check">
+                        <input class="form-check-input parent-checkbox" type="checkbox" name="chapters" value="{{ parent_chapter.id }}" id="ch{{ parent_chapter.id }}">
+                        <label class="form-check-label" for="ch{{ parent_chapter.id }}">
+                            {{ parent_chapter.name }}
+                            <span class="question-count {% if parent_chapter.question_count == 0 %}empty-count{% endif %}">
+                                {{ parent_chapter.question_count }} Q
+                            </span>
+                        </label>
+                    </div>
+                    
+                    {% if parent_chapter.subchapters %}
+                    <div class="subchapters">
+                        {% for subchapter in parent_chapter.subchapters %}
+                        <div class="form-check subchapter">
+                            <input class="form-check-input" type="checkbox" name="chapters" value="{{ subchapter.id }}" id="ch{{ subchapter.id }}">
+                            <label class="form-check-label" for="ch{{ subchapter.id }}">
+                                {{ subchapter.name }}
+                                <span class="question-count {% if subchapter.question_count == 0 %}empty-count{% endif %}">
+                                    {{ subchapter.question_count }} Q
+                                </span>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="mb-3">
+                <label for="num_questions" class="form-label">Number of Questions:</label>
+                <input type="number" min="1" max="50" class="form-control" id="num_questions" name="num_questions" value="10" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Start Practice</button>
+        </form>
+    </div>
+    
+    <script>
+        // Toggle all subchapters when parent chapter is checked/unchecked
+        document.querySelectorAll('.parent-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const subchapters = this.closest('.parent-chapter').querySelectorAll('.subchapter input');
+                subchapters.forEach(sub => {
+                    sub.checked = this.checked;
+                });
+            });
+        });
+    </script>
+</body>
+</html>

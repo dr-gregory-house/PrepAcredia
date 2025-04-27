@@ -1,0 +1,35 @@
+schema of mcq_database.db
+
+CREATE TABLE chapters (
+                            id INTEGER PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            parent_id INTEGER,
+                            UNIQUE(name, parent_id),
+                            FOREIGN KEY (parent_id) REFERENCES chapters(id))
+CREATE TABLE options (
+                        id INTEGER PRIMARY KEY,
+                        question_id INTEGER,
+                        option_letter CHAR(1),
+                        option_text TEXT,
+                        FOREIGN KEY (question_id) REFERENCES questions(id),
+                        UNIQUE (question_id, option_letter))
+CREATE TABLE question_chapters (
+                            question_id INTEGER,
+                            chapter_id INTEGER,
+                            PRIMARY KEY (question_id, chapter_id),
+                            FOREIGN KEY (question_id) REFERENCES questions(id),
+                            FOREIGN KEY (chapter_id) REFERENCES chapters(id))
+CREATE TABLE question_tags (
+                            question_id INTEGER,
+                            tag_id INTEGER,
+                            PRIMARY KEY (question_id, tag_id),
+                            FOREIGN KEY (question_id) REFERENCES questions(id),
+                            FOREIGN KEY (tag_id) REFERENCES tags(id))
+CREATE TABLE questions (
+                        id INTEGER PRIMARY KEY,
+                        question_text TEXT NOT NULL,
+                        correct_answer CHAR(1),
+                        question_hash TEXT UNIQUE, rationale TEXT)
+CREATE TABLE tags (
+                            id INTEGER PRIMARY KEY,
+                            name TEXT UNIQUE NOT NULL)
