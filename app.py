@@ -76,7 +76,7 @@ def home():
             # This is a parent chapter
             parent_chapter = dict(chapter)
             parent_chapter['subchapters'] = []
-            parent_chapter['question_count'] = chapter_question_counts.get(chapter['id'], 0)
+            parent_chapter['own_question_count'] = chapter_question_counts.get(chapter['id'], 0)
             parent_chapters.append(parent_chapter)
         else:
             # This is a subchapter
@@ -87,10 +87,16 @@ def home():
             subchapter['question_count'] = chapter_question_counts.get(chapter['id'], 0)
             subchapters_by_parent[parent_id].append(subchapter)
     
-    # Add subchapters to their parent chapters
+    # Add subchapters to their parent chapters and calculate total question counts
     for parent in parent_chapters:
+        total_questions = parent['own_question_count']
         if parent['id'] in subchapters_by_parent:
             parent['subchapters'] = subchapters_by_parent[parent['id']]
+            # Add up all subchapter questions
+            for subchapter in parent['subchapters']:
+                total_questions += subchapter['question_count']
+        
+        parent['question_count'] = total_questions
     
     conn.close()
     
@@ -130,7 +136,15 @@ def quiz():
             GROUP BY q.id
         """
         questions = conn.execute(query, session['selected_chapters']).fetchall()
-        questions = random.sample(list(questions), min(session['num_questions'], len(questions)))
+        
+        # If num_questions is -1, include all available questions
+        if session['num_questions'] == -1:
+            # Use all questions, just shuffle them
+            questions = random.sample(list(questions), len(questions))
+        else:
+            # Use the specified number of questions
+            questions = random.sample(list(questions), min(session['num_questions'], len(questions)))
+            
         quiz_data = []
         for q in questions:
             options = conn.execute('SELECT option_letter, option_text FROM options WHERE question_id = ? ORDER BY option_letter', (q['id'],)).fetchall()
@@ -219,15 +233,25 @@ def next_question():
     
     quiz_id = session['quiz_id']
     quiz_state = load_quiz_data(quiz_id)
-    
     if quiz_state is None:
         return redirect(url_for('home'))
-    
+
     # Move to next question only if answer was submitted
     if quiz_state.get('answer_submitted', False):
         quiz_state['current_question'] += 1
         save_quiz_data(quiz_id, quiz_state)
     
+    # Check if the quiz is complete and redirect to results
+    quiz_data = quiz_state['quiz_data']
+    current = quiz_state['current_question']
+    if current >= len(quiz_data):
+        # Save final state for results
+        session['score'] = quiz_state['score']
+        session['total'] = len(quiz_data)
+        session['quiz_data'] = quiz_data
+        session['user_answers'] = quiz_state['user_answers']
+        return redirect(url_for('results'))
+
     return redirect(url_for('quiz'))
 
 @app.route('/results')
