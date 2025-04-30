@@ -98,22 +98,53 @@ def home():
         
         parent['question_count'] = total_questions
     
+    # Get tags and question counts for selected chapters
+    tag_question_counts = {}
+    if request.method == 'POST':
+        selected_chapters = request.form.getlist('chapters')
+        if selected_chapters:
+            # Fetch tags and their question counts
+            tag_counts = conn.execute('''
+                SELECT t.id, t.name, COUNT(DISTINCT qt.question_id) as question_count
+                FROM tags t
+                JOIN question_tags qt ON t.id = qt.tag_id
+                JOIN question_chapters qc ON qt.question_id = qc.question_id
+                WHERE qc.chapter_id IN ({})
+                GROUP BY t.id
+            '''.format(','.join('?' for _ in selected_chapters)), selected_chapters).fetchall()
+            
+            for tag in tag_counts:
+                tag_question_counts[tag['id']] = {
+                    'name': tag['name'],
+                    'question_count': tag['question_count']
+                }
+
+    # Debug: Print tag_question_counts to verify data
+    # print('Tag Question Counts:', tag_question_counts)
+
     conn.close()
     
     if request.method == 'POST':
         selected_chapters = request.form.getlist('chapters')
         num_questions = int(request.form.get('num_questions', 1))
         if not selected_chapters:
-            return render_template('home.html', parent_chapters=parent_chapters, error='Please select at least one chapter.')
+            return render_template('home.html', parent_chapters=parent_chapters, error='Please select at least one chapter.', tag_question_counts=tag_question_counts)
+        
+        # Check if tags are being selected
+        selected_tags = request.form.getlist('tags')
+        if not selected_tags:
+            # If no tags are selected, use all questions from selected chapters
+            selected_tags = None
         
         # Generate a unique quiz ID
         quiz_id = str(random.randint(10000, 99999))
         session['quiz_id'] = quiz_id
         session['selected_chapters'] = selected_chapters
+        session['selected_tags'] = selected_tags
         session['num_questions'] = num_questions
         return redirect(url_for('quiz'))
     
-    return render_template('home.html', parent_chapters=parent_chapters)
+    return render_template('home.html', parent_chapters=parent_chapters, tag_question_counts=tag_question_counts)
 
 @app.route('/quiz', methods=['GET', 'POST'])
 def quiz():
@@ -126,16 +157,28 @@ def quiz():
     
     # Initialize quiz data if it doesn't exist
     if quiz_state is None:
-        # Fetch random questions from selected chapters
+        # Fetch random questions from selected chapters and tags
         conn = get_db_connection()
         chapter_ids = ','.join('?' for _ in session['selected_chapters'])
-        query = f"""
-            SELECT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
-            JOIN question_chapters qc ON q.id = qc.question_id
-            WHERE qc.chapter_id IN ({chapter_ids})
-            GROUP BY q.id
-        """
-        questions = conn.execute(query, session['selected_chapters']).fetchall()
+        tag_ids = ','.join('?' for _ in session['selected_tags']) if session['selected_tags'] else None
+        
+        if tag_ids:
+            query = f"""
+                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
+                JOIN question_chapters qc ON q.id = qc.question_id
+                JOIN question_tags qt ON q.id = qt.question_id
+                WHERE qc.chapter_id IN ({chapter_ids}) AND qt.tag_id IN ({tag_ids})
+            """
+            params = session['selected_chapters'] + session['selected_tags']
+        else:
+            query = f"""
+                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
+                JOIN question_chapters qc ON q.id = qc.question_id
+                WHERE qc.chapter_id IN ({chapter_ids})
+            """
+            params = session['selected_chapters']
+        
+        questions = conn.execute(query, params).fetchall()
         
         # If num_questions is -1, include all available questions
         if session['num_questions'] == -1:
@@ -144,7 +187,7 @@ def quiz():
         else:
             # Use the specified number of questions
             questions = random.sample(list(questions), min(session['num_questions'], len(questions)))
-            
+        
         quiz_data = []
         for q in questions:
             options = conn.execute('SELECT option_letter, option_text FROM options WHERE question_id = ? ORDER BY option_letter', (q['id'],)).fetchall()
@@ -268,5 +311,22 @@ def results():
     
     return render_template('results.html', score=score, total=total, user_answers=user_answers, quiz_data=quiz_data)
 
+@app.route('/get_tags', methods=['POST'])
+def get_tags():
+    selected_chapters = request.json.get('chapters', [])
+    conn = get_db_connection()
+    tag_counts = conn.execute('''
+        SELECT t.id, t.name, COUNT(DISTINCT qt.question_id) as question_count
+        FROM tags t
+        JOIN question_tags qt ON t.id = qt.tag_id
+        JOIN question_chapters qc ON qt.question_id = qc.question_id
+        WHERE qc.chapter_id IN ({})
+        GROUP BY t.id
+    '''.format(','.join('?' for _ in selected_chapters)), selected_chapters).fetchall()
+    conn.close()
+    
+    tag_question_counts = {tag['id']: {'name': tag['name'], 'question_count': tag['question_count']} for tag in tag_counts}
+    return {'tags': tag_question_counts}
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
