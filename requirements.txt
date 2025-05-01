@@ -1,2 +1,4 @@
-flask
-markdown2
+flask==2.3.3
+flask-oauthlib==0.9.6
+markdown2==2.4.10
+werkzeug==2.3.7

@@ -44,7 +44,7 @@
         
         <h4 class="mb-4">Question Review</h4>
         
-        {% for question, answer in zip(quiz_data, user_answers) %}
+        {% for question, answer in zipped_data %}
         <div class="question-card">
             <div class="question-text">{{ question.question_text|markdown|safe }}</div>
             
@@ -78,7 +78,7 @@
         {% endfor %}
         
         <div class="home-btn">
-            <a href="{{ url_for('home') }}" class="btn btn-primary w-100">Start New Quiz</a>
+            <a href="{{ url_for('main.home') }}" class="btn btn-primary w-100">Start New Quiz</a>
         </div>
     </div>
 </body>

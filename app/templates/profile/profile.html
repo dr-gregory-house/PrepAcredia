@@ -1,0 +1,91 @@
+{% extends 'layout.html' %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- User Info -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Profile</h4>
+                </div>
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture }}" alt="{{ user.name }}" class="img-fluid rounded-circle mb-3" style="max-width: 120px;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px; font-size: 3rem;">
+                        {{ user.name[0].upper() }}
+                    </div>
+                    {% endif %}
+                    
+                    <h5>{{ user.name }}</h5>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <p>
+                        <span class="badge bg-{{ 'success' if user.is_active else 'danger' }}">
+                            {{ 'Active' if user.is_active else 'Inactive' }}
+                        </span>
+                        {% if user.role == 'admin' %}
+                        <span class="badge bg-dark">Admin</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz History -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Quiz History</h4>
+                </div>
+                <div class="card-body">
+                    {% if history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Percentage</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quiz in history %}
+                                <tr>
+                                    <td>{{ quiz.date }}</td>
+                                    <td>{{ quiz.score }} / {{ quiz.total }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {{ 'bg-success' if quiz.percentage >= 70 else 'bg-warning' if quiz.percentage >= 40 else 'bg-danger' }}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ quiz.percentage }}%;" 
+                                                 aria-valuenow="{{ quiz.percentage }}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">
+                                                {{ quiz.percentage|round(1) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('quiz_detail', quiz_id=quiz.id) }}" class="btn btn-sm btn-primary">View Details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <p class="mb-0">You haven't taken any quizzes yet.</p>
+                        <a href="{{ url_for('main.home') }}" class="btn btn-primary mt-3">Take Your First Quiz</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

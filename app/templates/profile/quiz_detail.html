@@ -1,0 +1,76 @@
+{% extends 'layout.html' %}
+
+{% block title %}Quiz Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Quiz Results</h2>
+        <a href="{{ url_for('profile.profile') }}" class="btn btn-outline-primary">Back to Profile</a>
+    </div>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                Score: {{ quiz.score }}/{{ quiz.total_questions }} 
+                ({{ (quiz.score / quiz.total_questions * 100)|round(1) }}%)
+            </h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Date:</strong> {{ quiz.quiz_date }}</p>
+            
+            {% if quiz.selected_chapters %}
+            <p><strong>Chapters:</strong> {{ quiz.selected_chapters.replace(',', ', ') }}</p>
+            {% endif %}
+            
+            {% if quiz.selected_tags %}
+            <p><strong>Tags:</strong> {{ quiz.selected_tags.replace(',', ', ') }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% for question in questions %}
+    <div class="card mb-4">
+        <div class="card-header {{ 'bg-success text-white' if question.is_correct else 'bg-danger text-white' }}">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Question {{ loop.index }}</h5>
+                <span class="badge bg-light text-dark">
+                    {{ 'Correct' if question.is_correct else 'Incorrect' }}
+                </span>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="question-text mb-4">{{ question.question_text|markdown }}</div>
+            
+            <div class="options">
+                {% for option in question.options %}
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="radio" 
+                           disabled
+                           {{ 'checked' if option.option_letter == question.selected_answer }}
+                           {{ 'correct' if option.option_letter == question.correct_answer }}>
+                    <label class="form-check-label 
+                           {{ 'text-success fw-bold' if option.option_letter == question.correct_answer }}
+                           {{ 'text-danger fw-bold' if option.option_letter == question.selected_answer and question.selected_answer != question.correct_answer }}">
+                        {{ option.option_letter }}. {{ option.option_text }}
+                        {% if option.option_letter == question.correct_answer %}
+                        <i class="fas fa-check-circle text-success"></i>
+                        {% endif %}
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if question.rationale %}
+            <div class="rationale mt-3">
+                <div class="alert alert-info">
+                    <h6>Explanation:</h6>
+                    <div>{{ question.rationale|markdown }}</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 
