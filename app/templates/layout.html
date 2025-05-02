@@ -33,6 +33,15 @@
             display: flex;
             align-items: center;
         }
+        @keyframes review-pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+        
+        .review-pulse {
+            animation: review-pulse 1.5s infinite;
+        }
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
@@ -69,6 +78,18 @@
                 
                 <ul class="navbar-nav ms-auto">
                     {% if session.user_id %}
+                    <!-- Spaced Repetition Review Button -->
+                    <li class="nav-item" id="nav-review-container">
+                        <a class="btn btn-warning btn-sm nav-button me-2 position-relative" 
+                           href="{{ url_for('profile.spaced_repetition_review') }}"
+                           id="nav-review-btn">
+                            <i class="fas fa-sync me-1"></i> Review Cards
+                            <span id="nav-sr-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                0
+                            </span>
+                        </a>
+                    </li>
+                    
                     <!-- Quiz Exit Button (if in a quiz) -->
                     {% if session.quiz_id %}
                     <li class="nav-item">
@@ -150,6 +171,25 @@
                     }
                 }, 5000);
             });
+            
+            // Check for spaced repetition cards due for review
+            {% if session.user_id %}
+            fetch("{{ url_for('profile.review_status') }}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.has_due) {
+                        const badge = document.getElementById('nav-sr-badge');
+                        badge.textContent = data.count;
+                        badge.classList.remove('d-none');
+                        
+                        // Apply pulsing effect
+                        document.getElementById('nav-review-btn').classList.add('review-pulse');
+                    } else {
+                        // Hide the button if no cards to review
+                        document.getElementById('nav-review-container').classList.add('d-none');
+                    }
+                });
+            {% endif %}
         });
     </script>
     {% block extra_scripts %}{% endblock %}

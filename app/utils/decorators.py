@@ -6,7 +6,8 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            return redirect(url_for('auth.login', next=request.url))
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -14,16 +15,12 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
-            return redirect(url_for('auth.login', next=request.url))
+            flash('Please log in to access this page.', 'warning')
+            return redirect(url_for('auth.login'))
         
-        user_id = session['user_id']
-        conn = get_db_connection()
-        user = conn.execute('SELECT role FROM users WHERE id = ?', (user_id,)).fetchone()
-        conn.close()
-        
-        if not user or user['role'] != 'admin':
-            flash('Admin access required', 'error')
+        if session.get('user_role') != 'admin':
+            flash('You do not have permission to access this page.', 'danger')
             return redirect(url_for('main.home'))
-        
+            
         return f(*args, **kwargs)
     return decorated_function 

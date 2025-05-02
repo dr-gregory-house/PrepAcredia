@@ -1,0 +1,739 @@
+{% extends 'layout.html' %}
+
+{% block title %}Learning Analytics{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cal-heatmap@4.1.0/dist/cal-heatmap.css">
+<style>
+    .stat-card {
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: linear-gradient(90deg, #4D61FC, #6B4DFC);
+    }
+    
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-right: 15px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+    
+    .stat-icon.accuracy {
+        background-color: rgba(77, 97, 252, 0.1);
+        color: #4D61FC;
+        background-image: url('https://cdn-icons-png.flaticon.com/512/11641/11641938.png');
+    }
+    
+    .stat-icon.topics {
+        background-color: rgba(54, 179, 126, 0.1);
+        color: #36B37E;
+        background-image: url('https://cdn-icons-png.flaticon.com/512/3940/3940151.png');
+    }
+    
+    .stat-icon.review {
+        background-color: rgba(255, 171, 0, 0.1);
+        color: #FFAB00;
+        background-image: url('https://cdn-icons-png.flaticon.com/512/2541/2541991.png');
+    }
+    
+    .stat-icon.score {
+        background-color: rgba(101, 84, 192, 0.1);
+        color: #6554C0;
+        background-image: url('https://cdn-icons-png.flaticon.com/512/4966/4966221.png');
+    }
+    
+    .stat-icon.undiscovered {
+        background-color: rgba(255, 86, 48, 0.1);
+        color: #FF5630;
+        background-image: url('https://cdn-icons-png.flaticon.com/512/10897/10897132.png');
+    }
+    
+    .stat-icon::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: -1;
+    }
+    
+    .stat-icon i {
+        display: none;
+    }
+    
+    .progress-circle {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+        position: relative;
+    }
+    
+    .progress-circle canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    
+    .circle-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 250px;
+        margin: 0 auto;
+    }
+    
+    .topic-card {
+        border-radius: 10px;
+        border-left: 5px solid;
+        transition: all 0.2s ease;
+    }
+    
+    .topic-card:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .topic-card.strength {
+        border-left-color: #36B37E;
+    }
+    
+    .topic-card.weakness {
+        border-left-color: #FF5630;
+    }
+    
+    .heatmap-container {
+        padding: 20px;
+        overflow: hidden;
+    }
+    
+    #sr-count-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: #FF5630;
+        color: white;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Learning Analytics</h2>
+        <a href="{{ url_for('profile.profile') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-left"></i> Back to Profile
+        </a>
+    </div>
+    
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon accuracy me-3">
+                            <i class="bi bi-check-circle"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">Accuracy</h6>
+                            <h3 class="card-title mb-0">{{ stats.accuracy }}%</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small">
+                        {{ stats.correct_answers }} correct out of {{ stats.total_questions }} total
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon topics me-3">
+                            <i class="bi bi-layers"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">Topics Studied</h6>
+                            <h3 class="card-title mb-0">{{ stats.topics_studied }}</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small">
+                        Across various subjects and chapters
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon review me-3" style="position: relative;">
+                            <i class="bi bi-hdd-stack"></i>
+                            {% if sr_due_count > 0 %}
+                            <span id="sr-count-badge">{{ sr_due_count }}</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">Review Cards</h6>
+                            <h3 class="card-title mb-0">{{ stats.sr_cards }}</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small">
+                        {% if sr_due_count > 0 %}
+                        {{ sr_due_count }} cards due for review today
+                        {% else %}
+                        No cards due for review today
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon score me-3">
+                            <i class="bi bi-award"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">Avg. Score</h6>
+                            <h3 class="card-title mb-0">{{ stats.avg_score }}%</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small">
+                        Based on all your quiz attempts
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="stat-icon undiscovered me-3">
+                            <i class="bi bi-lightbulb"></i>
+                        </div>
+                        <div>
+                            <h6 class="card-subtitle text-muted">Undiscovered</h6>
+                            <h3 class="card-title mb-0">{{ stats.never_attempted }}</h3>
+                        </div>
+                    </div>
+                    <p class="card-text text-muted small">
+                        Questions you haven't tried yet
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Review Schedule Settings -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Spaced Repetition Settings</h5>
+                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="collapse" data-bs-target="#reviewScheduleCollapse">
+                        <i class="bi bi-sliders me-1"></i> Configure
+                    </button>
+                </div>
+                <div class="collapse" id="reviewScheduleCollapse">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Current Review Schedule</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Difficulty</th>
+                                                <th>1st Review</th>
+                                                <th>2nd Review</th>
+                                                <th>3rd Review</th>
+                                                <th>4th Review</th>
+                                                <th>5th Review</th>
+                                                <th>Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="scheduleTable">
+                                            <!-- Filled by JavaScript -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-3">
+                                    <p class="small text-muted">
+                                        Values represent days between reviews. Fractional values: 0.5 = 12 hours, 0.25 = 6 hours.
+                                        <br>Questions are assigned difficulty levels based on your performance.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="fw-bold">Change Review Pace</h6>
+                                <p>Select a review schedule that matches your study style:</p>
+                                
+                                <form action="{{ url_for('profile.change_review_schedule') }}" method="post">
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="schedule_type" id="schedule_default" value="default" checked>
+                                        <label class="form-check-label" for="schedule_default">
+                                            <strong>Standard Schedule</strong> - Balanced spacing for optimal learning
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="radio" name="schedule_type" id="schedule_faster" value="faster">
+                                        <label class="form-check-label" for="schedule_faster">
+                                            <strong>Faster Schedule</strong> - More frequent reviews for intensive study
+                                        </label>
+                                    </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="schedule_type" id="schedule_slower" value="slower">
+                                        <label class="form-check-label" for="schedule_slower">
+                                            <strong>Slower Schedule</strong> - Wider spacing for long-term retention
+                                        </label>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-check-circle me-1"></i> Apply Schedule
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Learning Progress Chart -->
+        <div class="col-md-7 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Learning Progress</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="learningProgressChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Topic Performance Chart -->
+        <div class="col-md-5 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Topic Performance</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container" style="height: 280px;">
+                        <canvas id="topicChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Heatmap and Strengths/Weaknesses -->
+    <div class="row">
+        <!-- Activity Heatmap -->
+        <div class="col-md-8 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Activity Heatmap</h5>
+                </div>
+                <div class="card-body">
+                    <div class="heatmap-container" id="heatmap"></div>
+                </div>
+                <div class="card-footer bg-white text-center">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <div class="d-flex align-items-center me-3">
+                            <div style="width:10px; height:10px; background-color:#ebedf0; margin-right:5px;"></div>
+                            <small>None</small>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
+                            <div style="width:10px; height:10px; background-color:#c6e48b; margin-right:5px;"></div>
+                            <small>Light</small>
+                        </div>
+                        <div class="d-flex align-items-center me-3">
+                            <div style="width:10px; height:10px; background-color:#7bc96f; margin-right:5px;"></div>
+                            <small>Medium</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div style="width:10px; height:10px; background-color:#196127; margin-right:5px;"></div>
+                            <small>Heavy</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Strengths and Weaknesses -->
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Strengths & Weaknesses</h5>
+                </div>
+                <div class="card-body">
+                    <h6 class="text-success fw-bold mb-3">
+                        <i class="bi bi-arrow-up-circle me-2"></i>Strengths
+                    </h6>
+                    <div id="strengths-container">
+                        {% set strengths = topic_performance|selectattr('accuracy', 'ge', 70)|list %}
+                        {% if strengths %}
+                            {% for topic in strengths|sort(attribute='accuracy', reverse=true) %}
+                            {% if loop.index <= 3 %}
+                            <div class="topic-card strength card mb-2 px-3 py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="mb-0 fw-bold">{{ topic.topic_name }}</p>
+                                        <small class="text-muted">{{ topic.correct }} / {{ topic.total }} correct</small>
+                                    </div>
+                                    <span class="badge bg-success">{{ topic.accuracy }}%</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted small">Keep practicing to discover your strengths!</p>
+                        {% endif %}
+                    </div>
+                    
+                    <h6 class="text-danger fw-bold mb-3 mt-4">
+                        <i class="bi bi-arrow-down-circle me-2"></i>Needs Improvement
+                    </h6>
+                    <div id="weaknesses-container">
+                        {% set weaknesses = topic_performance|selectattr('total', 'ge', 5)|selectattr('accuracy', 'lt', 70)|list %}
+                        {% if weaknesses %}
+                            {% for topic in weaknesses|sort(attribute='accuracy') %}
+                            {% if loop.index <= 3 %}
+                            <div class="topic-card weakness card mb-2 px-3 py-2">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="mb-0 fw-bold">{{ topic.topic_name }}</p>
+                                        <small class="text-muted">{{ topic.correct }} / {{ topic.total }} correct</small>
+                                    </div>
+                                    <span class="badge bg-danger">{{ topic.accuracy }}%</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted small">Great job! Try more challenging topics.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/cal-heatmap@4.1.0/dist/cal-heatmap.min.js"></script>
+
+<script>
+    // Topic performance data
+    const topicData = {{ json_topic_data|safe }};
+    
+    // Learning progress data
+    const progressData = {{ json_progress_data|safe }};
+    
+    // Heatmap data
+    const heatmapData = {{ json_heatmap_data|safe }};
+    
+    // Review schedule data
+    const reviewSchedule = {{ json_review_schedule|safe }};
+    
+    // Color constants
+    const CHART_COLORS = {
+        blue: '#4D61FC',
+        lightBlue: 'rgba(77, 97, 252, 0.2)',
+        green: '#36B37E',
+        lightGreen: 'rgba(54, 179, 126, 0.2)',
+        red: '#FF5630',
+        lightRed: 'rgba(255, 86, 48, 0.2)',
+        orange: '#FFAB00',
+        lightOrange: 'rgba(255, 171, 0, 0.2)',
+        purple: '#6554C0',
+        lightPurple: 'rgba(101, 84, 192, 0.2)'
+    };
+    
+    // Initialize charts when the document is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        initTopicChart();
+        initLearningProgressChart();
+        initHeatmap();
+        fillScheduleTable();
+    });
+    
+    // Topic performance chart
+    function initTopicChart() {
+        // Process data for the chart
+        const topics = topicData.slice(0, 5).map(topic => topic.topic_name);
+        const accuracy = topicData.slice(0, 5).map(topic => topic.accuracy);
+        
+        // Create the chart
+        const ctx = document.getElementById('topicChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: topics,
+                datasets: [{
+                    label: 'Accuracy %',
+                    data: accuracy,
+                    backgroundColor: CHART_COLORS.lightBlue,
+                    borderColor: CHART_COLORS.blue,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Accuracy: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Accuracy %'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Learning progress chart
+    function initLearningProgressChart() {
+        // Process data for the chart
+        const dates = progressData.map(item => item.date);
+        const dailyAccuracy = progressData.map(item => item.daily_accuracy);
+        const cumulativeAccuracy = progressData.map(item => item.cumulative_accuracy);
+        
+        // Create the chart
+        const ctx = document.getElementById('learningProgressChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Daily Accuracy',
+                        data: dailyAccuracy,
+                        backgroundColor: CHART_COLORS.lightOrange,
+                        borderColor: CHART_COLORS.orange,
+                        pointBackgroundColor: CHART_COLORS.orange,
+                        pointRadius: 3,
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Cumulative Accuracy',
+                        data: cumulativeAccuracy,
+                        backgroundColor: CHART_COLORS.lightGreen,
+                        borderColor: CHART_COLORS.green,
+                        pointBackgroundColor: CHART_COLORS.green,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Accuracy %'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxTicksLimit: 8,
+                            maxRotation: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Activity heatmap
+    function initHeatmap() {
+        if (Object.keys(heatmapData).length === 0) {
+            document.getElementById('heatmap').innerHTML = 
+                '<div class="text-center py-4"><p class="text-muted">Not enough activity data to display heatmap</p></div>';
+            return;
+        }
+        
+        // Convert the data to the format required by cal-heatmap
+        const dataForHeatmap = {};
+        Object.entries(heatmapData).forEach(([date, value]) => {
+            // Convert date to timestamp in seconds
+            const dateObj = new Date(date);
+            const timestamp = Math.floor(dateObj.getTime() / 1000);
+            dataForHeatmap[timestamp] = value;
+        });
+        
+        // Initialize the heatmap
+        const cal = new CalHeatMap();
+        cal.init({
+            itemSelector: '#heatmap',
+            domain: 'month',
+            subDomain: 'day',
+            data: dataForHeatmap,
+            start: new Date(new Date().setMonth(new Date().getMonth() - 5)),
+            cellSize: 12,
+            cellRadius: 2,
+            range: 6,
+            legend: [1, 5, 10, 15],
+            legendColors: {
+                min: '#ebedf0',
+                max: '#196127',
+                empty: '#ebedf0'
+            },
+            displayLegend: false,
+            tooltip: true,
+            subDomainDateFormat: function(date) {
+                return new Intl.DateTimeFormat('en-US', { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric'
+                }).format(date);
+            },
+            subDomainTextFormat: '',
+            legendTitleFormat: {
+                lower: 'Less than {min} questions',
+                inner: 'Between {down} and {up} questions',
+                upper: 'More than {max} questions'
+            }
+        });
+    }
+    
+    // Fill the schedule table
+    function fillScheduleTable() {
+        const table = document.getElementById('scheduleTable');
+        if (!table) return;
+        
+        const intervals = reviewSchedule.intervals;
+        const totalDays = reviewSchedule.total_days;
+        const descriptions = reviewSchedule.description;
+        
+        table.innerHTML = '';
+        
+        for (let difficulty = 1; difficulty <= 5; difficulty++) {
+            const row = document.createElement('tr');
+            
+            // Difficulty cell with description tooltip
+            const diffCell = document.createElement('td');
+            diffCell.className = 'fw-bold';
+            diffCell.setAttribute('title', descriptions[difficulty]);
+            diffCell.textContent = difficulty;
+            row.appendChild(diffCell);
+            
+            // Interval cells
+            for (let i = 0; i < 5; i++) {
+                const intervalCell = document.createElement('td');
+                const value = intervals[difficulty][i];
+                
+                // Format display - show hours if less than 1 day
+                if (value < 1) {
+                    const hours = Math.round(value * 24);
+                    intervalCell.textContent = `${hours}h`;
+                } else {
+                    intervalCell.textContent = `${value}d`;
+                }
+                
+                row.appendChild(intervalCell);
+            }
+            
+            // Total days cell
+            const totalCell = document.createElement('td');
+            totalCell.textContent = `${totalDays[difficulty].toFixed(1)}d`;
+            row.appendChild(totalCell);
+            
+            table.appendChild(row);
+        }
+    }
+</script>
+{% endblock %} 

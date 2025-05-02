@@ -2,6 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from app.utils.db import get_db_connection
 from app.utils.decorators import login_required
 from app.utils.quiz import save_quiz_data, load_quiz_data, delete_quiz_data
+from app.utils.spaced_repetition import add_to_spaced_repetition, get_spaced_repetition_questions, mark_question_reviewed
+from app.utils.analytics import update_topic_performance, update_user_activity
 import random
 
 quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
@@ -18,6 +20,9 @@ def start_quiz():
     
     # Initialize quiz data if it doesn't exist
     if quiz_state is None:
+        # Get user ID for spaced repetition and analytics
+        user_id = session.get('user_id')
+        
         # Fetch random questions from selected chapters and tags
         conn = get_db_connection()
         chapter_ids = ','.join('?' for _ in session['selected_chapters'])
@@ -47,19 +52,33 @@ def start_quiz():
             conn.close()
             return redirect(url_for('main.home'))
         
+        # If the user is logged in, get their spaced repetition questions
+        sr_questions = []
+        if user_id:
+            # Get questions due for review based on spaced repetition schedule
+            sr_questions = get_spaced_repetition_questions(user_id)
+        
         # If num_questions is -1, include all available questions
         if session['num_questions'] == -1:
             # Use all questions, just shuffle them
             questions = random.sample(list(questions), len(questions))
         else:
-            # Check if we have enough questions
-            if len(questions) < session['num_questions']:
-                flash(f'Only {len(questions)} questions available for the selected criteria. Using all available questions.', 'warning')
-                session['num_questions'] = len(questions)
+            # Calculate how many regular questions to include
+            reg_question_count = session['num_questions'] - len(sr_questions)
+            if reg_question_count < 0:
+                # If we have more SR questions than requested, just use the first N
+                sr_questions = sr_questions[:session['num_questions']]
+                reg_question_count = 0
+            
+            # Check if we have enough regular questions
+            if len(questions) < reg_question_count:
+                flash(f'Only {len(questions)} regular questions available for the selected criteria.', 'warning')
+                reg_question_count = len(questions)
             
             # Use the specified number of questions
-            questions = random.sample(list(questions), min(session['num_questions'], len(questions)))
+            questions = random.sample(list(questions), reg_question_count)
         
+        # Process regular questions
         quiz_data = []
         for q in questions:
             options = conn.execute('SELECT option_letter, option_text FROM options WHERE question_id = ? ORDER BY option_letter', (q['id'],)).fetchall()
@@ -68,8 +87,17 @@ def start_quiz():
                 'question_text': q['question_text'],
                 'correct_answer': q['correct_answer'],
                 'rationale': q['rationale'],
-                'options': [dict(option) for option in options]
+                'options': [dict(option) for option in options],
+                'is_review': False  # Regular question, not from spaced repetition
             })
+        
+        # Add spaced repetition questions if any
+        for q in sr_questions:
+            quiz_data.append(q)
+        
+        # Shuffle the combined questions
+        random.shuffle(quiz_data)
+        
         conn.close()
         
         # Check if we have valid quiz data
@@ -113,13 +141,36 @@ def start_quiz():
         user_answers = quiz_state.get('user_answers', [])
         while len(user_answers) <= current:
             user_answers.append(None)  # Fill in any gaps
-            
+        
         user_answers[current] = {
             'selected': selected,
             'correct': correct,
             'is_correct': is_correct,
-            'rationale': quiz_data[current]['rationale']
+            'rationale': quiz_data[current]['rationale'],
+            'question_id': quiz_data[current]['id']
         }
+        
+        # Handle spaced repetition if user is logged in
+        user_id = session.get('user_id')
+        if user_id and not is_correct:
+            # Add incorrectly answered question to spaced repetition
+            add_to_spaced_repetition(user_id, quiz_data[current]['id'])
+        elif user_id and is_correct and quiz_data[current].get('is_review', False):
+            # Update spaced repetition for correctly answered review question
+            mark_question_reviewed(user_id, quiz_data[current]['id'], True)
+        
+        # Get chapter IDs for this question for analytics
+        if user_id:
+            conn = get_db_connection()
+            chapters = conn.execute(
+                'SELECT chapter_id FROM question_chapters WHERE question_id = ?', 
+                (quiz_data[current]['id'],)
+            ).fetchall()
+            conn.close()
+            
+            # Update performance for each chapter
+            for chapter in chapters:
+                update_topic_performance(user_id, chapter['chapter_id'], is_correct)
         
         quiz_state['user_answers'] = user_answers
         quiz_state['answer_submitted'] = True  # Mark that this question has been answered
@@ -138,12 +189,17 @@ def start_quiz():
     # Normal question display (GET or after moving to next question)
     quiz_state['answer_submitted'] = False  # Reset for new question
     save_quiz_data(quiz_id, quiz_state)
+    
+    # Add a flag for review questions to show different styling
+    is_review = quiz_data[current].get('is_review', False)
+    
     return render_template(
         'quiz/question.html',
         question=quiz_data[current],
         current=current+1,  # Display is 1-indexed
         total=len(quiz_data),
-        show_rationale=False
+        show_rationale=False,
+        is_review=is_review
     )
 
 @quiz_bp.route('/next', methods=['POST'])
@@ -184,6 +240,24 @@ def results():
     quiz_data = session.get('quiz_data', [])
     user_answers = session.get('user_answers', [])
     
+    # If quiz_data and user_answers are not in session, check if we have a quiz_id and load data
+    if (not quiz_data or not user_answers) and 'quiz_id' in session and session['quiz_id']:
+        quiz_id = session['quiz_id']
+        quiz_state = load_quiz_data(quiz_id)
+        
+        if quiz_state:
+            # Extract data from quiz_state
+            quiz_data = quiz_state.get('quiz_data', [])
+            user_answers = quiz_state.get('user_answers', [])
+            score = quiz_state.get('score', 0)
+            total = len(quiz_data) if quiz_data else 0
+            
+            # Store in session for template rendering
+            session['quiz_data'] = quiz_data
+            session['user_answers'] = user_answers
+            session['score'] = score
+            session['total'] = total
+    
     # Calculate actual score based on user answers if available
     if not score and user_answers:
         # Recalculate score from answers
@@ -196,11 +270,17 @@ def results():
     # Zip the data for the template
     zipped_data = list(zip(quiz_data, user_answers)) if quiz_data and user_answers else []
     
+    # Make sure we have the right length for user_answers
+    if quiz_data and user_answers and len(quiz_data) > len(user_answers):
+        # Pad user_answers with None to match quiz_data length
+        user_answers.extend([None] * (len(quiz_data) - len(user_answers)))
+        zipped_data = list(zip(quiz_data, user_answers))
+    
     # If user is logged in, save quiz results to database
     if 'user_id' in session and quiz_data and user_answers:
         user_id = session['user_id']
-        selected_chapters = ','.join(session.get('selected_chapters', []))
-        selected_tags = ','.join(session.get('selected_tags', [])) if session.get('selected_tags') else None
+        selected_chapters = ','.join(map(str, session.get('selected_chapters', [])))
+        selected_tags = ','.join(map(str, session.get('selected_tags', []))) if session.get('selected_tags') else None
         
         conn = get_db_connection()
         
@@ -224,6 +304,10 @@ def results():
         
         conn.commit()
         conn.close()
+        
+        # Update activity tracking for analytics
+        if total > 0:  # Ensure we don't track quizzes with zero questions
+            update_user_activity(user_id, total, score)
     
     # Prepare template rendering with captured data
     result_data = {
@@ -233,7 +317,7 @@ def results():
     }
     
     # Clean up session and temp data
-    if 'quiz_id' in session:
+    if 'quiz_id' in session and session['quiz_id']:
         delete_quiz_data(session['quiz_id'])
         # Remove quiz_id from session but keep the key with None value
         # This helps the navbar to know we're not in a quiz anymore

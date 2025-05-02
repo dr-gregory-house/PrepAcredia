@@ -350,26 +350,26 @@
                 {{ score }}/{{ total }}
             </div>
             <div class="score-text">
-                You scored {{ (score / total * 100)|round|int }}%
+                You scored {% if total > 0 %}{{ (score / total * 100)|round|int }}{% else %}0{% endif %}%
             </div>
         </div>
     </div>
     
     <div class="results-content">
-        {% if score > 0 %}
+        {% if score > 0 and total > 0 %}
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-value">{{ score }}</div>
                 <div class="stat-label">Correct</div>
                 <div class="performance-indicator">
-                    <div class="performance-fill" style="width: {{ (score / total * 100)|round|int }}%;"></div>
+                    <div class="performance-fill" style="width: {% if total > 0 %}{{ (score / total * 100)|round|int }}{% else %}0{% endif %}%;"></div>
                 </div>
             </div>
             <div class="stat-card">
                 <div class="stat-value">{{ total - score }}</div>
                 <div class="stat-label">Incorrect</div>
                 <div class="performance-indicator">
-                    <div class="performance-fill" style="width: {{ ((total - score) / total * 100)|round|int }}%; background: var(--danger);"></div>
+                    <div class="performance-fill" style="width: {% if total > 0 %}{{ ((total - score) / total * 100)|round|int }}{% else %}0{% endif %}%; background: var(--danger);"></div>
                 </div>
             </div>
             <div class="stat-card">

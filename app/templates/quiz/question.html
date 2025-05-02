@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}MCQ Practice - Quiz{% endblock %}
+{% block title %}Quiz{% endblock %}
 
 {% block extra_styles %}
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -315,110 +315,222 @@
             padding: 15px;
         }
     }
+
+    /* Progress bar */
+    .progress-container {
+        background-color: #f1f1f1;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .progress-bar {
+        border-radius: 10px;
+        transition: width 0.4s ease-in-out;
+    }
+    
+    /* Question container */
+    .question-container {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        padding: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Options */
+    .option-letter {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background-color: #6c757d1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+    }
+    
+    .option-card {
+        border-radius: 10px;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    
+    .option-card:hover {
+        border-color: #4D61FC;
+        background-color: #F8F9FE;
+    }
+    
+    /* Selected option */
+    .option-card.selected {
+        border-color: #4D61FC;
+        background-color: #F0F3FF;
+    }
+    
+    /* Correct/incorrect indicators */
+    .option-card.correct {
+        border-color: #36B37E;
+        background-color: #E6F4EA;
+    }
+    
+    .option-card.incorrect {
+        border-color: #FF5630;
+        background-color: #FFEBE6;
+    }
+    
+    .option-card.correct .option-letter,
+    .option-card.incorrect .option-letter {
+        color: white;
+    }
+    
+    .option-card.correct .option-letter {
+        background-color: #36B37E;
+    }
+    
+    .option-card.incorrect .option-letter {
+        background-color: #FF5630;
+    }
+    
+    /* Rationale */
+    .rationale-container {
+        background-color: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid #4D61FC;
+        padding: 15px;
+        margin-top: 20px;
+    }
+    
+    /* Button styles */
+    .btn-primary {
+        background-color: #4D61FC;
+        border-color: #4D61FC;
+    }
+    
+    .btn-primary:hover, .btn-primary:focus {
+        background-color: #3D51EC;
+        border-color: #3D51EC;
+    }
+    
+    /* Review question indicator */
+    .review-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: #FFAB00;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 0 0 0 10px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+    
+    .review-question {
+        border-left: 4px solid #FFAB00;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="quiz-container">
-    <div class="quiz-header">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <h2>MCQ Practice</h2>
-            <span class="badge">{{ current }}/{{ total }}</span>
-        </div>
-        <div class="progress-indicator">
-            <i class="bi bi-lightning-charge-fill"></i>
-            Your progress
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: {{ (current/total)*100 }}%"></div>
+<div class="container mt-4">
+    <!-- Progress bar -->
+    <div class="progress-container">
+        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (current / total) * 100 }}%;" 
+             aria-valuenow="{{ current }}" aria-valuemin="0" aria-valuemax="{{ total }}">
+            {{ current }} / {{ total }}
         </div>
     </div>
     
-    <div class="quiz-content">
-        <div class="question-number">
-            <i class="bi bi-patch-question-fill"></i>
-            Question {{ current }}
+    <!-- Question container -->
+    <div class="question-container {% if is_review %}review-question{% endif %}">
+        {% if is_review %}
+        <div class="review-badge">
+            <i class="bi bi-arrow-repeat me-1"></i> Review Question
         </div>
-        <div class="question-text">{{ question.question_text|markdown|safe }}</div>
+        {% endif %}
         
-        {% if not show_rationale %}
-        <!-- Question display mode (before answer submission) -->
-        <form method="post">
-            <div class="options-grid">
+        <h5 class="mb-4">{{ question.question_text }}</h5>
+        
+        {% if show_rationale %}
+            <!-- Option display after answer submission -->
+            <form method="post" action="{{ url_for('quiz.next_question') }}">
                 {% for option in question.options %}
-                <div class="option-container" style="animation-delay: {{ loop.index * 0.1 }}s">
-                    <input type="radio" name="option" value="{{ option.option_letter }}" id="option{{ option.option_letter }}" required>
-                    <label class="option-label" for="option{{ option.option_letter }}">
-                        <span class="option-letter">{{ option.option_letter }}</span>
-                        <span>{{ option.option_text|markdown|safe }}</span>
-                    </label>
+                <div class="option-card p-3 d-flex align-items-center 
+                    {% if option.option_letter == current_answer.selected %}selected{% endif %}
+                    {% if show_rationale and option.option_letter == question.correct_answer %}correct{% endif %}
+                    {% if show_rationale and option.option_letter == current_answer.selected and not current_answer.is_correct %}incorrect{% endif %}">
+                    <div class="option-letter me-3">{{ option.option_letter }}</div>
+                    <div>{{ option.option_text }}</div>
+                    {% if show_rationale and option.option_letter == question.correct_answer %}
+                    <div class="ms-auto">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                    </div>
+                    {% endif %}
+                    {% if show_rationale and option.option_letter == current_answer.selected and not current_answer.is_correct %}
+                    <div class="ms-auto">
+                        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                    </div>
+                    {% endif %}
                 </div>
                 {% endfor %}
-            </div>
-            <button type="submit" class="action-button w-100">
-                <i class="bi bi-check-circle"></i>
-                Submit Answer
-            </button>
-        </form>
-        {% else %}
-        <!-- Feedback mode (after answer submission) -->
-        <div class="options-grid">
-            {% for option in question.options %}
-            <div class="option-container" style="animation-delay: {{ loop.index * 0.1 }}s">
-                <input type="radio" disabled 
-                       {% if option.option_letter == current_answer.selected %}checked{% endif %}
-                       id="option{{ option.option_letter }}">
-                <label class="option-label {% if option.option_letter == current_answer.correct %}correct{% elif option.option_letter == current_answer.selected and not current_answer.is_correct %}incorrect{% endif %}" 
-                       for="option{{ option.option_letter }}">
-                    <span class="option-letter">{{ option.option_letter }}</span>
-                    <span>{{ option.option_text|markdown|safe }}</span>
-                    
-                    {% if option.option_letter == current_answer.correct %}
-                    <i class="bi bi-check-circle-fill ms-auto" style="color: var(--success); font-size: 1.2rem;"></i>
-                    {% elif option.option_letter == current_answer.selected and option.option_letter != current_answer.correct %}
-                    <i class="bi bi-x-circle-fill ms-auto" style="color: var(--danger); font-size: 1.2rem;"></i>
-                    {% endif %}
-                </label>
-            </div>
-            {% endfor %}
-        </div>
-        
-        <!-- Feedback message -->
-        <div class="feedback {% if current_answer.is_correct %}correct{% else %}incorrect{% endif %}">
-            <i class="bi {% if current_answer.is_correct %}bi-emoji-smile-fill{% else %}bi-emoji-frown-fill{% endif %} feedback-icon"></i>
-            <div>
-                {% if current_answer.is_correct %}
-                <strong>Well done!</strong> You selected the correct answer.
-                {% else %}
-                <strong>Not quite right.</strong> The correct answer is {{ current_answer.correct }}.
+                
+                <!-- Rationale -->
+                {% if show_rationale and question.rationale %}
+                <div class="rationale-container">
+                    <h6 class="mb-2"><i class="bi bi-lightbulb me-2"></i>Explanation:</h6>
+                    <p class="mb-0">{{ question.rationale }}</p>
+                </div>
                 {% endif %}
-            </div>
-        </div>
-        
-        <!-- Rationale -->
-        {% if question.rationale %}
-        <div class="rationale">
-            <h5><i class="bi bi-lightbulb-fill"></i>Explanation</h5>
-            <div>{{ question.rationale|markdown|safe }}</div>
-        </div>
+                
+                <!-- Next button -->
+                <div class="mt-4 text-center">
+                    <button type="submit" class="btn btn-primary px-4">
+                        {% if current < total %}Next Question{% else %}Finish Quiz{% endif %}
+                    </button>
+                </div>
+            </form>
+        {% else %}
+            <!-- Option selection form -->
+            <form method="post" action="{{ url_for('quiz.start_quiz') }}">
+                {% for option in question.options %}
+                <label class="w-100">
+                    <div class="option-card p-3 d-flex align-items-center">
+                        <div class="option-letter">{{ option.option_letter }}</div>
+                        <div>{{ option.option_text }}</div>
+                        <input type="radio" name="option" value="{{ option.option_letter }}" style="display: none;" required>
+                    </div>
+                </label>
+                {% endfor %}
+                
+                <!-- Submit button -->
+                <div class="mt-4 text-center">
+                    <button type="submit" class="btn btn-primary px-4">Submit Answer</button>
+                </div>
+            </form>
+            
+            <script>
+                // Add selected class to option when clicked
+                document.querySelectorAll('.option-card').forEach(option => {
+                    option.addEventListener('click', function() {
+                        // Remove selected class from all options
+                        document.querySelectorAll('.option-card').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        
+                        // Add selected class to clicked option
+                        this.classList.add('selected');
+                        
+                        // Check the radio input
+                        const radio = this.querySelector('input[type="radio"]');
+                        if (radio) {
+                            radio.checked = true;
+                        }
+                    });
+                });
+            </script>
         {% endif %}
-        
-        <!-- Next button -->
-        <form method="post" action="{{ url_for('quiz.next_question') }}">
-            <button type="submit" class="action-button w-100">
-                <i class="bi bi-arrow-right-circle"></i>
-                Next Question
-            </button>
-        </form>
-        {% endif %}
-        
-        <!-- Quiz Exit Link -->
-        <div class="text-center mt-4">
-            <a href="{{ url_for('main.home') }}" class="text-muted" style="font-size: 0.9rem; text-decoration: none;"
-               onclick="return confirm('Are you sure you want to exit the quiz? Your progress will be lost.')">
-                <i class="bi bi-x-circle me-1"></i> Exit Quiz
-            </a>
-        </div>
     </div>
 </div>
 {% endblock %} 

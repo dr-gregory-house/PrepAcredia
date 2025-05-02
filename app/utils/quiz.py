@@ -1,6 +1,12 @@
 import os
 import json
+import random
+import uuid
 from flask import current_app
+
+def generate_quiz_id():
+    """Generate a unique ID for a quiz session"""
+    return str(uuid.uuid4())[:8]  # Use first 8 chars of a UUID for brevity
 
 def save_quiz_data(quiz_id, data):
     """Save quiz data to filesystem instead of session"""
