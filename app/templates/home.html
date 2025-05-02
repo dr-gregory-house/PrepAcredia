@@ -4,552 +4,915 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Pedia - MCQ Practice</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary: #5465ff;
-            --primary-dark: #3a46a0;
-            --primary-light: #788bff;
-            --secondary: #7fc8f8;
-            --accent: #f72585;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #06b6d4;
+            --accent: #f97316;
             --light: #f8f9fa;
-            --dark: #212529;
-            --success: #48cae4;
-            --warning: #fca311;
-            --danger: #e63946;
+            --dark: #1e293b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
             --card-bg: #ffffff;
-            --border-radius: 12px;
-            --box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --border-radius: 18px;
+            --box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            --content-width: 1000px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
         
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f5f7fa;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             color: var(--dark);
             line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23a5b4fc' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E"),
+            linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            background-attachment: fixed;
         }
         
-        .app-container {
-            max-width: 900px;
+        .page-container {
+            width: 100%;
+            max-width: var(--content-width);
             margin: 40px auto;
-            background: var(--card-bg);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .hero-section {
+            width: 100%;
+            padding: 60px 50px;
+            background: linear-gradient(135deg, #6366f1 0%, #3730a3 100%);
             border-radius: var(--border-radius);
+            color: white;
+            position: relative;
+            overflow: hidden;
             box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 600px;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+        
+        .hero-section::after {
+            content: '';
+            position: absolute;
+            bottom: -80px;
+            left: -80px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+        
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            letter-spacing: -1px;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            font-weight: 400;
+            max-width: 80%;
+        }
+        
+        .error-banner {
+            background-color: #fef2f2;
+            border-radius: var(--border-radius);
+            padding: 16px 20px;
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.15);
+            border-left: 4px solid var(--danger);
+        }
+        
+        .error-banner i {
+            font-size: 1.5rem;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 30px;
+        }
+        
+        .settings-column {
+            grid-column: span 4;
+        }
+        
+        .topics-column {
+            grid-column: span 8;
+        }
+        
+        .widget {
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .widget:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .widget-header {
+            background: var(--dark);
+            color: white;
+            padding: 20px 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
             overflow: hidden;
         }
         
-        .app-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 30px;
-            position: relative;
-            border-bottom: 5px solid var(--primary-light);
+        .widget-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
         }
         
-        .app-header h1 {
-            font-weight: 700;
-            margin: 0;
-            font-size: 2rem;
-            letter-spacing: -0.5px;
+        .widget-content {
+            padding: 25px;
         }
         
-        .app-header p {
-            margin: 8px 0 0;
-            opacity: 0.9;
-            font-weight: 400;
-            font-size: 1rem;
+        .settings-widget .widget-header {
+            background: linear-gradient(135deg, var(--secondary) 0%, #0891b2 100%);
         }
         
-        .app-content {
-            padding: 30px;
+        .topic-widget .widget-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%);
+        }
+        
+        .tags-widget .widget-header {
+            background: linear-gradient(135deg, var(--accent) 0%, #ea580c 100%);
         }
         
         .section-title {
             font-weight: 600;
             font-size: 1.1rem;
             color: var(--dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .question-counter {
+            margin-bottom: 30px;
+        }
+        
+        .question-counter-label {
+            display: block;
+            font-weight: 500;
+            color: #64748b;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         
-        .settings-panel {
-            background-color: #f8f9fa;
-            border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-        
-        .chapters-panel, .tags-panel {
-            border-radius: var(--border-radius);
-            margin-bottom: 30px;
-            overflow: hidden;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
-            background-color: #f8f9fa;
-        }
-        
-        .panel-header {
-            background-color: var(--primary);
-            color: white;
-            padding: 15px 20px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .panel-body {
-            padding: 20px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .panel-body::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .panel-body::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 10px;
-        }
-        
-        .panel-body::-webkit-scrollbar-thumb {
-            background: var(--primary-light);
-            border-radius: 10px;
-        }
-        
-        .chapter-card {
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #e9ecef;
-            margin-bottom: 12px;
-            transition: all 0.2s ease;
-            overflow: hidden;
-        }
-        
-        .chapter-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            border-color: var(--primary-light);
-        }
-        
-        .chapter-header {
-            display: flex;
-            align-items: center;
-            padding: 15px 20px;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .chapter-name {
-            font-weight: 500;
-            font-size: 1rem;
-            flex-grow: 1;
-            padding-right: 10px;
-            margin-left: 8px;
-        }
-        
-        .chapter-count {
-            font-size: 0.8rem;
-            font-weight: 500;
-            padding: 3px 10px;
-            border-radius: 20px;
-            background: var(--primary);
-            color: white;
-            display: inline-flex;
-            align-items: center;
-            transition: all 0.3s ease;
+        .counter-value {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.5rem;
             margin-right: 10px;
         }
         
-        .empty-count {
-            background: var(--secondary);
-            color: var(--dark);
-            opacity: 0.7;
+        .slider-container {
+            position: relative;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            margin: 30px 0;
+            cursor: pointer;
         }
         
-        .toggle-icon {
-            font-size: 1.2rem;
-            color: var(--dark);
-            transition: transform 0.3s ease;
-            opacity: 0.5;
+        .slider-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 10px;
+            width: 20%;
+            pointer-events: none;
         }
         
-        .expanded .toggle-icon {
-            transform: rotate(180deg);
-            color: var(--primary);
-            opacity: 1;
-        }
-        
-        .subchapters-container {
-            display: none;
-            padding: 0 20px 15px;
-            background-color: #f8f9fa;
-            border-top: 1px solid #e9ecef;
-        }
-        
-        .expanded .subchapters-container {
-            display: block;
-        }
-        
-        .subchapter-item {
+        .slider-thumb {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+            z-index: 10;
             display: flex;
             align-items: center;
-            padding: 10px 15px;
-            margin: 8px 0;
-            background-color: white;
-            border-radius: 8px;
-            border: 1px solid #e9ecef;
+            justify-content: center;
+        }
+        
+        .slider-thumb:hover, .slider-thumb:active {
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .slider-thumb:active {
+            cursor: grabbing;
+            background-color: var(--primary-light);
+        }
+        
+        .slider-container:hover .slider-fill {
+            background: linear-gradient(90deg, var(--primary-dark) 0%, var(--secondary) 100%);
+        }
+        
+        .slider-points {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .slider-point {
+            font-size: 0.85rem;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .slider-point:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .slider-point.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .slider-point::before {
+            content: '';
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 10px;
+            background: #e2e8f0;
+        }
+        
+        .slider-point.active::before {
+            background: var(--primary);
+        }
+        
+        .all-questions-switch {
+            margin-top: 15px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
             transition: all 0.2s ease;
         }
         
-        .subchapter-item:hover {
-            transform: translateX(5px);
-            border-color: var(--primary-light);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        .all-questions-switch:hover {
+            background: #e2e8f0;
         }
         
-        .subchapter-count {
-            font-size: 0.75rem;
-            padding: 2px 8px;
-            margin-left: 8px;
-        }
-        
-        .error-message {
-            background-color: rgba(230, 57, 70, 0.1);
-            border-left: 4px solid var(--danger);
-            color: var(--danger);
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
+        .switch-label {
+            font-weight: 500;
             display: flex;
             align-items: center;
             gap: 10px;
         }
         
-        .selected-count {
-            background-color: rgba(84, 101, 255, 0.1);
-            padding: 10px 15px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            color: var(--primary);
-            font-weight: 500;
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
         }
         
-        .selected-count span {
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .topics-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .topics-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .topics-container::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        
+        .topics-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .topics-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        .topic-card {
+            background: #f8fafc;
+            border-radius: 14px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+            border-color: var(--primary-light);
+        }
+        
+        .topic-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .topic-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .topic-checkbox:checked {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .topic-checkbox:checked::before {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .topic-name {
+            font-weight: 500;
+            flex-grow: 1;
+        }
+        
+        .topic-count {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.8rem;
             font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .topic-count.empty {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+        
+        .toggle-icon {
+            color: #64748b;
+            transition: transform 0.3s ease;
             margin-left: 5px;
         }
         
-        .tag-container {
+        .topic-card.expanded .toggle-icon {
+            transform: rotate(180deg);
+            color: var(--primary);
+        }
+        
+        .subtopics-container {
+            display: none;
+            padding: 10px 20px;
+            background: #f1f5f9;
+        }
+        
+        .topic-card.expanded .subtopics-container {
+            display: block;
+        }
+        
+        .subtopic-item {
             display: flex;
-            flex-wrap: wrap;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 10px;
+            transition: all 0.2s ease;
             gap: 10px;
         }
         
+        .subtopic-item:hover {
+            transform: translateX(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .subtopic-count {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-radius: 20px;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+        
+        .subtopic-count.empty {
+            background: #e2e8f0;
+            color: #64748b;
+        }
+        
+        .selected-count {
+            background: #eef2ff;
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: var(--primary);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
         .tag-item {
-            background-color: white;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
+            background: #f8fafc;
+            border-radius: 12px;
             padding: 10px 15px;
             display: flex;
             align-items: center;
             gap: 10px;
+            border: 1px solid #e2e8f0;
             transition: all 0.2s ease;
             cursor: pointer;
         }
         
         .tag-item:hover {
+            background: #eef2ff;
             border-color: var(--primary-light);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tag-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        
+        .tag-checkbox:checked {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .tag-checkbox:checked::before {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
         }
         
         .tag-name {
             font-weight: 500;
             font-size: 0.9rem;
-            color: var(--dark);
         }
         
-        .tag-badge {
-            background-color: var(--secondary);
-            color: var(--dark);
-            font-size: 0.75rem;
-            padding: 3px 8px;
+        .tag-count {
+            background: #f1f5f9;
+            color: #64748b;
             border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: auto;
         }
         
-        .question-bubbles-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin: 15px 0;
-        }
-        
-        .question-bubble {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .start-button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 30px;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            user-select: none;
-            background-color: #eef2ff;
-            border: 2px solid #d1d5db;
-            color: var(--dark);
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .question-bubble:before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            transform: translateX(-100%);
-            transition: transform 0.6s;
-        }
-        
-        .question-bubble:hover:before {
-            transform: translateX(100%);
-        }
-        
-        .question-bubble:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .question-bubble.selected {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary-dark);
-            transform: scale(1.1);
-        }
-        
-        .question-bubble.selected:hover {
-            transform: translateY(-3px) scale(1.1);
-        }
-        
-        .presets-container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 15px;
-        }
-        
-        .preset-button {
-            background-color: white;
-            border: 1px solid #e9ecef;
-            border-radius: 20px;
-            padding: 5px 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        
-        .preset-button:hover {
-            background-color: #f8f9fa;
-            border-color: #dee2e6;
-        }
-        
-        .preset-button.active {
-            background-color: var(--primary-light);
-            border-color: var(--primary);
-            color: white;
-        }
-        
-        .all-questions-option {
-            display: flex;
-            justify-content: center;
             align-items: center;
-            padding: 8px 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-weight: 500;
-            gap: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border: 1px solid #e9ecef;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
         }
         
-        .all-questions-option:hover {
+        .start-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(99, 102, 241, 0.6);
+        }
+        
+        @media (max-width: 992px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .settings-column, .topics-column {
+                grid-column: span 12;
+        }
+        }
+        
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 40px 30px;
+            }
+            
+            .hero-title {
+                font-size: 2.5rem;
+        }
+        
+            .topics-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-container {
+                margin: 20px auto;
+        }
+        
+            .slider-thumb i {
+                display: none;
+            }
+        }
+        
+        /* Navigation header */
+        .nav-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        
+        .nav-logo {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .nav-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            color: var(--dark);
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .profile-btn {
+            color: var(--primary);
             background-color: #eef2ff;
             border-color: var(--primary-light);
         }
         
-        .all-questions-option.active {
-            background-color: var(--primary-light);
+        .logout-btn {
+            color: var(--danger);
+            background-color: #fef2f2;
+            border-color: rgba(239, 68, 68, 0.2);
+        }
+        
+        .admin-btn {
+            color: var(--accent);
+            background-color: #fff7ed;
+            border-color: rgba(249, 115, 22, 0.2);
+        }
+        
+        .login-btn {
+            color: var(--primary);
+            background-color: #eef2ff;
+            border-color: var(--primary-light);
+        }
+        
+        .register-btn {
             color: white;
+            background-color: var(--primary);
             border-color: var(--primary);
         }
         
-        /* MOBILE ANIMATIONS */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-30px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        /* Add mobile gradient background animation */
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
+        /* Media queries */
         @media (max-width: 768px) {
-            .app-container {
-                margin: 20px 15px;
-                border-radius: 12px;
-                /* combine container fade-in and moving gradient */
-                animation: gradientBG 12s ease infinite, fadeInUp 0.6s ease;
-                background: linear-gradient(-45deg, #ff9a9e, #fbc2eb, #a6c1ee, #f6d365);
-                background-size: 400% 400%;
-                backdrop-filter: blur(10px);
-            }
-            .app-header {
-                padding: 20px 15px;
-                animation: fadeInUp 0.8s ease;
-            }
-            .app-header h1, .app-header p {
-                animation: fadeInUp 1s ease;
-            }
-            .app-content {
-                padding: 20px 15px;
-            }
-            .settings-panel, .chapters-panel, .tags-panel {
-                animation: fadeInUp 0.7s ease;
-            }
-            .chapter-card {
-                animation: fadeInUp 0.5s ease both;
-            }
-            .tag-item {
-                flex-basis: 100%;
-                animation: slideInLeft 0.5s ease both;
-            }
-            .selected-count {
-                animation: pulse 2s infinite;
-            }
-            .question-bubbles-container {
-                gap: 10px;
+            .nav-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
             }
             
-            .question-bubble {
-                width: 45px;
-                height: 45px;
+            .nav-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .nav-btn {
+                padding: 8px 12px;
                 font-size: 0.85rem;
-                animation: fadeInUp 0.3s ease both;
-                animation-delay: calc(0.05s * var(--i));
-            }
-            
-            .question-bubble.selected {
-                animation: pulse 2s infinite;
-            }
-            
-            .preset-button {
-                flex-grow: 1;
-                text-align: center;
-                animation: slideInLeft 0.3s ease both;
-                animation-delay: calc(0.1s * var(--i));
-            }
-            
-            .all-questions-option {
-                animation: fadeInUp 0.5s ease;
             }
         }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="app-header">
-            <h1>Project Pedia</h1>
-            <p>Master your knowledge with targeted MCQ practice sessions</p>
+    <div class="page-container">
+        <!-- Add nav bar at the top -->
+        <div class="nav-header">
+            <div class="nav-logo">Project Pedia</div>
+            {% if session.user_id %}
+            <div class="nav-actions">
+                {% if session.user_role == 'admin' %}
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-btn admin-btn">
+                    <i class="bi bi-gear-fill"></i>
+                    Admin Panel
+                </a>
+                {% endif %}
+                <a href="{{ url_for('profile.profile') }}" class="nav-btn profile-btn">
+                    <i class="bi bi-person-circle"></i>
+                    Profile
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="nav-btn logout-btn">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </div>
+            {% else %}
+            <div class="nav-actions">
+                <a href="{{ url_for('auth.login') }}" class="nav-btn login-btn">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Login
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="nav-btn register-btn">
+                    <i class="bi bi-person-plus"></i>
+                    Register
+                </a>
+            </div>
+            {% endif %}
         </div>
         
-        <div class="app-content">
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1 class="hero-title">Project Pedia</h1>
+                <p class="hero-subtitle">Elevate your knowledge with personalized MCQ practice sessions designed for mastery</p>
+            </div>
+        </div>
+        
+        <form method="post">
             {% if error %}
-            <div class="error-message">
-                <i class="bi bi-exclamation-triangle-fill"></i>
+            <div class="error-banner">
+                <i class="bi bi-exclamation-circle-fill"></i>
                 <span>{{ error }}</span>
             </div>
             {% endif %}
             
-            <form method="post">
                 <div id="selected-counter" class="selected-count" style="display: none;">
-                    <i class="bi bi-check2-circle me-2"></i> Chapters selected: <span id="selected-count">0</span>
+                <i class="bi bi-check-circle-fill"></i>
+                Topics selected: <span id="selected-count">0</span>
                 </div>
                 
-                <div class="settings-panel">
-                    <div class="section-title">
-                        <i class="bi bi-sliders"></i> Practice Settings
+            <div class="content-grid">
+                <div class="settings-column">
+                    <div class="widget settings-widget">
+                        <div class="widget-header">
+                            <i class="bi bi-sliders"></i>
+                            Practice Settings
                     </div>
-                    
-                    <div class="mb-3">
-                        <label for="num_questions" class="form-label">Number of Questions: <span id="question-value" class="fw-bold">10</span></label>
-                        
-                        <!-- Question bubbles selection UI -->
-                        <div class="question-bubbles-container">
-                            <!-- Will be populated dynamically -->
+                        <div class="widget-content">
+                            <div class="question-counter">
+                                <label for="num_questions" class="question-counter-label">Number of Questions</label>
+                                <span class="counter-value" id="question-value">10</span>
+                                <span>questions</span>
+                                
+                                <div class="slider-container">
+                                    <div class="slider-fill" id="slider-fill"></div>
+                                    <div class="slider-thumb" id="slider-thumb" title="Drag to adjust">
+                                        <i class="bi bi-grip-horizontal" style="font-size: 10px; opacity: 0.7;"></i>
+                                    </div>
                         </div>
                         
-                        <!-- Preset amounts -->
-                        <div class="presets-container">
-                            <div class="preset-button" data-value="5" style="--i:1">5 Q</div>
-                            <div class="preset-button active" data-value="10" style="--i:2">10 Q</div>
-                            <div class="preset-button" data-value="15" style="--i:3">15 Q</div>
-                            <div class="preset-button" data-value="20" style="--i:4">20 Q</div>
-                            <div class="preset-button" data-value="30" style="--i:5">30 Q</div>
+                                <div class="slider-points">
+                                    <div class="slider-point" data-value="5">5</div>
+                                    <div class="slider-point active" data-value="10">10</div>
+                                    <div class="slider-point" data-value="15">15</div>
+                                    <div class="slider-point" data-value="20">20</div>
+                                    <div class="slider-point" data-value="30">30</div>
+                                    <div class="slider-point" data-value="50">50</div>
+                                </div>
                         </div>
                         
-                        <!-- All questions toggle -->
-                        <div class="all-questions-option" id="all_questions_button">
+                            <div class="all-questions-switch" id="all_questions_switch">
+                                <div class="switch-label">
                             <i class="bi bi-infinity"></i>
-                            <span>Use all available questions</span>
+                                    Use all available questions
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="all_questions_toggle">
+                                    <span class="slider"></span>
+                                </label>
                         </div>
                         
                         <input type="hidden" id="num_questions" name="num_questions" value="10">
                     </div>
                 </div>
                 
-                <div class="chapters-panel">
-                    <div class="panel-header">
-                        <i class="bi bi-journal-text"></i> Select Topics to Practice
+                    <div class="widget tags-widget">
+                        <div class="widget-header">
+                            <i class="bi bi-tags-fill"></i>
+                            Filter by Tags
+                        </div>
+                        <div class="widget-content">
+                            <div class="tags-container">
+                                {% for tag_id, tag_info in tag_question_counts.items() %}
+                                <div class="tag-item">
+                                    <input type="checkbox" class="tag-checkbox" id="tag{{ tag_id }}" name="tags" value="{{ tag_id }}">
+                                    <label for="tag{{ tag_id }}" class="tag-name">{{ tag_info.name }}</label>
+                                    <span class="tag-count">{{ tag_info.question_count }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                     </div>
                     
-                    <div class="panel-body">
+                <div class="topics-column">
+                    <div class="widget topic-widget">
+                        <div class="widget-header">
+                            <i class="bi bi-journal-text"></i>
+                            Select Topics to Practice
+                        </div>
+                        <div class="widget-content">
+                            <div class="topics-container">
                     {% for parent_chapter in parent_chapters %}
-                    <div class="chapter-card">
-                        <div class="chapter-header" data-bs-toggle="collapse" data-bs-target="#subchapters-{{ parent_chapter.id }}">
-                            <input type="checkbox" class="custom-checkbox parent-checkbox" id="ch{{ parent_chapter.id }}" name="chapters" value="{{ parent_chapter.id }}">
-                            <label for="ch{{ parent_chapter.id }}" class="chapter-name">{{ parent_chapter.name }}</label>
+                                <div class="topic-card" id="topic-card-{{ parent_chapter.id }}">
+                                    <div class="topic-header">
+                                        <input type="checkbox" class="topic-checkbox parent-checkbox" id="ch{{ parent_chapter.id }}" name="chapters" value="{{ parent_chapter.id }}">
+                                        <label for="ch{{ parent_chapter.id }}" class="topic-name">{{ parent_chapter.name }}</label>
                             
-                            <div class="chapter-count {% if parent_chapter.question_count == 0 %}empty-count{% endif %}">
-                                <i class="bi bi-question-circle me-1"></i> {{ parent_chapter.question_count }}
+                                        <div class="topic-count {% if parent_chapter.question_count == 0 %}empty{% endif %}">
+                                            <i class="bi bi-question-circle"></i>
+                                            {{ parent_chapter.question_count }}
                             </div>
                             
                             {% if parent_chapter.subchapters %}
@@ -558,12 +921,12 @@
                         </div>
                         
                         {% if parent_chapter.subchapters %}
-                        <div class="subchapters-container" id="subchapters-{{ parent_chapter.id }}">
+                                    <div class="subtopics-container">
                             {% for subchapter in parent_chapter.subchapters %}
-                            <div class="subchapter-item">
-                                <input type="checkbox" class="custom-checkbox" id="ch{{ subchapter.id }}" name="chapters" value="{{ subchapter.id }}">
+                                        <div class="subtopic-item">
+                                            <input type="checkbox" class="topic-checkbox" id="ch{{ subchapter.id }}" name="chapters" value="{{ subchapter.id }}">
                                 <label for="ch{{ subchapter.id }}">{{ subchapter.name }}</label>
-                                <div class="chapter-count subchapter-count {% if subchapter.question_count == 0 %}empty-count{% endif %}">
+                                            <div class="subtopic-count {% if subchapter.question_count == 0 %}empty{% endif %}">
                                     {{ subchapter.question_count }}
                                 </div>
                             </div>
@@ -574,160 +937,209 @@
                     {% endfor %}
                     </div>
                 </div>
-                
-                <div class="tags-panel">
-                    <div class="panel-header">
-                        <i class="bi bi-tags"></i> Filter Questions by Tags
                     </div>
                     
-                    <div class="panel-body">
-                        <div class="tag-container">
-                    {% for tag_id, tag_info in tag_question_counts.items() %}
-                            <div class="tag-item">
-                                <input type="checkbox" class="custom-checkbox" id="tag{{ tag_id }}" name="tags" value="{{ tag_id }}">
-                                <label for="tag{{ tag_id }}" class="tag-name">{{ tag_info.name }}</label>
-                                <span class="tag-badge">{{ tag_info.question_count }}</span>
+                    <button type="submit" class="start-button">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                        Start Practice Session
+                    </button>
                             </div>
-                            {% endfor %}
                         </div>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn-start">
-                    <i class="bi bi-lightning-charge-fill"></i> Start Practice Session
-                </button>
             </form>
-        </div>
     </div>
     
     <script>
-        // Toggle chapter expansion
-        document.querySelectorAll('.chapter-header').forEach(header => {
-            header.addEventListener('click', function(e) {
-                // Don't toggle if clicking on checkbox
-                if (e.target.type === 'checkbox' || e.target.tagName === 'LABEL') return;
-                
-                const card = this.closest('.chapter-card');
-                card.classList.toggle('expanded');
-            });
-        });
-        
-        // Toggle all subchapters when parent chapter is checked/unchecked
-        document.querySelectorAll('.parent-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const subchapters = this.closest('.chapter-card').querySelectorAll('.subchapter-item input');
-                subchapters.forEach(sub => {
-                    sub.checked = this.checked;
-                });
-                updateSelectedCount();
-            });
-        });
-        
-        // Update question count display
+        // Initialize slider functionality
+        const slider = document.getElementById('slider-thumb');
+        const sliderContainer = document.querySelector('.slider-container');
+        const sliderFill = document.getElementById('slider-fill');
         const questionValue = document.getElementById('question-value');
         const numQuestionsInput = document.getElementById('num_questions');
+        const sliderPoints = document.querySelectorAll('.slider-point');
         
-        // Initialize question bubbles
-        function initQuestionBubbles() {
-            const container = document.querySelector('.question-bubbles-container');
-            container.innerHTML = '';
+        // Available values for the slider
+        const availableValues = [5, 10, 15, 20, 30, 50];
             
-            // Create bubbles with commonly used values
-            const values = [5, 10, 15, 20, 25, 30, 40, 50];
-            values.forEach((value, index) => {
-                const bubble = document.createElement('div');
-                bubble.className = 'question-bubble';
-                bubble.textContent = value;
-                bubble.dataset.value = value;
-                bubble.style.setProperty('--i', index + 1);
-                
-                // Select initially active bubble
-                if (value == 10) {
-                    bubble.classList.add('selected');
-                }
-                
-                bubble.addEventListener('click', () => {
-                    // Unselect all bubbles first
-                    document.querySelectorAll('.question-bubble').forEach(b => {
-                        b.classList.remove('selected');
-                    });
-                    
-                    // Select this bubble
-                    bubble.classList.add('selected');
-                    
-                    // Update the question count value
-                    questionValue.textContent = value;
-                    numQuestionsInput.value = value;
-                    
-                    // Update preset buttons
-                    document.querySelectorAll('.preset-button').forEach(btn => {
-                        btn.classList.toggle('active', btn.dataset.value == value);
-                    });
-                    
-                    // Ensure all questions toggle is off
-                    document.getElementById('all_questions_button').classList.remove('active');
-                });
-                
-                container.appendChild(bubble);
+        // Map of values to positions (in percentage)
+        const valuePositions = {
+            5: 0,
+            10: 20,
+            15: 40,
+            20: 60,
+            30: 80,
+            50: 100
+        };
+        
+        // Map of positions to values
+        const positionValues = {
+            0: 5,
+            20: 10,
+            40: 15,
+            60: 20,
+            80: 30,
+            100: 50
+        };
+        
+        // Set slider position based on value
+        function setSliderPosition(value) {
+            const position = valuePositions[value];
+            sliderFill.style.width = `${position}%`;
+            slider.style.left = `${position}%`;
+            questionValue.textContent = value;
+            numQuestionsInput.value = value;
+            
+            // Update active point
+            sliderPoints.forEach(point => {
+                point.classList.toggle('active', point.dataset.value == value);
             });
         }
         
-        // Initialize preset buttons
-        document.querySelectorAll('.preset-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const value = this.dataset.value;
+        // Get the closest valid value from a percentage position
+        function getValueFromPosition(positionPercent) {
+            // Find the closest snap point
+            let closestPosition = 0;
+            let minDistance = 100;
+            
+            Object.keys(positionValues).forEach(position => {
+                const distance = Math.abs(parseInt(position) - positionPercent);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestPosition = parseInt(position);
+                }
+            });
+            
+            return positionValues[closestPosition];
+        }
+        
+        // Handle click on the slider track
+        sliderContainer.addEventListener('click', function(e) {
+            // Ignore if target is the thumb (to prevent duplicate events)
+            if (e.target === slider) return;
+                    
+            // Make sure all questions toggle is off
+            document.getElementById('all_questions_toggle').checked = false;
+            
+            // Calculate position as percentage
+            const rect = sliderContainer.getBoundingClientRect();
+            const position = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
+            
+            // Get the closest valid value
+            const value = getValueFromPosition(position);
+            
+            // Set the slider position
+            setSliderPosition(value);
+            });
+        
+        // Implement dragging functionality
+        let isDragging = false;
+        
+        slider.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            document.getElementById('all_questions_toggle').checked = false;
+            e.preventDefault(); // Prevent text selection during drag
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            const rect = sliderContainer.getBoundingClientRect();
+            const position = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
                 
-                // Update all UI elements
-                document.querySelectorAll('.preset-button').forEach(btn => {
-                    btn.classList.toggle('active', btn === this);
+            // Get the closest valid value for smooth snapping
+            const value = getValueFromPosition(position);
+            
+            // Set the slider position
+            setSliderPosition(value);
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+        });
+        
+        // Touch events for mobile
+        slider.addEventListener('touchstart', function(e) {
+            isDragging = true;
+            document.getElementById('all_questions_toggle').checked = false;
+            e.preventDefault();
                 });
                 
-                document.querySelectorAll('.question-bubble').forEach(bubble => {
-                    bubble.classList.toggle('selected', bubble.dataset.value == value);
+        document.addEventListener('touchmove', function(e) {
+            if (!isDragging) return;
+            
+            const touch = e.touches[0];
+            const rect = sliderContainer.getBoundingClientRect();
+            const position = Math.min(100, Math.max(0, ((touch.clientX - rect.left) / rect.width) * 100));
+            
+            const value = getValueFromPosition(position);
+            setSliderPosition(value);
                 });
                 
-                // Update the question value
-                questionValue.textContent = value;
-                numQuestionsInput.value = value;
+        document.addEventListener('touchend', function() {
+            isDragging = false;
+        });
+        
+        // Initialize slider points click behavior
+        sliderPoints.forEach(point => {
+            point.addEventListener('click', () => {
+                const value = parseInt(point.dataset.value);
+                setSliderPosition(value);
                 
-                // Ensure all questions toggle is off
-                document.getElementById('all_questions_button').classList.remove('active');
+                // Make sure all questions toggle is off
+                document.getElementById('all_questions_toggle').checked = false;
             });
         });
         
         // All questions toggle functionality
-        document.getElementById('all_questions_button').addEventListener('click', function() {
-            this.classList.toggle('active');
-            
-            if (this.classList.contains('active')) {
+        const allQuestionsToggle = document.getElementById('all_questions_toggle');
+        allQuestionsToggle.addEventListener('change', function() {
+            if (this.checked) {
                 // Set to all questions
                 questionValue.textContent = 'All';
                 numQuestionsInput.value = '-1';
                 
-                // Unselect all bubbles and presets
-                document.querySelectorAll('.question-bubble, .preset-button').forEach(el => {
-                    el.classList.remove('selected', 'active');
-                });
+                // Disable slider visually
+                sliderFill.style.opacity = '0.5';
+                slider.style.opacity = '0.5';
+                sliderPoints.forEach(point => point.classList.remove('active'));
             } else {
                 // Default back to 10
-                const defaultValue = 10;
-                questionValue.textContent = defaultValue;
-                numQuestionsInput.value = defaultValue;
+                setSliderPosition(10);
                 
-                // Select the right bubble and preset
-                document.querySelectorAll('.question-bubble').forEach(bubble => {
-                    bubble.classList.toggle('selected', bubble.dataset.value == defaultValue);
-                });
-                document.querySelectorAll('.preset-button').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.value == defaultValue);
-                });
+                // Enable slider visually
+                sliderFill.style.opacity = '1';
+                slider.style.opacity = '1';
             }
         });
         
-        // Initialize on page load
-        initQuestionBubbles();
+        // Initialize the slider with default value
+        setSliderPosition(10);
         
-        // Update selected chapters count
+        // Topic card expansion
+        document.querySelectorAll('.topic-header').forEach(header => {
+            header.addEventListener('click', function(e) {
+                // Don't toggle if clicking checkbox or label
+                if (e.target.type === 'checkbox' || e.target.tagName === 'LABEL') return;
+                
+                const card = this.closest('.topic-card');
+                card.classList.toggle('expanded');
+                });
+        });
+        
+        // Toggle all subtopics when parent topic is checked/unchecked
+        document.querySelectorAll('.parent-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const topicCard = this.closest('.topic-card');
+                const subtopicCheckboxes = topicCard.querySelectorAll('.subtopic-item input');
+                
+                subtopicCheckboxes.forEach(sub => {
+                    sub.checked = this.checked;
+                });
+                
+                updateSelectedCount();
+            });
+        });
+        
+        // Update selected topics count
         function updateSelectedCount() {
             const checkboxes = document.querySelectorAll('input[name="chapters"]:checked');
             const counter = document.getElementById('selected-counter');
@@ -771,16 +1183,16 @@
         }
 
         function updateTagList(tags) {
-            const tagContainer = document.querySelector('.tag-container');
+            const tagContainer = document.querySelector('.tags-container');
             tagContainer.innerHTML = '';
             
             for (const [tagId, tagInfo] of Object.entries(tags)) {
                 const tagItem = document.createElement('div');
                 tagItem.className = 'tag-item';
                 tagItem.innerHTML = `
-                    <input type="checkbox" class="custom-checkbox" id="tag${tagId}" name="tags" value="${tagId}">
+                    <input type="checkbox" class="tag-checkbox" id="tag${tagId}" name="tags" value="${tagId}">
                     <label for="tag${tagId}" class="tag-name">${tagInfo.name}</label>
-                    <span class="tag-badge">${tagInfo.question_count}</span>
+                    <span class="tag-count">${tagInfo.question_count}</span>
                 `;
                 tagContainer.appendChild(tagItem);
             }

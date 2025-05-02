@@ -41,11 +41,22 @@ def start_quiz():
         
         questions = conn.execute(query, params).fetchall()
         
+        # Check if we found any questions
+        if not questions:
+            flash('No questions found for the selected chapters and tags.', 'error')
+            conn.close()
+            return redirect(url_for('main.home'))
+        
         # If num_questions is -1, include all available questions
         if session['num_questions'] == -1:
             # Use all questions, just shuffle them
             questions = random.sample(list(questions), len(questions))
         else:
+            # Check if we have enough questions
+            if len(questions) < session['num_questions']:
+                flash(f'Only {len(questions)} questions available for the selected criteria. Using all available questions.', 'warning')
+                session['num_questions'] = len(questions)
+            
             # Use the specified number of questions
             questions = random.sample(list(questions), min(session['num_questions'], len(questions)))
         
@@ -60,6 +71,11 @@ def start_quiz():
                 'options': [dict(option) for option in options]
             })
         conn.close()
+        
+        # Check if we have valid quiz data
+        if not quiz_data:
+            flash('Could not create a quiz with the selected options.', 'error')
+            return redirect(url_for('main.home'))
         
         quiz_state = {
             'quiz_data': quiz_data,
@@ -162,10 +178,20 @@ def next_question():
 @quiz_bp.route('/results')
 @login_required
 def results():
+    # Capture score values at the beginning
     score = session.get('score', 0)
     total = session.get('total', 0)
     quiz_data = session.get('quiz_data', [])
     user_answers = session.get('user_answers', [])
+    
+    # Calculate actual score based on user answers if available
+    if not score and user_answers:
+        # Recalculate score from answers
+        score = sum(1 for answer in user_answers if answer and answer.get('is_correct', False))
+    
+    # Ensure we have a valid total
+    if not total and quiz_data:
+        total = len(quiz_data)
     
     # Zip the data for the template
     zipped_data = list(zip(quiz_data, user_answers)) if quiz_data and user_answers else []
@@ -199,17 +225,25 @@ def results():
         conn.commit()
         conn.close()
     
+    # Prepare template rendering with captured data
+    result_data = {
+        'score': score,
+        'total': total,
+        'zipped_data': zipped_data
+    }
+    
     # Clean up session and temp data
     if 'quiz_id' in session:
         delete_quiz_data(session['quiz_id'])
+        # Remove quiz_id from session but keep the key with None value
+        # This helps the navbar to know we're not in a quiz anymore
+        session['quiz_id'] = None
     
     # Keep user session data, but clear quiz-related data
-    session_keys_to_keep = ['user_id', 'user_name', 'user_role', 'google_token']
-    session_copy = {k: session[k] for k in session_keys_to_keep if k in session}
-    session.clear()
+    keys_to_remove = ['selected_chapters', 'selected_tags', 'num_questions', 'score', 'total', 'quiz_data', 'user_answers']
+    for key in keys_to_remove:
+        if key in session:
+            session.pop(key)
     
-    # Restore user session data
-    for key, value in session_copy.items():
-        session[key] = value
-    
-    return render_template('quiz/results.html', score=score, total=total, zipped_data=zipped_data) 
+    # Return the template with the captured data
+    return render_template('quiz/results.html', **result_data) 

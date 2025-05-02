@@ -1,85 +1,442 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MCQ Practice - Results</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Montserrat', sans-serif; background: #f4f8fb; }
-        .container { max-width: 800px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,0.08); padding: 40px; }
-        .results-header { margin-bottom: 30px; text-align: center; }
-        .score-display { font-size: 2rem; margin: 20px 0; text-align: center; }
-        .score-circle { display: inline-flex; justify-content: center; align-items: center; width: 160px; height: 160px; border-radius: 50%; font-size: 3rem; font-weight: 700; margin-bottom: 20px; }
-        .score-text { font-size: 1.2rem; color: #555; }
-        .question-card { background: #f9f9f9; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-        .question-text { font-size: 1.1rem; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-        .option { padding: 10px; border-radius: 5px; margin: 5px 0; }
-        .option.selected { font-weight: 600; }
-        .option.correct { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
-        .option.incorrect { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
-        .rationale { background-color: #e2f3f7; padding: 15px; border-radius: 8px; margin-top: 15px; }
-        .home-btn { margin-top: 30px; }
-        .btn-primary { background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%); border: none; }
-        .btn-primary:hover { background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%); }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="results-header">
-            <h2>Quiz Results</h2>
-            <div class="score-display">
-                <div class="score-circle" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white;">
-                    {{ score }}/{{ total }}
-                </div>
-                <div class="score-text">
-                    You scored {{ score }} out of {{ total }}
-                    {% if total > 0 %}
-                    ({{ (score / total * 100)|int }}%)
-                    {% endif %}
-                </div>
+{% extends 'layout.html' %}
+
+{% block title %}MCQ Practice - Results{% endblock %}
+
+{% block extra_styles %}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
+    :root {
+        --primary: #5465ff;
+        --primary-hover: #4150e8;
+        --primary-dark: #3a46a0;
+        --primary-light: #788bff;
+        --secondary: #7fc8f8;
+        --success: #48cae4;
+        --warning: #fca311;
+        --danger: #e63946;
+        --light: #f8f9fa;
+        --dark: #212529;
+        --border-radius: 16px;
+        --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        --accent-gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .results-container {
+        max-width: 850px;
+        margin: 30px auto;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        padding: 0;
+        overflow: hidden;
+        transform: translateY(0);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .results-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 50px rgba(84, 101, 255, 0.15);
+    }
+
+    .results-header {
+        background: var(--accent-gradient);
+        color: white;
+        text-align: center;
+        padding: 30px;
+        position: relative;
+    }
+
+    .results-header h2 {
+        font-weight: 700;
+        margin-bottom: 25px;
+        font-size: 1.8rem;
+    }
+
+    .score-display {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 20px 0;
+    }
+
+    .score-circle {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        font-size: 3rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .score-circle::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        background: linear-gradient(225deg, 
+            rgba(255, 255, 255, 0.3) 0%, 
+            rgba(255, 255, 255, 0) 60%);
+        transform: rotate(45deg);
+    }
+
+    .score-text {
+        font-size: 1.3rem;
+        font-weight: 500;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .results-content {
+        padding: 30px;
+    }
+
+    .review-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 1.3rem;
+        margin-bottom: 25px;
+        color: var(--primary-dark);
+    }
+
+    .question-card {
+        background: #f9f9f9;
+        border-radius: 14px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+        border: 1px solid #eee;
+        animation: slideInUp 0.5s ease;
+        animation-fill-mode: both;
+    }
+
+    .question-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+        transform: translateY(-3px);
+        transition: all 0.3s ease;
+    }
+
+    .question-number {
+        display: inline-block;
+        background: var(--accent-gradient);
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 30px;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+
+    .question-text {
+        font-size: 1.15rem;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+        font-weight: 500;
+        line-height: 1.6;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .options-list {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .option {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border-radius: 10px;
+        margin: 5px 0;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+
+    .option-letter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #f0f7ff;
+        color: var(--primary);
+        font-weight: 600;
+        flex-shrink: 0;
+        margin-right: 10px;
+    }
+
+    .option.selected {
+        font-weight: 500;
+    }
+
+    .option.correct {
+        background-color: rgba(72, 202, 228, 0.1);
+        border: 1px solid var(--success);
+    }
+
+    .option.incorrect {
+        background-color: rgba(230, 57, 70, 0.1);
+        border: 1px solid var(--danger);
+    }
+
+    .badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        float: right;
+        margin-left: auto;
+    }
+
+    .badge.bg-success {
+        background: var(--success) !important;
+    }
+
+    .badge.bg-danger {
+        background: var(--danger) !important;
+    }
+
+    .rationale {
+        background-color: #f0f7ff;
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 20px;
+        position: relative;
+        border-left: 4px solid var(--primary);
+    }
+
+    .rationale h6 {
+        font-weight: 600;
+        color: var(--primary-dark);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .action-button {
+        background: var(--accent-gradient);
+        color: white;
+        border: none;
+        padding: 14px 20px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        box-shadow: 0 5px 15px rgba(84, 101, 255, 0.3);
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .action-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(84, 101, 255, 0.4);
+        background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+        color: white;
+        text-decoration: none;
+    }
+
+    .stats-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        flex: 1;
+        min-width: 150px;
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #eee;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #777;
+        font-weight: 500;
+    }
+
+    .performance-indicator {
+        height: 8px;
+        background: #eee;
+        border-radius: 4px;
+        margin-top: 10px;
+        overflow: hidden;
+    }
+
+    .performance-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: var(--accent-gradient);
+    }
+
+    @keyframes slideInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .results-container {
+            margin: 15px;
+            border-radius: 12px;
+        }
+
+        .results-header {
+            padding: 20px;
+        }
+
+        .results-content {
+            padding: 20px;
+        }
+
+        .stats-row {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stat-card {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-header">
+        <h2>Quiz Results</h2>
+        <div class="score-display">
+            <div class="score-circle">
+                {{ score }}/{{ total }}
+            </div>
+            <div class="score-text">
+                You scored {{ (score / total * 100)|round|int }}%
             </div>
         </div>
+    </div>
+    
+    <div class="results-content">
+        {% if score > 0 %}
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-value">{{ score }}</div>
+                <div class="stat-label">Correct</div>
+                <div class="performance-indicator">
+                    <div class="performance-fill" style="width: {{ (score / total * 100)|round|int }}%;"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total - score }}</div>
+                <div class="stat-label">Incorrect</div>
+                <div class="performance-indicator">
+                    <div class="performance-fill" style="width: {{ ((total - score) / total * 100)|round|int }}%; background: var(--danger);"></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">{{ total }}</div>
+                <div class="stat-label">Total Questions</div>
+            </div>
+        </div>
+        {% endif %}
         
-        <h4 class="mb-4">Question Review</h4>
+        <div class="review-header">
+            <i class="bi bi-journal-check"></i>
+            Question Review
+        </div>
         
-        {% for question, answer in zipped_data %}
-        <div class="question-card">
-            <div class="question-text">{{ question.question_text|markdown|safe }}</div>
-            
-            {% for option in question.options %}
-            <div class="option 
-                {% if option.option_letter == answer.selected and option.option_letter == answer.correct %}correct selected
-                {% elif option.option_letter == answer.selected and option.option_letter != answer.correct %}incorrect selected
-                {% elif option.option_letter == answer.correct %}correct
-                {% endif %}">
-                <strong>{{ option.option_letter }}.</strong> {{ option.option_text|markdown|safe }}
+        {% if zipped_data %}
+            {% for question, answer in zipped_data %}
+            <div class="question-card" style="animation-delay: {{ loop.index * 0.1 }}s">
+                <div class="question-text">
+                    <span class="question-number">{{ loop.index }}</span>
+                    <div>{{ question.question_text|markdown|safe }}</div>
+                </div>
                 
-                {% if option.option_letter == answer.selected %}
-                    {% if option.option_letter == answer.correct %}
-                    <span class="badge bg-success float-end">Your Answer (Correct)</span>
-                    {% else %}
-                    <span class="badge bg-danger float-end">Your Answer</span>
-                    {% endif %}
-                {% elif option.option_letter == answer.correct %}
-                    <span class="badge bg-success float-end">Correct Answer</span>
+                {% if question.options %}
+                    <div class="options-list">
+                        {% for option in question.options %}
+                        <div class="option 
+                            {% if answer and option.option_letter == answer.selected and option.option_letter == answer.correct %}correct selected
+                            {% elif answer and option.option_letter == answer.selected and option.option_letter != answer.correct %}incorrect selected
+                            {% elif answer and option.option_letter == answer.correct %}correct
+                            {% endif %}">
+                            <span class="option-letter">{{ option.option_letter }}</span>
+                            {{ option.option_text|markdown|safe }}
+                            
+                            {% if answer %}
+                                {% if option.option_letter == answer.selected %}
+                                    {% if option.option_letter == answer.correct %}
+                                    <span class="badge bg-success">Your Answer</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Your Answer</span>
+                                    {% endif %}
+                                {% elif option.option_letter == answer.correct %}
+                                    <span class="badge bg-success">Correct</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning">No options found for this question.</div>
+                {% endif %}
+                
+                {% if question.rationale %}
+                <div class="rationale">
+                    <h6><i class="bi bi-lightbulb-fill"></i> Explanation</h6>
+                    <div>{{ question.rationale|markdown|safe }}</div>
+                </div>
                 {% endif %}
             </div>
             {% endfor %}
-            
-            {% if question.rationale %}
-            <div class="rationale">
-                <h6>Explanation:</h6>
-                <div>{{ question.rationale|markdown|safe }}</div>
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
+        {% else %}
+            <div class="alert alert-info">No quiz data available to display.</div>
+        {% endif %}
         
-        <div class="home-btn">
-            <a href="{{ url_for('main.home') }}" class="btn btn-primary w-100">Start New Quiz</a>
-        </div>
+        <a href="{{ url_for('main.home') }}" class="action-button w-100">
+            <i class="bi bi-lightning-charge-fill"></i>
+            Start New Quiz
+        </a>
     </div>
-</body>
-</html> 
+</div>
+{% endblock %} 

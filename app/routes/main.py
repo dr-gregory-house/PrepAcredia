@@ -94,6 +94,10 @@ def home():
             # If no tags are selected, use all questions from selected chapters
             selected_tags = None
         
+        # Clear any existing quiz state
+        if 'quiz_id' in session:
+            session.pop('quiz_id', None)
+        
         # Generate a unique quiz ID
         quiz_id = str(random.randint(10000, 99999))
         session['quiz_id'] = quiz_id

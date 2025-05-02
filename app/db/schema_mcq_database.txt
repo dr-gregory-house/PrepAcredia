@@ -149,61 +149,17 @@ Foreign Keys:
 
 ==================================================
 
-Table: users
-------------------------------
-Column: id
-  Type: INTEGER
-  Not Null: False
-  Default Value: None
-  Primary Key: True
-
-Column: email
-  Type: TEXT
-  Not Null: True
-  Default Value: None
-  Primary Key: False
-
-Column: name
-  Type: TEXT
-  Not Null: True
-  Default Value: None
-  Primary Key: False
-
-Column: password_hash
-  Type: TEXT
-  Not Null: False
-  Default Value: None
-  Primary Key: False
-
-Column: google_id
-  Type: TEXT
-  Not Null: False
-  Default Value: None
-  Primary Key: False
-
-Column: profile_picture
-  Type: TEXT
-  Not Null: False
-  Default Value: None
-  Primary Key: False
-
-Column: role
-  Type: TEXT
-  Not Null: False
-  Default Value: 'user'
-  Primary Key: False
-
-Column: is_active
-  Type: INTEGER
-  Not Null: False
-  Default Value: 1
-  Primary Key: False
-
-Column: created_at
-  Type: TIMESTAMP
-  Not Null: False
-  Default Value: CURRENT_TIMESTAMP
-  Primary Key: False
+CREATE TABLE "users" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    password_hash TEXT,
+    profile_picture TEXT,
+    role TEXT DEFAULT 'user',
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
 
 
 ==================================================

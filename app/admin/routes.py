@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+from flask import Blueprint, render_template, request, redirect, url_for, flash, session
 from app.utils.db import get_db_connection
 from app.utils.decorators import admin_required
 
@@ -25,6 +25,29 @@ def toggle_user_active(user_id):
         conn.execute('UPDATE users SET is_active = ? WHERE id = ?', (new_status, user_id))
         conn.commit()
         flash(f"User {'activated' if new_status == 1 else 'deactivated'} successfully", 'success')
+    else:
+        flash('User not found', 'error')
+    
+    conn.close()
+    return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/user/<int:user_id>/toggle_admin', methods=['POST'])
+@admin_required
+def toggle_user_admin(user_id):
+    # Don't allow admin to remove their own admin status
+    if user_id == session.get('user_id'):
+        flash('You cannot change your own admin status', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+    
+    if user:
+        # Toggle admin status
+        new_role = 'user' if user['role'] == 'admin' else 'admin'
+        conn.execute('UPDATE users SET role = ? WHERE id = ?', (new_role, user_id))
+        conn.commit()
+        flash(f"User {'promoted to admin' if new_role == 'admin' else 'demoted to regular user'} successfully", 'success')
     else:
         flash('User not found', 'error')
     

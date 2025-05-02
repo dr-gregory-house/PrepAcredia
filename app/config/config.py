@@ -9,9 +9,5 @@ class Config:
     # Temp directory for quiz data
     TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
     
-    # Google OAuth config
-    GOOGLE_CLIENT_ID = '1067338275457-86so8n3dcsbsonm35nnqkjamsudrdo0a.apps.googleusercontent.com'
-    GOOGLE_CLIENT_SECRET = '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'
-    
     # Debug flag
     DEBUG = True 

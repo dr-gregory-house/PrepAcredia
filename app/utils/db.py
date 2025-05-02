@@ -23,10 +23,10 @@ def init_db():
     conn.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         name TEXT NOT NULL,
         password_hash TEXT,
-        google_id TEXT UNIQUE,
         profile_picture TEXT,
         role TEXT DEFAULT 'user',
         is_active INTEGER DEFAULT 1,
@@ -63,9 +63,9 @@ def init_db():
     admin_exists = conn.execute('SELECT 1 FROM users WHERE role = "admin" LIMIT 1').fetchone()
     if not admin_exists:
         conn.execute('''
-        INSERT INTO users (email, name, role, is_active)
-        VALUES (?, ?, ?, ?)
-        ''', ('admin@example.com', 'Admin User', 'admin', 1))
+        INSERT INTO users (username, email, name, role, is_active)
+        VALUES (?, ?, ?, ?, ?)
+        ''', ('admin', 'admin@example.com', 'Admin User', 'admin', 1))
     
     conn.commit()
     conn.close() 
