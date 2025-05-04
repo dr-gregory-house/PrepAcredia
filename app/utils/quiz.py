@@ -32,7 +32,7 @@ def load_quiz_data(quiz_id):
         else:
             return None
     except Exception as e:
-    return None
+        return None
 
 def delete_quiz_data(quiz_id):
     """Delete quiz data file when quiz is completed"""
@@ -44,4 +44,4 @@ def delete_quiz_data(quiz_id):
         else:
             return False
     except Exception as e:
-    return False 
+        return False 
