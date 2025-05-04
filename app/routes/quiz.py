@@ -242,10 +242,6 @@ def start_quiz():
         'time_limit': None
     }
     
-    # Debug info
-    print(f"Rendering question {current+1} of {len(quiz_data)}")
-    print(f"Question data: {quiz_data[current]}")
-    
     return render_template(
         'quiz/question.html',
         quiz=quiz,
@@ -479,12 +475,6 @@ def answer():
     current_question = quiz_data[current]
     correct = current_question['correct_answer']
     is_correct = (selected == correct)
-    
-    # Print debug info
-    print(f"Selected: {selected}, Correct: {correct}, Is correct: {is_correct}")
-    print(f"Question options: {current_question['options']}")
-    print(f"Explanation field: {current_question.get('explanation')}")
-    print(f"Rationale field: {current_question.get('rationale')}")
     
     # Update score if correct
     if is_correct:

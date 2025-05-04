@@ -17,10 +17,8 @@ def save_quiz_data(quiz_id, data):
         os.makedirs(current_app.config['TEMP_DIR'], exist_ok=True)
         with open(filepath, 'w') as f:
             json.dump(data, f)
-        print(f"Quiz data saved to {filepath}")
         return True
     except Exception as e:
-        print(f"Error saving quiz data: {str(e)}")
         return False
 
 def load_quiz_data(quiz_id):
@@ -30,13 +28,11 @@ def load_quiz_data(quiz_id):
         if os.path.exists(filepath):
             with open(filepath, 'r') as f:
                 data = json.load(f)
-            print(f"Loaded quiz data from {filepath}")
             return data
         else:
-            print(f"Quiz data file not found: {filepath}")
+            return None
     except Exception as e:
-        print(f"Error loading quiz data: {str(e)}")
-    return None
+        return None
 
 def delete_quiz_data(quiz_id):
     """Delete quiz data file when quiz is completed"""
@@ -44,10 +40,8 @@ def delete_quiz_data(quiz_id):
     try:
         if os.path.exists(filepath):
             os.remove(filepath)
-            print(f"Deleted quiz data file: {filepath}")
             return True
         else:
-            print(f"No quiz data file to delete: {filepath}")
+            return False
     except Exception as e:
-        print(f"Error deleting quiz data: {str(e)}")
-    return False 
+        return False 
