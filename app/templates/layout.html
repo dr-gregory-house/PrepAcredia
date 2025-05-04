@@ -7,68 +7,326 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            padding-top: 20px;
-            padding-bottom: 40px;
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(255, 255, 255, 0.25);
+            --card-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            --navbar-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f0f4ff 0%, #e5e7fa 100%);
+            background-attachment: fixed;
+            color: var(--dark);
+            min-height: 100vh;
+            padding-top: 70px;
+            padding-bottom: 40px;
+            position: relative;
+        }
+
+        body:before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiMwMDAiIGQ9Ik0zNiAxOGMwLTkuOTQtOC4wNi0xOC0xOC0xOFYyYzcuNzMyIDAgMTQgNi4yNjggMTQgMTRoMnptLTIgMGMwIDcuNzMyLTYuMjY4IDE0LTE0IDE0djJjOC45NCAwIDE2LTcuMDYgMTYtMTZoLTJ6Ii8+PC9nPjwvc3ZnPg==');
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .navbar {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--card-border);
+            box-shadow: var(--navbar-shadow);
+            padding: 15px 0;
+            transition: var(--transition);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .navbar-brand i {
+            font-size: 1.8rem;
+        }
+        
+        .navbar .container {
+            max-width: 1400px;
+        }
+        
+        .navbar .nav-link {
+            font-weight: 500;
+            color: var(--dark);
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        
+        .navbar .nav-link:hover {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .navbar .nav-link.active {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+        }
+        
+        .btn-warning {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .btn-outline-light {
+            color: var(--dark);
+            border-color: rgba(99, 102, 241, 0.2);
+            background: rgba(255, 255, 255, 0.8);
+        }
+        
+        .btn-outline-light:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        .btn-outline-danger {
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+        
         .flash-messages {
             position: fixed;
-            top: 20px;
+            top: 80px;
             right: 20px;
             z-index: 1000;
             min-width: 300px;
+            max-width: 400px;
         }
-        .navbar .user-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            margin-right: 8px;
+        
+        .alert {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            padding: 15px;
         }
-        .navbar .nav-button {
-            margin-left: 5px;
+        
+        .alert-primary {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.3);
+            color: var(--primary);
         }
-        .main-actions {
-            display: flex;
-            align-items: center;
+        
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+            color: var(--secondary);
         }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: var(--accent);
+        }
+        
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: var(--danger);
+        }
+        
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(31, 38, 135, 0.2);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: white;
+            font-weight: 600;
+            border-bottom: none;
+            padding: 20px;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .nav-button {
+            margin-left: 8px;
+        }
+        
+        .badge {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        
+        footer {
+            margin-top: 60px;
+            padding:2px 0;
+            color: var(--dark);
+            opacity: 0.7;
+        }
+        
         @keyframes review-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
         
         .review-pulse {
             animation: review-pulse 1.5s infinite;
+        }
+        
+        .developer-signature {
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        
+        .developer-signature i.fa-heart {
+            font-size: 0.8rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
         }
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.home') }}">Quiz App</a>
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
+                <i class="fas fa-brain"></i> Project Pedia
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+                <i class="fas fa-bars text-primary"></i>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.home') }}">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.home' }}" href="{{ url_for('main.home') }}">
                             <i class="fas fa-home me-1"></i> Home
                         </a>
                     </li>
                     {% if session.user_id %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('profile.profile') }}">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('profile.') }}" href="{{ url_for('profile.profile') }}">
                             <i class="fas fa-user me-1"></i> My Profile
                         </a>
                     </li>
                     {% if session.user_role == 'admin' %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin.') }}" href="{{ url_for('admin.dashboard') }}">
                             <i class="fas fa-cog me-1"></i> Admin
                         </a>
                     </li>
@@ -100,9 +358,9 @@
                     </li>
                     {% endif %}
                     
-                    <li class="nav-item main-actions">
+                    <li class="nav-item d-flex align-items-center">
                         <!-- Profile Button -->
-                        <a class="btn btn-outline-light btn-sm nav-button me-2" href="{{ url_for('profile.profile') }}">
+                        <a class="btn btn-outline-primary btn-sm nav-button me-2" href="{{ url_for('profile.profile') }}">
                             <i class="fas fa-user me-1"></i> Profile
                         </a>
                         <!-- Logout Button -->
@@ -111,12 +369,10 @@
                         </a>
                     </li>
                     {% else %}
-                    <li class="nav-item">
+                    <li class="nav-item d-flex align-items-center">
                         <a class="btn btn-outline-primary btn-sm nav-button me-2" href="{{ url_for('auth.login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i> Login
                         </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="btn btn-primary btn-sm nav-button" href="{{ url_for('auth.register') }}">
                             <i class="fas fa-user-plus me-1"></i> Register
                         </a>
@@ -133,7 +389,18 @@
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category if category != 'message' else 'info' }} alert-dismissible fade show">
-                        {{ message }}
+                        <div class="d-flex align-items-center">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle me-2 fs-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                                <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+                            {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-triangle me-2 fs-5"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle me-2 fs-5"></i>
+                            {% endif %}
+                            <div>{{ message }}</div>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 {% endfor %}
@@ -141,15 +408,19 @@
         {% endwith %}
     </div>
     
-    <main>
+    <main class="container py-4">
         {% block content %}{% endblock %}
     </main>
     
     <!-- Footer -->
-    <footer class="mt-5">
+    <footer>
         <div class="container">
-            <hr>
-            <p class="text-center text-muted">&copy; 2024 Quiz App</p>
+            <hr class="opacity-25 mb-2">
+            <div class="text-center">
+                <div class="developer-signature">
+                    <p class="mb-0"><i class="fas fa-code"></i> Developed with <i class="fas fa-heart text-danger"></i> by Anubhav</p>
+                </div>
+            </div>
         </div>
     </footer>
     
@@ -159,8 +430,6 @@
     <!-- Initialize dropdowns -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Bootstrap 5 dropdown initialization is automatic, but we can add custom behavior if needed
-            
             // Auto-close flash messages
             var flashMessages = document.querySelectorAll('.alert-dismissible');
             flashMessages.forEach(function(alert) {

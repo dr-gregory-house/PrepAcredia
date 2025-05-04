@@ -1,51 +1,289 @@
 {% extends 'layout.html' %}
 
-{% block title %}Register - Quiz App{% endblock %}
+{% block title %}Register - Project Pedia{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .auth-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .auth-card {
+        max-width: 500px;
+        width: 100%;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 48px rgba(99, 102, 241, 0.3);
+    }
+    
+    .auth-header {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        padding: 30px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .auth-header:before {
+        content: '';
+        position: absolute;
+        width: 210%;
+        height: 210%;
+        background: linear-gradient(rgba(255, 255, 255, 0.3), transparent);
+        transform: rotate(45deg);
+        top: -80%;
+        left: -80%;
+    }
+    
+    .auth-header h1 {
+        font-weight: 800;
+        color: white;
+        margin: 0;
+        position: relative;
+        font-size: 2.2rem;
+    }
+    
+    .auth-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin-top: 10px;
+        position: relative;
+        font-weight: 300;
+    }
+    
+    .auth-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.25);
+        backdrop-filter: blur(4px);
+        margin-bottom: 15px;
+        color: white;
+        font-size: 1.8rem;
+        position: relative;
+    }
+    
+    .auth-body {
+        padding: 40px;
+    }
+    
+    .auth-form-control {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        border-radius: 12px;
+        padding: 12px 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .auth-form-label {
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+    
+    .auth-btn {
+        border-radius: 12px;
+        padding: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+    }
+    
+    .auth-separator {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 30px 0;
+        color: var(--dark);
+        font-weight: 500;
+    }
+    
+    .auth-separator::before,
+    .auth-separator::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    
+    .auth-separator::before {
+        margin-right: 15px;
+    }
+    
+    .auth-separator::after {
+        margin-left: 15px;
+    }
+    
+    .auth-alt-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .auth-alt-link:hover {
+        color: var(--primary-hover);
+        text-decoration: underline;
+    }
+    
+    .feature-list {
+        margin-top: 20px;
+    }
+    
+    .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        color: var(--dark);
+    }
+    
+    .feature-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--secondary);
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    .password-requirements {
+        font-size: 0.85rem;
+        color: var(--dark);
+        opacity: 0.7;
+        margin-top: 8px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 text-center mb-4">
-            <h1 class="display-4">Join Quiz App</h1>
-            <p class="lead">Create an account to start tracking your quiz progress</p>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h1>Create Account</h1>
+            <p>Join our community of learners today</p>
         </div>
-    </div>
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Register</h4>
-                </div>
-                <div class="card-body">
-                    {% if error %}
-                    <div class="alert alert-danger">{{ error }}</div>
-                    {% endif %}
-                    
-                    <form method="post" action="{{ url_for('auth.register') }}">
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">Register</button>
-                        </div>
-                    </form>
-                    
-                    <div class="mt-3 text-center">
-                        <p>Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+        
+        <div class="auth-body">
+            {% if error %}
+            <div class="alert alert-danger mb-4">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ error }}
+            </div>
+            {% endif %}
+            
+            <form method="post" action="{{ url_for('auth.register') }}">
+                <div class="mb-4">
+                    <label for="username" class="auth-form-label">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="fas fa-user text-primary"></i>
+                        </span>
+                        <input type="text" class="form-control auth-form-control border-start-0 ps-0" 
+                               id="username" name="username" placeholder="Choose a unique username" required>
                     </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="email" class="auth-form-label">Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="fas fa-envelope text-primary"></i>
+                        </span>
+                        <input type="email" class="form-control auth-form-control border-start-0 ps-0" 
+                               id="email" name="email" placeholder="Your email address" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="password" class="auth-form-label">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="fas fa-lock text-primary"></i>
+                        </span>
+                        <input type="password" class="form-control auth-form-control border-start-0 ps-0" 
+                               id="password" name="password" placeholder="Create a strong password" required>
+                    </div>
+                    <div class="password-requirements">
+                        <small>Password must be at least 8 characters with letters and numbers</small>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="confirm_password" class="auth-form-label">Confirm Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-transparent border-end-0">
+                            <i class="fas fa-lock text-primary"></i>
+                        </span>
+                        <input type="password" class="form-control auth-form-control border-start-0 ps-0" 
+                               id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                    </div>
+                </div>
+                
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary auth-btn">
+                        <i class="fas fa-user-plus me-2"></i> Create Account
+                    </button>
+                </div>
+            </form>
+            
+            <div class="auth-separator">Or</div>
+            
+            <div class="text-center">
+                <p>Already have an account? <a href="{{ url_for('auth.login') }}" class="auth-alt-link">Log In</a></p>
+            </div>
+            
+            <div class="feature-list mt-4">
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-check fa-xs"></i>
+                    </div>
+                    <div>Free access to interactive quizzes</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-check fa-xs"></i>
+                    </div>
+                    <div>Track your learning progress</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
+                        <i class="fas fa-check fa-xs"></i>
+                    </div>
+                    <div>Spaced repetition learning system</div>
                 </div>
             </div>
         </div>

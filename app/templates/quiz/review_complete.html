@@ -1,0 +1,327 @@
+{% extends 'layout.html' %}
+
+{% block title %}Review Complete - Project Pedia{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .celebration-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, rgba(255, 255, 255, 0) 70%);
+    }
+
+    .celebration-card {
+        max-width: 800px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(99, 102, 241, 0.2);
+        position: relative;
+        z-index: 1;
+    }
+
+    .celebration-header {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .celebration-header h1 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 2;
+    }
+
+    .celebration-header p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    .celebration-content {
+        padding: 40px;
+        text-align: center;
+    }
+
+    .achievement-icon {
+        font-size: 5rem;
+        color: #10b981;
+        margin-bottom: 20px;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    .stats-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin: 30px 0;
+        flex-wrap: wrap;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        min-width: 160px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #6366f1;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #6b7280;
+        font-size: 0.9rem;
+    }
+
+    .action-btn {
+        display: inline-block;
+        background: #6366f1;
+        color: white;
+        padding: 15px 30px;
+        border-radius: 12px;
+        font-weight: 600;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-3px);
+        background: #4f46e5;
+        box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+    }
+    
+    .celebrate-emoji {
+        display: inline-block;
+        animation: celebrate 1.5s infinite alternate;
+        margin: 0 5px;
+        font-size: 3rem;
+    }
+    
+    .memory-fact {
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 12px;
+        padding: 25px;
+        margin: 30px auto;
+        max-width: 650px;
+        position: relative;
+    }
+    
+    .memory-fact:before {
+        content: """;
+        position: absolute;
+        left: 10px;
+        top: -30px;
+        font-size: 6rem;
+        color: rgba(99, 102, 241, 0.2);
+        font-family: Georgia, serif;
+    }
+    
+    .memory-fact p {
+        font-style: italic;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        color: #4b5563;
+        line-height: 1.6;
+    }
+    
+    .memory-fact-title {
+        font-weight: 700;
+        color: #6366f1;
+        margin-bottom: 10px;
+    }
+    
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #f97316;
+        border-radius: 0;
+        opacity: 0.8;
+    }
+
+    @keyframes celebrate {
+        0% { transform: translateY(0) rotate(0); }
+        100% { transform: translateY(-10px) rotate(10deg); }
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    
+    @media (max-width: 768px) {
+        .celebration-card {
+            width: 95%;
+            max-width: 95%;
+            margin: 0 auto;
+        }
+        
+        .celebration-header {
+            padding: 25px;
+        }
+        
+        .celebration-content {
+            padding: 25px;
+        }
+        
+        .stats-container {
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .stat-card {
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .celebration-header h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="celebration-container">
+    <div class="celebration-card">
+        <div class="celebration-header">
+            <h1>Memory Milestone Achieved! <span class="celebrate-emoji">🎉</span></h1>
+            <p>Congratulations on completing your spaced repetition review session! Your brain thanks you for the workout.</p>
+        </div>
+        
+        <div class="celebration-content">
+            <div class="achievement-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            
+            <h2>Neural Pathways Strengthened!</h2>
+            <p>You've just strengthened your long-term memory by reviewing these concepts at the perfect time.</p>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value">{{ total_questions }}</div>
+                    <div class="stat-label">Cards Reviewed</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value">{{ score }}</div>
+                    <div class="stat-label">Correct Answers</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-value">{{ percentage|round }}%</div>
+                    <div class="stat-label">Accuracy</div>
+                </div>
+            </div>
+            
+            <div class="memory-fact">
+                <div class="memory-fact-title">Memory Fun Fact</div>
+                <p>The act of recalling information - exactly what you just did - is one of the most powerful ways to cement learning in your long-term memory. This is called the "testing effect" or "retrieval practice."</p>
+                <p><strong>That means you're not just reviewing - you're actually building a stronger brain!</strong></p>
+            </div>
+            
+            <p>You have no more cards due for review right now. Check back tomorrow for new reviews!</p>
+            
+            <div>
+                <a href="{{ url_for('profile.profile') }}" class="action-btn">
+                    <i class="fas fa-user me-2"></i> Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Create confetti effect
+        const colors = ['#ef4444', '#f97316', '#f59e0b', '#10b981', '#06b6d4', '#6366f1', '#8b5cf6', '#d946ef'];
+        const container = document.querySelector('.celebration-container');
+        
+        for (let i = 0; i < 100; i++) {
+            createConfetti(container, colors);
+        }
+        
+        function createConfetti(container, colors) {
+            const confetti = document.createElement('div');
+            confetti.classList.add('confetti');
+            
+            // Random position
+            const startPositionX = Math.random() * 100; // vw
+            
+            // Random color
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Random rotation
+            const rotation = Math.random() * 360;
+            
+            // Random size
+            const size = Math.random() * 10 + 5;
+            
+            // Set styles
+            confetti.style.left = `${startPositionX}vw`;
+            confetti.style.top = '-20px';
+            confetti.style.backgroundColor = color;
+            confetti.style.transform = `rotate(${rotation}deg)`;
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
+            
+            // Add shape randomness
+            if (Math.random() > 0.5) {
+                confetti.style.borderRadius = '50%';
+            } else if (Math.random() > 0.5) {
+                confetti.style.borderRadius = '2px';
+            }
+            
+            // Animation
+            confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear forwards`;
+            
+            // Add keyframe for this specific confetti
+            const keyframes = `
+                @keyframes fall {
+                    to {
+                        transform: translateY(100vh) rotate(${rotation + 360}deg);
+                        opacity: 0;
+                    }
+                }
+            `;
+            
+            const style = document.createElement('style');
+            style.innerHTML = keyframes;
+            document.head.appendChild(style);
+            
+            container.appendChild(confetti);
+            
+            // Remove after animation completes
+            setTimeout(() => {
+                confetti.remove();
+                style.remove();
+            }, 5000);
+        }
+    });
+</script>
+{% endblock %} 

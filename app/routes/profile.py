@@ -161,6 +161,7 @@ def spaced_repetition_review():
     session['selected_chapters'] = []  # Empty as this is a review session
     session['selected_tags'] = []  # Empty as this is a review session
     session['num_questions'] = sr_due_count
+    session['is_spaced_repetition'] = True  # Mark this as a spaced repetition session
     
     # Redirect to the quiz route which will handle the questions
     return redirect(url_for('quiz.start_quiz'))

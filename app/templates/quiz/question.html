@@ -1,105 +1,164 @@
 {% extends 'layout.html' %}
 
-{% block title %}Quiz{% endblock %}
+{% block title %}Quiz - Project Pedia{% endblock %}
 
 {% block extra_styles %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
     :root {
-        --primary: #5465ff;
-        --primary-hover: #4150e8;
-        --primary-dark: #3a46a0;
-        --primary-light: #788bff;
-        --secondary: #7fc8f8;
-        --success: #48cae4;
-        --warning: #fca311;
-        --danger: #e63946;
-        --light: #f8f9fa;
-        --dark: #212529;
-        --border-radius: 16px;
-        --box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        --accent-gradient: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --primary-light: #a5b4fc;
+        --secondary: #10b981;
+        --accent: #f59e0b;
+        --danger: #ef4444;
+        --dark: #1f2937;
+        --light: #f9fafb;
+        --correct: #10b981;
+        --incorrect: #ef4444;
+        --card-border: rgba(255, 255, 255, 0.25);
+        --card-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
     }
 
-    body {
-        font-family: 'Poppins', sans-serif;
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
-        min-height: 100vh;
-        overflow-x: hidden;
+    .quiz-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 0;
     }
 
     .quiz-container {
-        max-width: 800px;
-        margin: 30px auto;
-        background: white;
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
+        max-width: 850px;
+        width: 100%;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        box-shadow: var(--card-shadow);
         overflow: hidden;
-        transform: translateY(0);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                    box-shadow 0.5s ease;
     }
 
     .quiz-container:hover {
         transform: translateY(-5px);
-        box-shadow: 0 15px 50px rgba(84, 101, 255, 0.15);
+        box-shadow: 0 20px 50px rgba(99, 102, 241, 0.2);
     }
 
     .quiz-header {
-        background: var(--accent-gradient);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
         color: white;
-        padding: 25px 30px;
+        padding: 30px;
         position: relative;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
     }
 
-    .quiz-header h2 {
-        font-weight: 700;
-        margin: 0;
-        font-size: 1.6rem;
+    .quiz-header:before,
+    .quiz-header:after {
+        content: '';
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
     }
 
-    .quiz-header .badge {
+    .quiz-header:before {
+        width: 150px;
+        height: 150px;
+        right: -50px;
+        top: -50px;
+    }
+
+    .quiz-header:after {
+        width: 200px;
+        height: 200px;
+        right: 30%;
+        bottom: -100px;
+        opacity: 0.05;
+    }
+
+    .quiz-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        margin: 0 0 5px 0;
+        position: relative;
+        z-index: 1;
+    }
+
+    .quiz-subject {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .quiz-subject i {
+        font-size: 0.9rem;
+    }
+
+    .quiz-badge {
         position: absolute;
         top: 20px;
         right: 20px;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(4px);
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
         padding: 8px 15px;
-        font-size: 0.85rem;
-        font-weight: 500;
-    }
-
-    .progress-indicator {
-        font-size: 0.95rem;
-        font-weight: 500;
-        opacity: 0.95;
+        font-size: 0.9rem;
+        font-weight: 600;
+        z-index: 1;
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-top: 5px;
+        gap: 8px;
     }
 
-    .progress-bar {
+    .progress-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 10px;
+    }
+
+    .question-count {
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .time-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .progress-bar-container {
         height: 8px;
         background: rgba(255, 255, 255, 0.2);
         border-radius: 4px;
-        margin-top: 15px;
         overflow: hidden;
+        position: relative;
+        z-index: 1;
     }
 
-    .progress-fill {
+    .progress-bar-fill {
         height: 100%;
         background: white;
         border-radius: 4px;
-        transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         position: relative;
-        overflow: hidden;
     }
 
-    .progress-fill::after {
+    .progress-bar-fill:before {
         content: '';
         position: absolute;
         top: 0;
@@ -107,9 +166,10 @@
         right: 0;
         bottom: 0;
         background: linear-gradient(90deg, 
-            rgba(255,255,255,0) 0%, 
-            rgba(255,255,255,0.3) 50%, 
-            rgba(255,255,255,0) 100%);
+            rgba(255, 255, 255, 0) 0%, 
+            rgba(255, 255, 255, 0.5) 50%, 
+            rgba(255, 255, 255, 0) 100%);
+        opacity: 0.8;
         animation: shimmer 2s infinite;
     }
 
@@ -119,72 +179,88 @@
     }
 
     .quiz-content {
-        padding: 30px;
+        padding: 40px;
+    }
+
+    .question-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
     }
 
     .question-number {
         color: var(--primary);
         font-size: 0.9rem;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 10px;
         display: flex;
         align-items: center;
         gap: 6px;
     }
 
     .question-text {
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         line-height: 1.6;
         margin-bottom: 30px;
         color: var(--dark);
-        animation: fadeIn 0.5s ease;
-        font-weight: 500;
+        font-weight: 600;
+        animation: fadeIn 0.6s ease;
     }
 
-    .options-grid {
-        display: grid;
-        gap: 15px;
+    .options-container {
         margin-bottom: 30px;
     }
 
-    .option-container {
-        animation: slideInUp 0.5s ease;
+    .option-item {
+        margin-bottom: 16px;
+        animation: slideInUp 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+        animation-fill-mode: both;
     }
+
+    .option-item:nth-child(1) { animation-delay: 0.1s; }
+    .option-item:nth-child(2) { animation-delay: 0.2s; }
+    .option-item:nth-child(3) { animation-delay: 0.3s; }
+    .option-item:nth-child(4) { animation-delay: 0.4s; }
 
     .option-label {
         display: flex;
         align-items: center;
-        padding: 18px 20px;
-        border-radius: 14px;
+        padding: 20px;
+        border-radius: 16px;
         cursor: pointer;
         transition: all 0.3s ease;
-        border: 2px solid #e9ecef;
+        border: 1px solid rgba(0, 0, 0, 0.05);
         background: white;
         position: relative;
         overflow: hidden;
-        font-size: 1rem;
-        gap: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
     }
 
     .option-label:hover {
         transform: translateY(-3px);
-        border-color: var(--primary-light);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.1);
     }
 
-    .option-letter {
+    .option-circle {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        background: #f0f7ff;
+        background: rgb(243, 244, 246);
         color: var(--primary);
-        font-weight: 600;
+        font-weight: 700;
+        margin-right: 15px;
         flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .option-text {
+        font-size: 1.1rem;
+        font-weight: 500;
         transition: all 0.3s ease;
     }
 
@@ -194,95 +270,132 @@
 
     input[type="radio"]:checked + .option-label {
         border-color: var(--primary);
-        background-color: #f0f7ff;
-        transform: translateY(-3px);
+        background: rgba(99, 102, 241, 0.03);
     }
 
-    input[type="radio"]:checked + .option-label .option-letter {
+    input[type="radio"]:checked + .option-label .option-circle {
         background: var(--primary);
         color: white;
     }
 
-    .feedback {
-        padding: 20px;
-        border-radius: 14px;
-        margin: 25px 0;
-        animation: fadeIn 0.5s ease;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        font-size: 1rem;
-    }
-
-    .feedback-icon {
-        font-size: 1.5rem;
-        flex-shrink: 0;
-    }
-
-    .correct {
-        background-color: rgba(72, 202, 228, 0.1);
-        border: 1px solid var(--success);
-        color: #155724;
-    }
-
-    .incorrect {
-        background-color: rgba(230, 57, 70, 0.1);
-        border: 1px solid var(--danger);
-        color: #721c24;
-    }
-
-    .rationale {
-        background-color: #f8f9fa;
-        padding: 25px;
-        border-radius: 14px;
-        margin: 25px 0;
-        border: 1px solid #e9ecef;
-        animation: fadeIn 0.5s ease;
-        position: relative;
-    }
-
-    .rationale::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: var(--accent-gradient);
-        border-radius: 4px 0 0 4px;
-    }
-
-    .rationale h5 {
-        color: var(--primary-dark);
-        margin-bottom: 15px;
+    input[type="radio"]:checked + .option-label .option-text {
+        color: var(--primary);
         font-weight: 600;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
     }
 
-    .action-button {
-        background: var(--accent-gradient);
-        border: none;
-        padding: 14px 20px;
-        font-weight: 600;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-        border-radius: 12px;
+    .quiz-navigation {
         display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .nav-button {
+        display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        color: white;
-        box-shadow: 0 5px 15px rgba(84, 101, 255, 0.3);
-        cursor: pointer;
+        padding: 12px 24px;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        gap: 8px;
     }
 
-    .action-button:hover {
+    .nav-button:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(84, 101, 255, 0.4);
-        background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-dark) 100%);
+    }
+
+    .btn-next {
+        background: var(--primary);
+        color: white;
+        border: none;
+    }
+
+    .btn-next:hover {
+        background: var(--primary-hover);
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-prev {
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        background: white;
+        color: var(--dark);
+    }
+
+    .btn-prev:hover {
+        border-color: rgba(0, 0, 0, 0.2);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Result state styles */
+    .option-label.correct {
+        border-color: var(--correct);
+        background: rgba(16, 185, 129, 0.2);
+        color: var(--correct);
+        font-weight: 600;
+    }
+
+    .option-label.correct .option-circle {
+        background: var(--correct);
+        color: white;
+    }
+
+    .option-label.wrong {
+        border-color: var(--incorrect);
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--incorrect);
+        font-weight: 600;
+    }
+
+    .option-label.wrong .option-circle {
+        background: var(--incorrect);
+        color: white;
+    }
+
+    .feedback {
+        margin-top: 25px;
+        padding: 20px;
+        border-radius: 16px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .feedback.correct {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .feedback.wrong {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .feedback-header {
+        display: flex;
+        align-items: center;
+        font-weight: 700;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        gap: 10px;
+    }
+
+    .feedback-header.correct {
+        color: var(--correct);
+    }
+
+    .feedback-header.wrong {
+        color: var(--incorrect);
+    }
+
+    .feedback-content {
+        font-size: 1rem;
+        line-height: 1.6;
+        background-color: rgba(99, 102, 241, 0.1);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #3730a3;
+        padding: 15px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
     }
 
     /* Animations */
@@ -292,245 +405,191 @@
     }
 
     @keyframes slideInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { 
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
-    /* Mobile Responsiveness */
+    /* Responsive styles */
     @media (max-width: 768px) {
         .quiz-container {
-            margin: 15px;
-            border-radius: 12px;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 95%;
+            margin: 0 auto;
         }
-
+        
         .quiz-header {
-            padding: 20px;
+            padding: 25px;
         }
-
+        
         .quiz-content {
-            padding: 20px;
+            padding: 30px;
         }
-
+        
+        .question-text {
+            font-size: 1.2rem;
+        }
+        
         .option-label {
             padding: 15px;
         }
-    }
-
-    /* Progress bar */
-    .progress-container {
-        background-color: #f1f1f1;
-        border-radius: 10px;
-        margin-bottom: 20px;
-    }
-    
-    .progress-bar {
-        border-radius: 10px;
-        transition: width 0.4s ease-in-out;
-    }
-    
-    /* Question container */
-    .question-container {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-        padding: 25px;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    /* Options */
-    .option-letter {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background-color: #6c757d1a;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-right: 10px;
-    }
-    
-    .option-card {
-        border-radius: 10px;
-        transition: all 0.2s;
-        border: 2px solid transparent;
-        cursor: pointer;
-        margin-bottom: 10px;
-    }
-    
-    .option-card:hover {
-        border-color: #4D61FC;
-        background-color: #F8F9FE;
-    }
-    
-    /* Selected option */
-    .option-card.selected {
-        border-color: #4D61FC;
-        background-color: #F0F3FF;
-    }
-    
-    /* Correct/incorrect indicators */
-    .option-card.correct {
-        border-color: #36B37E;
-        background-color: #E6F4EA;
-    }
-    
-    .option-card.incorrect {
-        border-color: #FF5630;
-        background-color: #FFEBE6;
-    }
-    
-    .option-card.correct .option-letter,
-    .option-card.incorrect .option-letter {
-        color: white;
-    }
-    
-    .option-card.correct .option-letter {
-        background-color: #36B37E;
-    }
-    
-    .option-card.incorrect .option-letter {
-        background-color: #FF5630;
-    }
-    
-    /* Rationale */
-    .rationale-container {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        border-left: 4px solid #4D61FC;
-        padding: 15px;
-        margin-top: 20px;
-    }
-    
-    /* Button styles */
-    .btn-primary {
-        background-color: #4D61FC;
-        border-color: #4D61FC;
-    }
-    
-    .btn-primary:hover, .btn-primary:focus {
-        background-color: #3D51EC;
-        border-color: #3D51EC;
-    }
-    
-    /* Review question indicator */
-    .review-badge {
-        position: absolute;
-        top: 0;
-        right: 0;
-        background-color: #FFAB00;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 0 0 0 10px;
-        font-size: 0.8rem;
-        font-weight: bold;
-    }
-    
-    .review-question {
-        border-left: 4px solid #FFAB00;
+        
+        .option-text {
+            font-size: 1rem;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Progress bar -->
-    <div class="progress-container">
-        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ (current / total) * 100 }}%;" 
-             aria-valuenow="{{ current }}" aria-valuemin="0" aria-valuemax="{{ total }}">
-            {{ current }} / {{ total }}
-        </div>
-    </div>
-    
-    <!-- Question container -->
-    <div class="question-container {% if is_review %}review-question{% endif %}">
-        {% if is_review %}
-        <div class="review-badge">
-            <i class="bi bi-arrow-repeat me-1"></i> Review Question
-        </div>
-        {% endif %}
-        
-        <h5 class="mb-4">{{ question.question_text }}</h5>
-        
-        {% if show_rationale %}
-            <!-- Option display after answer submission -->
-            <form method="post" action="{{ url_for('quiz.next_question') }}">
-                {% for option in question.options %}
-                <div class="option-card p-3 d-flex align-items-center 
-                    {% if option.option_letter == current_answer.selected %}selected{% endif %}
-                    {% if show_rationale and option.option_letter == question.correct_answer %}correct{% endif %}
-                    {% if show_rationale and option.option_letter == current_answer.selected and not current_answer.is_correct %}incorrect{% endif %}">
-                    <div class="option-letter me-3">{{ option.option_letter }}</div>
-                    <div>{{ option.option_text }}</div>
-                    {% if show_rationale and option.option_letter == question.correct_answer %}
-                    <div class="ms-auto">
-                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
-                    </div>
-                    {% endif %}
-                    {% if show_rationale and option.option_letter == current_answer.selected and not current_answer.is_correct %}
-                    <div class="ms-auto">
-                        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
-                    </div>
-                    {% endif %}
+<div class="quiz-wrapper">
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div class="quiz-title">{{ quiz.title }}</div>
+            <div class="quiz-subject">
+                <i class="fas fa-book"></i> {{ quiz.subject }}
+            </div>
+            
+            <div class="quiz-badge">
+                <i class="fas fa-stopwatch"></i> {{ quiz.time_limit|default('No time limit') }}
+            </div>
+            
+            <div class="progress-info">
+                <div class="question-count">Question {{ current_question }}/{{ total_questions }}</div>
+                <div class="time-info">
+                    <i class="fas fa-clock"></i> <span id="timer">00:00</span>
                 </div>
-                {% endfor %}
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: {{ (current_question / total_questions) * 100 }}%;"></div>
+            </div>
+        </div>
+        
+        <div class="quiz-content">
+            <div class="question-header">
+                <div class="question-number">
+                    <i class="fas fa-question-circle"></i> Question {{ current_question }}
+                </div>
+            </div>
+            
+            <div class="question-text">
+                {{ question.text if question.text is defined else question.question_text }}
+            </div>
+            
+            <form method="post" action="{{ url_for('quiz.answer') }}" id="quiz-form">
+                <input type="hidden" name="question_id" value="{{ question.id }}">
                 
-                <!-- Rationale -->
-                {% if show_rationale and question.rationale %}
-                <div class="rationale-container">
-                    <h6 class="mb-2"><i class="bi bi-lightbulb me-2"></i>Explanation:</h6>
-                    <p class="mb-0">{{ question.rationale }}</p>
+                <div class="options-container">
+                    {% for option in question.options %}
+                    <div class="option-item">
+                        <input type="radio" name="answer" id="option{{ loop.index }}" value="{{ option.id if option.id is defined else option.option_letter }}" required 
+                               {% if show_answer and (option.id == user_answer or option.option_letter == user_answer) %}checked{% endif %}>
+                        <label for="option{{ loop.index }}" class="option-label
+                               {% if show_answer and option.is_correct %}correct
+                               {% elif show_answer and (option.id == user_answer or option.option_letter == user_answer) and not option.is_correct %}wrong{% endif %}">
+                            <div class="option-circle">{{ loop.index }}</div>
+                            <div class="option-text">{{ option.text if option.text is defined else option.option_text }}</div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if show_answer %}
+                <div class="feedback {{ 'correct' if is_correct else 'wrong' }}">
+                    <div class="feedback-header {{ 'correct' if is_correct else 'wrong' }}">
+                        {% if is_correct %}
+                        <i class="fas fa-check-circle"></i> Correct!
+                        {% else %}
+                        <i class="fas fa-times-circle"></i> Incorrect
+                        {% endif %}
+                    </div>
+                    <div class="feedback-content">
+                        {{ (question.explanation if question.explanation is defined else question.rationale)|markdown|safe }}
+                    </div>
                 </div>
                 {% endif %}
                 
-                <!-- Next button -->
-                <div class="mt-4 text-center">
-                    <button type="submit" class="btn btn-primary px-4">
-                        {% if current < total %}Next Question{% else %}Finish Quiz{% endif %}
+                <div class="quiz-navigation">
+                    {% if prev_question_url %}
+                    <a href="{{ prev_question_url }}" class="nav-button btn-prev">
+                        <i class="fas fa-arrow-left"></i> Previous
+                    </a>
+                    {% else %}
+                    <div></div>
+                    {% endif %}
+                    
+                    {% if not show_answer %}
+                    <button type="submit" class="nav-button btn-next">
+                        Submit Answer <i class="fas fa-check"></i>
                     </button>
-                </div>
-            </form>
-        {% else %}
-            <!-- Option selection form -->
-            <form method="post" action="{{ url_for('quiz.start_quiz') }}">
-                {% for option in question.options %}
-                <label class="w-100">
-                    <div class="option-card p-3 d-flex align-items-center">
-                        <div class="option-letter">{{ option.option_letter }}</div>
-                        <div>{{ option.option_text }}</div>
-                        <input type="radio" name="option" value="{{ option.option_letter }}" style="display: none;" required>
-                    </div>
-                </label>
-                {% endfor %}
-                
-                <!-- Submit button -->
-                <div class="mt-4 text-center">
-                    <button type="submit" class="btn btn-primary px-4">Submit Answer</button>
+                    {% endif %}
                 </div>
             </form>
             
-            <script>
-                // Add selected class to option when clicked
-                document.querySelectorAll('.option-card').forEach(option => {
-                    option.addEventListener('click', function() {
-                        // Remove selected class from all options
-                        document.querySelectorAll('.option-card').forEach(opt => {
-                            opt.classList.remove('selected');
-                        });
-                        
-                        // Add selected class to clicked option
-                        this.classList.add('selected');
-                        
-                        // Check the radio input
-                        const radio = this.querySelector('input[type="radio"]');
-                        if (radio) {
-                            radio.checked = true;
-                        }
-                    });
-                });
-            </script>
-        {% endif %}
+            {% if show_answer %}
+            <div class="quiz-navigation text-end mt-3">
+                <form method="post" action="{{ url_for('quiz.next_question') }}">
+                    <button type="submit" class="nav-button btn-next">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Timer functionality
+        let seconds = 0;
+        const timerElement = document.getElementById('timer');
+        
+        const timerInterval = setInterval(function() {
+            seconds++;
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            
+            timerElement.textContent = 
+                (minutes < 10 ? '0' : '') + minutes + ':' + 
+                (remainingSeconds < 10 ? '0' : '') + remainingSeconds;
+        }, 1000);
+        
+        // Option selection animation
+        const optionLabels = document.querySelectorAll('.option-label');
+        
+        optionLabels.forEach(label => {
+            label.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+            });
+            
+            label.addEventListener('mouseleave', function() {
+                this.style.transform = '';
+            });
+        });
+        
+        // Form submission
+        const form = document.getElementById('quiz-form');
+        
+        form.addEventListener('submit', function() {
+            clearInterval(timerInterval);
+            
+            // Add time spent to form
+            const timeInput = document.createElement('input');
+            timeInput.type = 'hidden';
+            timeInput.name = 'time_spent';
+            timeInput.value = seconds;
+            this.appendChild(timeInput);
+        });
+    });
+</script>
 {% endblock %} 
