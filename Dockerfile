@@ -10,4 +10,4 @@ COPY . .
 ENV PORT=8080
 ENV PYTHONPATH=/app
 
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 "run:app" 
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 wsgi:application 
