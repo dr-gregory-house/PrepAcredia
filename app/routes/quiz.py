@@ -5,6 +5,16 @@ from app.utils.quiz import save_quiz_data, load_quiz_data, delete_quiz_data
 from app.utils.spaced_repetition import add_to_spaced_repetition, get_spaced_repetition_questions, mark_question_reviewed
 from app.utils.analytics import update_topic_performance, update_user_activity
 import random
+import sys
+
+# Import global variable for tracking database changes
+# This will be shared with app.py
+# This needs to be at module level
+try:
+    from app.app import db_changed
+except ImportError:
+    # Fallback if not available directly
+    db_changed = None
 
 quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
 
@@ -284,6 +294,8 @@ def next_question():
 @quiz_bp.route('/results')
 @login_required
 def results():
+    global db_changed  # Access the global variable
+    
     # Capture score values at the beginning
     score = session.get('score', 0)
     total = session.get('total', 0)
@@ -340,29 +352,43 @@ def results():
         
         cursor = conn.cursor()
         
-        cursor.execute('''
-            INSERT INTO quiz_history (user_id, score, total_questions, selected_chapters, selected_tags, time_spent)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (user_id, score, total, selected_chapters, selected_tags, total_time_spent))
-        
-        # Get the quiz history ID
-        quiz_history_id = cursor.lastrowid
-        
-        # Save individual answers
-        for i, question in enumerate(quiz_data):
-            if i < len(user_answers) and user_answers[i]:
-                answer = user_answers[i]
-                conn.execute('''
-                    INSERT INTO quiz_answers (quiz_history_id, question_id, selected_answer, is_correct)
-                    VALUES (?, ?, ?, ?)
-                ''', (quiz_history_id, question['id'], answer['selected'], 1 if answer['is_correct'] else 0))
-        
-        conn.commit()
-        conn.close()
-        
-        # Update activity tracking for analytics
-        if total > 0:  # Ensure we don't track quizzes with zero questions
-            update_user_activity(user_id, total, score)
+        try:
+            cursor.execute('''
+                INSERT INTO quiz_history (user_id, score, total_questions, selected_chapters, selected_tags, time_spent)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (user_id, score, total, selected_chapters, selected_tags, total_time_spent))
+            
+            # Get the quiz history ID
+            quiz_history_id = cursor.lastrowid
+            
+            # Save individual answers
+            for i, question in enumerate(quiz_data):
+                if i < len(user_answers) and user_answers[i]:
+                    answer = user_answers[i]
+                    conn.execute('''
+                        INSERT INTO quiz_answers (quiz_history_id, question_id, selected_answer, is_correct)
+                        VALUES (?, ?, ?, ?)
+                    ''', (quiz_history_id, question['id'], answer['selected'], 1 if answer['is_correct'] else 0))
+            
+            conn.commit()
+            
+            # Explicitly mark database as changed
+            if db_changed is not None:
+                db_changed = True
+                
+            # Update activity tracking for analytics
+            if total > 0:  # Ensure we don't track quizzes with zero questions
+                update_user_activity(user_id, total, score)
+                
+                # Explicitly mark database as changed again (though update_user_activity already modifies DB)
+                if db_changed is not None:
+                    db_changed = True
+                    
+        except Exception as e:
+            conn.rollback()
+            flash(f"Error saving quiz results: {str(e)}", "error")
+        finally:
+            conn.close()
     
     # Calculate percentage score
     percentage = (score / total) * 100 if total > 0 else 0
@@ -449,6 +475,8 @@ def results():
 @quiz_bp.route('/answer', methods=['POST'])
 @login_required
 def answer():
+    global db_changed  # Access the global variable
+    
     if 'quiz_id' not in session:
         return redirect(url_for('main.home'))
     
@@ -503,9 +531,17 @@ def answer():
     if user_id and not is_correct:
         # Add incorrectly answered question to spaced repetition
         add_to_spaced_repetition(user_id, quiz_data[current]['id'])
+        
+        # Explicitly mark database as changed
+        if db_changed is not None:
+            db_changed = True
     elif user_id and is_correct and quiz_data[current].get('is_review', False):
         # Update spaced repetition for correctly answered review question
         mark_question_reviewed(user_id, quiz_data[current]['id'], True)
+        
+        # Explicitly mark database as changed
+        if db_changed is not None:
+            db_changed = True
     
     # Get chapter IDs for this question for analytics
     if user_id:
@@ -519,6 +555,10 @@ def answer():
         # Update performance for each chapter
         for chapter in chapters:
             update_topic_performance(user_id, chapter['chapter_id'], is_correct)
+            
+            # Explicitly mark database as changed
+            if db_changed is not None:
+                db_changed = True
     
     quiz_state['user_answers'] = user_answers
     quiz_state['answer_submitted'] = True  # Mark that this question has been answered

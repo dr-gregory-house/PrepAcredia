@@ -1,5 +1,14 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from app.utils.db import get_db_connection
+import sys
+
+# Import global variable for tracking database changes
+# This will be shared with app.py
+try:
+    from app.app import db_changed
+except ImportError:
+    # Fallback if not available directly
+    db_changed = None
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -44,6 +53,8 @@ def login():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
+    global db_changed  # Access the global variable
+    
     if 'user_id' in session:
         return redirect(url_for('main.home'))
     
@@ -56,32 +67,39 @@ def register():
         
         if email and username and name and password:
             conn = get_db_connection()
-            existing_email = conn.execute('SELECT 1 FROM users WHERE email = ?', (email,)).fetchone()
-            existing_username = conn.execute('SELECT 1 FROM users WHERE username = ?', (username,)).fetchone()
-            
-            if existing_email:
-                conn.close()
-                error = 'Email already registered'
-            elif existing_username:
-                conn.close()
-                error = 'Username already taken'
-            else:
-                # Set is_active to 0 by default
-                conn.execute(
-                    'INSERT INTO users (username, email, name, password_hash, is_active) VALUES (?, ?, ?, ?, ?)',
-                    (username, email, name, password, 0)
-                )
-                conn.commit()
-                conn.close()
+            try:
+                existing_email = conn.execute('SELECT 1 FROM users WHERE email = ?', (email,)).fetchone()
+                existing_username = conn.execute('SELECT 1 FROM users WHERE username = ?', (username,)).fetchone()
                 
-                flash('Registration successful! Your account is pending activation. Please contact the administrator.', 'info')
-                return redirect(url_for('auth.pending_activation'))
+                if existing_email:
+                    error = 'Email already registered'
+                elif existing_username:
+                    error = 'Username already taken'
+                else:
+                    # Set is_active to 0 by default
+                    conn.execute(
+                        'INSERT INTO users (username, email, name, password_hash, is_active) VALUES (?, ?, ?, ?, ?)',
+                        (username, email, name, password, 0)
+                    )
+                    conn.commit()
+                    
+                    # Explicitly mark database as changed
+                    if db_changed is not None:
+                        db_changed = True
+                    
+                    flash('Registration successful! Your account is pending activation. Please contact the administrator.', 'info')
+                    return redirect(url_for('auth.pending_activation'))
+            except Exception as e:
+                conn.rollback()
+                error = f'Registration error: {str(e)}'
+            finally:
+                conn.close()
         else:
             error = 'Please fill out all fields'
     
     return render_template('auth/register.html', error=error)
 
-@auth_bp.route('/pending-activation')
+@auth_bp.route('/pending_activation')
 def pending_activation():
     return render_template('auth/pending_activation.html')
 
