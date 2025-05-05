@@ -139,6 +139,15 @@ def get_activity_heatmap(user_id, days=365):
         
         # Format for heatmap (date: value pairs)
         heatmap_data = {}
+        
+        # First create a dictionary with all dates in the range (to avoid gaps)
+        current_date = start_date
+        while current_date <= end_date:
+            date_str = current_date.strftime('%Y-%m-%d')
+            heatmap_data[date_str] = 0
+            current_date += timedelta(days=1)
+        
+        # Then fill in actual activity data
         for data in activity_data:
             date_str = data['activity_date']
             # Use question count as the intensity value
@@ -274,5 +283,52 @@ def get_never_attempted_count(user_id):
         never_attempted_count = total_questions_count - attempted_questions_count
         
         return never_attempted_count
+    finally:
+        conn.close()
+
+def get_day_streak(user_id):
+    """
+    Calculate the user's current day streak based on consecutive days of activity
+    """
+    conn = get_db_connection()
+    try:
+        # Get the user's activity dates in descending order
+        activity_dates = conn.execute(
+            '''SELECT activity_date FROM user_activity 
+               WHERE user_id = ? 
+               ORDER BY activity_date DESC''',
+            (user_id,)
+        ).fetchall()
+        
+        # If no activity, return 0
+        if not activity_dates:
+            return 0
+        
+        # Convert to datetime objects
+        dates = [datetime.strptime(date['activity_date'], '%Y-%m-%d').date() for date in activity_dates]
+        
+        today = datetime.now().date()
+        
+        # Check if today has activity
+        streak = 0
+        if dates and (dates[0] == today or dates[0] == today - timedelta(days=1)):
+            # Start counting streak
+            streak = 1
+            last_date = dates[0]
+            
+            # Check each date in sequence for continuity
+            for i in range(1, len(dates)):
+                # If there's exactly one day difference, continue the streak
+                if last_date - dates[i] == timedelta(days=1):
+                    streak += 1
+                    last_date = dates[i]
+                # If same day (duplicate entry), skip
+                elif last_date == dates[i]:
+                    continue
+                # If gap in dates, break the streak
+                else:
+                    break
+        
+        return streak
     finally:
         conn.close() 

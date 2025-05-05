@@ -648,14 +648,50 @@
         
         // Convert the data to the format required by cal-heatmap
         const dataForHeatmap = {};
+        
+        // Track the maximum value for better color scaling
+        let maxValue = 0;
+        
         Object.entries(heatmapData).forEach(([date, value]) => {
-            // Convert date to timestamp in seconds
-            const dateObj = new Date(date);
-            const timestamp = Math.floor(dateObj.getTime() / 1000);
-            dataForHeatmap[timestamp] = value;
+            // Parse date properly (ensure format: YYYY-MM-DD)
+            let dateObj;
+            try {
+                // Split by "-" to ensure proper parsing
+                const [year, month, day] = date.split('-').map(num => parseInt(num, 10));
+                // Note: months are 0-indexed in JavaScript Date
+                dateObj = new Date(year, month - 1, day);
+                
+                // Only add valid dates (some DB entries might have invalid formats)
+                if (dateObj instanceof Date && !isNaN(dateObj)) {
+                    const timestamp = Math.floor(dateObj.getTime() / 1000);
+                    dataForHeatmap[timestamp] = value;
+                    
+                    // Update max value
+                    if (value > maxValue) {
+                        maxValue = value;
+                    }
+                }
+            } catch (e) {
+                console.error(`Invalid date format: ${date}`);
+            }
         });
         
-        // Initialize the heatmap
+        // Calculate better legend values based on actual data
+        // Default if maxValue is too small
+        let legendValues = [1, 5, 10, 15];
+        
+        // If we have larger values, create a more appropriate scale
+        if (maxValue > 20) {
+            const step = Math.ceil(maxValue / 4);
+            legendValues = [
+                Math.ceil(step * 0.25), 
+                Math.ceil(step), 
+                Math.ceil(step * 2), 
+                Math.ceil(step * 3)
+            ];
+        }
+        
+        // Initialize the heatmap with improved options
         const cal = new CalHeatMap();
         cal.init({
             itemSelector: '#heatmap',
@@ -666,13 +702,13 @@
             cellSize: 12,
             cellRadius: 2,
             range: 6,
-            legend: [1, 5, 10, 15],
+            legend: legendValues,
             legendColors: {
                 min: '#ebedf0',
                 max: '#196127',
                 empty: '#ebedf0'
             },
-            displayLegend: false,
+            displayLegend: true,
             tooltip: true,
             subDomainDateFormat: function(date) {
                 return new Intl.DateTimeFormat('en-US', { 

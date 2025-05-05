@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, flash, redirect, url_for, jsonify, request
 from app.utils.db import get_db_connection
 from app.utils.decorators import login_required
-from app.utils.analytics import get_topic_performance, get_activity_heatmap, get_learning_progress, get_user_stats_summary
+from app.utils.analytics import get_topic_performance, get_activity_heatmap, get_learning_progress, get_user_stats_summary, get_day_streak
 from app.utils.spaced_repetition import get_spaced_repetition_questions, mark_question_reviewed, set_review_schedule, get_current_schedule
 from app.utils.quiz import generate_quiz_id, save_quiz_data
 import json
@@ -30,12 +30,16 @@ def profile():
             'date': quiz['quiz_date'],
             'score': quiz['score'],
             'total': quiz['total_questions'],
-            'percentage': (quiz['score'] / quiz['total_questions']) * 100 if quiz['total_questions'] > 0 else 0
+            'percentage': (quiz['score'] / quiz['total_questions']) * 100 if quiz['total_questions'] > 0 else 0,
+            'time_spent': quiz['time_spent'] if 'time_spent' in quiz.keys() else 0
         })
     
     conn.close()
     
-    return render_template('profile/profile.html', user=user, history=history_data)
+    # Calculate day streak
+    day_streak = get_day_streak(user_id)
+    
+    return render_template('profile/profile.html', user=user, history=history_data, day_streak=day_streak)
 
 @profile_bp.route('/analytics')
 @login_required

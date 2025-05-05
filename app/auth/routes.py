@@ -19,7 +19,11 @@ def login():
             user = conn.execute('SELECT * FROM users WHERE username = ? AND password_hash IS NOT NULL', (username,)).fetchone()
             conn.close()
             
-            if user and user['is_active']:
+            if user:
+                if not user['is_active']:
+                    flash('Your account is pending activation. Please contact the administrator.', 'warning')
+                    return redirect(url_for('auth.pending_activation'))
+                
                 # In a real app, you would verify the password hash here
                 # For now, we'll just simulate a successful login
                 session['user_id'] = user['id']
@@ -32,7 +36,7 @@ def login():
                     return redirect(next_page)
                 return redirect(url_for('main.home'))
             else:
-                error = 'Invalid credentials or account deactivated'
+                error = 'Invalid credentials'
         else:
             error = 'Please provide username and password'
     
@@ -62,28 +66,24 @@ def register():
                 conn.close()
                 error = 'Username already taken'
             else:
-                # In a real app, you would hash the password
-                # For now, we'll store it directly (not secure!)
+                # Set is_active to 0 by default
                 conn.execute(
                     'INSERT INTO users (username, email, name, password_hash, is_active) VALUES (?, ?, ?, ?, ?)',
-                    (username, email, name, password, 1)
+                    (username, email, name, password, 0)
                 )
                 conn.commit()
-                
-                # Get the newly created user
-                user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
                 conn.close()
                 
-                session['user_id'] = user['id']
-                session['user_name'] = user['name']
-                session['user_role'] = user['role']
-                
-                flash('Registration successful!', 'success')
-                return redirect(url_for('main.home'))
+                flash('Registration successful! Your account is pending activation. Please contact the administrator.', 'info')
+                return redirect(url_for('auth.pending_activation'))
         else:
             error = 'Please fill out all fields'
     
     return render_template('auth/register.html', error=error)
+
+@auth_bp.route('/pending-activation')
+def pending_activation():
+    return render_template('auth/pending_activation.html')
 
 @auth_bp.route('/logout')
 def logout():

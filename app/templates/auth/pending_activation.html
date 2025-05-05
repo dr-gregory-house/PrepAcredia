@@ -1,0 +1,208 @@
+{% extends 'layout.html' %}
+
+{% block title %}Account Pending Activation - Project Pedia{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .pending-container {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    
+    .pending-card {
+        max-width: 600px;
+        width: 100%;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        padding: 3rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .pending-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 2rem;
+        background: linear-gradient(45deg, var(--primary) 0%, var(--primary-hover) 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 3rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+        }
+        70% {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 20px rgba(99, 102, 241, 0);
+        }
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+        }
+    }
+    
+    .pending-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--dark);
+        margin-bottom: 1.5rem;
+    }
+    
+    .pending-message {
+        color: var(--dark);
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+    }
+    
+    .contact-info {
+        background: rgba(99, 102, 241, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .contact-info h3 {
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .whatsapp-link, .phone-link {
+        color: var(--dark);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+    }
+    
+    .whatsapp-link:hover {
+        background-color: #25D366;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .phone-link:hover {
+        background-color: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    .contact-method {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .contact-method i {
+        font-size: 1.2rem;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .contact-method i.fa-whatsapp {
+        color: #25D366;
+    }
+    
+    .contact-method i.fa-phone {
+        color: var(--primary);
+    }
+    
+    .next-steps {
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+    
+    .next-steps h3 {
+        color: var(--dark);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .next-steps ul {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .next-steps li {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        color: var(--dark);
+    }
+    
+    .next-steps li i {
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pending-container">
+    <div class="pending-card">
+        <div class="pending-icon">
+            <i class="fas fa-user-clock"></i>
+        </div>
+        
+        <h1 class="pending-title">Welcome Aboard!</h1>
+        
+        <div class="pending-message">
+            <p>Thank you for registering with Project Pedia! 🎉 Your account has been created successfully, but it needs to be activated by an administrator before you can start your learning journey.</p>
+        </div>
+        
+        <div class="contact-info">
+            <h3>📫 Contact Administrator</h3>
+            <div class="contact-method">
+                <i class="fab fa-whatsapp"></i>
+                <a href="https://wa.me/+79964683147?text=Hi%20Admin,%20I%20just%20registered%20on%20Project%20Pedia%20and%20would%20like%20to%20request%20account%20activation.%20Thank%20you!" 
+                   target="_blank" 
+                   class="whatsapp-link">
+                    Click to contact via WhatsApp
+                </a>
+            </div>
+            
+        </div>
+        
+        <div class="next-steps">
+            <h3>What's Next?</h3>
+            <ul>
+                <li>
+                    <i class="fas fa-check-circle"></i>
+                    <span>Your registration information has been received</span>
+                </li>
+                <li>
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Contact the administrator via WhatsApp to expedite activation</span>
+                </li>
+                
+                <li>
+                    <i class="fas fa-sign-in-alt"></i>
+                    <span>After activation, you can log in and start learning!</span>
+                </li>
+            </ul>
+        </div>
+        
+        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Login
+        </a>
+    </div>
+</div>
+{% endblock %} 

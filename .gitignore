@@ -22,7 +22,6 @@ env/
 # Application specific
 instance/
 temp/
-*.db
 
 # System files
 .DS_Store

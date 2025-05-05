@@ -335,11 +335,15 @@ def results():
         
         conn = get_db_connection()
         
-        # Create quiz history record
-        cursor = conn.execute('''
-            INSERT INTO quiz_history (user_id, score, total_questions, selected_chapters, selected_tags)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, score, total, selected_chapters, selected_tags))
+        # Calculate total time spent from all answers
+        total_time_spent = sum(answer.get('time_spent', 0) for answer in user_answers if answer) if user_answers else 0
+        
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO quiz_history (user_id, score, total_questions, selected_chapters, selected_tags, time_spent)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, score, total, selected_chapters, selected_tags, total_time_spent))
         
         # Get the quiz history ID
         quiz_history_id = cursor.lastrowid
