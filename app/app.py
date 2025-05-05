@@ -1,3 +1,4 @@
+# Version 1.0.1 - Removed before_first_request for Flask 2.0+ compatibility
 from flask import Flask, request
 from app.config.config import Config
 from app.utils.db import init_db, sync_db_to_cloud
@@ -19,7 +20,23 @@ logger = logging.getLogger(__name__)
 # Global variables for sync tracking
 last_sync_time = 0
 db_changed = False
-SYNC_INTERVAL = 900  # 5 minutes in seconds
+SYNC_INTERVAL = 900  # 15 minutes in seconds
+
+# Function for background thread
+def scheduled_sync():
+    global db_changed, last_sync_time
+    while True:
+        time.sleep(SYNC_INTERVAL * 15)  # 15 times the normal interval as a backup
+        from flask import current_app
+        if os.environ.get('K_SERVICE') and db_changed:
+            try:
+                with current_app.app_context():
+                    sync_db_to_cloud()
+                    last_sync_time = time.time()
+                    db_changed = False
+                    logger.info("Scheduled database sync completed")
+            except Exception as e:
+                logger.error(f"Error in scheduled sync: {str(e)}")
 
 def create_app(config_class=Config):
     app = Flask(__name__)
@@ -74,28 +91,13 @@ def create_app(config_class=Config):
     if os.environ.get('K_SERVICE'):
         atexit.register(sync_on_shutdown)
     
-    # Schedule periodic syncing regardless of activity as a fallback
-    def scheduled_sync():
-        global db_changed, last_sync_time
-        while True:
-            time.sleep(SYNC_INTERVAL * 15)  # 15 times the normal interval as a backup
-            if os.environ.get('K_SERVICE') and db_changed:
-                try:
-                    with app.app_context():
-                        sync_db_to_cloud()
-                        last_sync_time = time.time()
-                        db_changed = False
-                        logger.info("Scheduled database sync completed")
-                except Exception as e:
-                    logger.error(f"Error in scheduled sync: {str(e)}")
-    
-    @app.before_first_request
-    def start_sync_thread():
-        if os.environ.get('K_SERVICE'):
-            sync_thread = threading.Thread(target=scheduled_sync)
-            sync_thread.daemon = True
-            sync_thread.start()
-            logger.info("Background database sync thread started")
+    # Start background thread for scheduled syncing directly (Flask 2.0+ compatible)
+    # NO before_first_request here - it's not supported in Flask 2.0+
+    if os.environ.get('K_SERVICE'):
+        sync_thread = threading.Thread(target=scheduled_sync)
+        sync_thread.daemon = True
+        sync_thread.start()
+        logger.info("Background database sync thread started")
     
     from app.utils.filters import init_filters
     init_filters(app)
