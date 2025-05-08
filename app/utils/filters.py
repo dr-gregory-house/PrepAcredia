@@ -16,4 +16,42 @@ def init_filters(app):
     # Provide datetime to all templates
     @app.context_processor
     def inject_now():
-        return {'now': datetime.now} 
+        return {'now': datetime.now}
+
+def timeago(timestamp):
+    """Convert a timestamp to a human-readable relative time string"""
+    if not timestamp:
+        return ''
+    
+    # Convert string timestamp to datetime if needed
+    if isinstance(timestamp, str):
+        try:
+            timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            return timestamp
+    
+    now = datetime.now()
+    diff = now - timestamp
+    
+    seconds = diff.total_seconds()
+    minutes = seconds // 60
+    hours = minutes // 60
+    days = diff.days
+    
+    if seconds < 60:
+        return 'just now'
+    elif minutes < 60:
+        return f'{int(minutes)} minute{"s" if minutes != 1 else ""} ago'
+    elif hours < 24:
+        return f'{int(hours)} hour{"s" if hours != 1 else ""} ago'
+    elif days < 7:
+        return f'{days} day{"s" if days != 1 else ""} ago'
+    elif days < 30:
+        weeks = days // 7
+        return f'{weeks} week{"s" if weeks != 1 else ""} ago'
+    elif days < 365:
+        months = days // 30
+        return f'{months} month{"s" if months != 1 else ""} ago'
+    else:
+        years = days // 365
+        return f'{years} year{"s" if years != 1 else ""} ago' 

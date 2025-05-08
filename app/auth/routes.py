@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from app.utils.db import get_db_connection
+from app.utils.user_tracking import create_user_session, end_user_session, log_user_activity
 import sys
 
 # Import global variable for tracking database changes
@@ -33,11 +34,18 @@ def login():
                     flash('Your account is pending activation. Please contact the administrator.', 'warning')
                     return redirect(url_for('auth.pending_activation'))
                 
-                # In a real app, you would verify the password hash here
-                # For now, we'll just simulate a successful login
+                # Create user session and store token
+                session_token = create_user_session(user['id'])
+                session['session_token'] = session_token
+                
+                # Store user info in session
                 session['user_id'] = user['id']
                 session['user_name'] = user['name']
                 session['user_role'] = user['role']
+                
+                # Log the login activity
+                log_user_activity(user['id'], 'login', f'User logged in from {request.remote_addr}')
+                
                 flash('Login successful!', 'success')
                 
                 next_page = request.args.get('next')
@@ -105,7 +113,15 @@ def pending_activation():
 
 @auth_bp.route('/logout')
 def logout():
-    session.pop('user_id', None)
-    session.pop('user_name', None)
-    session.pop('user_role', None)
-    return redirect(url_for('main.home')) 
+    if 'session_token' in session:
+        # End the user session
+        end_user_session(session['session_token'])
+        
+        # Log the logout activity
+        if 'user_id' in session:
+            log_user_activity(session['user_id'], 'logout', f'User logged out from {request.remote_addr}')
+    
+    # Clear session data
+    session.clear()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('auth.login')) 

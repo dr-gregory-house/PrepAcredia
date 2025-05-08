@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from app.utils.db import get_db_connection
 from app.utils.decorators import admin_required
+from app.utils.user_tracking import get_online_users, get_user_activity_history, get_user_statistics
 from app.utils.spaced_repetition import (
     get_current_schedule, 
     set_review_schedule, 
@@ -19,10 +20,51 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_required
 def dashboard():
     conn = get_db_connection()
-    users = conn.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
+    try:
+        # Get all users
+        users = conn.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
+        
+        # Get online users
+        online_users = get_online_users()
+        
+        # Get recent activity logs for all users
+        recent_activities = conn.execute('''
+            SELECT l.*, u.username, u.name
+            FROM user_activity_logs l
+            JOIN users u ON l.user_id = u.id
+            ORDER BY l.timestamp DESC
+            LIMIT 50
+        ''').fetchall()
+        
+        return render_template('admin/dashboard.html', 
+                            users=users,
+                            online_users=online_users,
+                            recent_activities=recent_activities)
+    finally:
+        conn.close()
+
+@admin_bp.route('/user/<int:user_id>/activity')
+@admin_required
+def user_activity(user_id):
+    # Get user details
+    conn = get_db_connection()
+    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
     
-    return render_template('admin/dashboard.html', users=users)
+    if not user:
+        flash('User not found', 'error')
+        return redirect(url_for('admin.dashboard'))
+    
+    # Get user activity history
+    activity_history = get_user_activity_history(user_id)
+    
+    # Get user statistics
+    statistics = get_user_statistics(user_id)
+    
+    return render_template('admin/user_activity.html',
+                         user=user,
+                         activity_history=activity_history,
+                         statistics=statistics)
 
 @admin_bp.route('/user/<int:user_id>/toggle_active', methods=['POST'])
 @admin_required

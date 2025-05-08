@@ -2,6 +2,7 @@ import sqlite3
 import os
 import logging
 from flask import current_app, g
+from app.scripts.init_tracking_tables import init_tracking_tables
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -142,6 +143,9 @@ def init_db():
         FOREIGN KEY (question_id) REFERENCES questions (id)
     )
     ''')
+    
+    # Initialize user tracking tables
+    init_tracking_tables()
     
     # Create default admin user if not exists
     admin_exists = conn.execute('SELECT 1 FROM users WHERE role = "admin" LIMIT 1').fetchone()
