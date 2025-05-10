@@ -95,6 +95,9 @@ def home():
             # If no tags are selected, use all questions from selected chapters
             selected_tags = None
         
+        # Check if only undiscovered questions should be displayed
+        undiscovered_only = 'undiscovered_only' in request.form
+        
         # Clear any existing quiz state
         if 'quiz_id' in session:
             session.pop('quiz_id', None)
@@ -105,6 +108,7 @@ def home():
         session['selected_chapters'] = selected_chapters
         session['selected_tags'] = selected_tags
         session['num_questions'] = num_questions
+        session['undiscovered_only'] = undiscovered_only
         
         # Log the quiz_start activity here - at quiz creation
         if 'user_id' in session:

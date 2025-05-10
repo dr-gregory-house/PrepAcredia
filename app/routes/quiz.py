@@ -48,27 +48,68 @@ def display_quiz():
         chapter_ids = ','.join('?' for _ in session['selected_chapters'])
         tag_ids = ','.join('?' for _ in session['selected_tags']) if session['selected_tags'] else None
         
-        if tag_ids:
+        # Check if we should include only undiscovered questions
+        undiscovered_only = session.get('undiscovered_only', False)
+        
+        # Base query parameters will be populated based on selected chapters and tags
+        params = session['selected_chapters'].copy() if session['selected_chapters'] else []
+        
+        # Build the query based on filters
+        if tag_ids and undiscovered_only and user_id:
+            # Include chapters, tags, and filter out answered questions
+            query = f"""
+                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
+                JOIN question_chapters qc ON q.id = qc.question_id
+                JOIN question_tags qt ON q.id = qt.question_id
+                WHERE qc.chapter_id IN ({chapter_ids}) AND qt.tag_id IN ({tag_ids})
+                AND q.id NOT IN (
+                    SELECT DISTINCT qa.question_id
+                    FROM quiz_answers qa
+                    JOIN quiz_history qh ON qa.quiz_history_id = qh.id
+                    WHERE qh.user_id = ?
+                )
+            """
+            params.extend(session['selected_tags'])
+            params.append(user_id)
+        elif tag_ids:
+            # Include only chapters and tags
             query = f"""
                 SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
                 JOIN question_chapters qc ON q.id = qc.question_id
                 JOIN question_tags qt ON q.id = qt.question_id
                 WHERE qc.chapter_id IN ({chapter_ids}) AND qt.tag_id IN ({tag_ids})
             """
-            params = session['selected_chapters'] + session['selected_tags']
+            params.extend(session['selected_tags'])
+        elif undiscovered_only and user_id:
+            # Include chapters and filter out answered questions
+            query = f"""
+                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
+                JOIN question_chapters qc ON q.id = qc.question_id
+                WHERE qc.chapter_id IN ({chapter_ids})
+                AND q.id NOT IN (
+                    SELECT DISTINCT qa.question_id
+                    FROM quiz_answers qa
+                    JOIN quiz_history qh ON qa.quiz_history_id = qh.id
+                    WHERE qh.user_id = ?
+                )
+            """
+            params.append(user_id)
         else:
+            # Only filter by chapters
             query = f"""
                 SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
                 JOIN question_chapters qc ON q.id = qc.question_id
                 WHERE qc.chapter_id IN ({chapter_ids})
             """
-            params = session['selected_chapters']
         
         questions = conn.execute(query, params).fetchall()
         
         # Check if we found any questions
         if not questions:
-            flash('No questions found for the selected chapters and tags.', 'error')
+            if undiscovered_only:
+                flash('No undiscovered questions found for the selected criteria. Try including discovered questions.', 'warning')
+            else:
+                flash('No questions found for the selected chapters and tags.', 'error')
             conn.close()
             return redirect(url_for('main.home'))
         
