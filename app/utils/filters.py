@@ -17,6 +17,28 @@ def init_filters(app):
     @app.context_processor
     def inject_now():
         return {'now': datetime.now}
+    
+    # Register format_datetime filter
+    app.jinja_env.filters['format_datetime'] = format_datetime
+
+def format_datetime(timestamp):
+    """Format a timestamp as HH:MM DD-MM-YYYY"""
+    if not timestamp:
+        return ''
+    
+    # Convert string timestamp to datetime if needed
+    if isinstance(timestamp, str):
+        try:
+            timestamp = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            try:
+                # Try another common format
+                timestamp = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S')
+            except ValueError:
+                return timestamp
+    
+    # Format the datetime
+    return timestamp.strftime('%H:%M %d-%m-%Y')
 
 def timeago(timestamp):
     """Convert a timestamp to a human-readable relative time string"""

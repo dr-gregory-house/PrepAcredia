@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from app.utils.db import get_db_connection
 from app.utils.decorators import login_required
+from app.utils.user_tracking import log_user_activity
 import random
 
 main_bp = Blueprint('main', __name__)
@@ -104,7 +105,16 @@ def home():
         session['selected_chapters'] = selected_chapters
         session['selected_tags'] = selected_tags
         session['num_questions'] = num_questions
-        return redirect(url_for('quiz.start_quiz'))
+        
+        # Log the quiz_start activity here - at quiz creation
+        if 'user_id' in session:
+            log_user_activity(
+                session['user_id'],
+                'quiz_start',
+                f"Started quiz with {num_questions} questions from {len(selected_chapters)} chapters"
+            )
+        
+        return redirect(url_for('quiz.display_quiz'))
     
     return render_template('home.html', parent_chapters=parent_chapters, tag_question_counts=tag_question_counts)
 

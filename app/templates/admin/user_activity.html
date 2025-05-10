@@ -2,84 +2,7 @@
 
 {% block title %}User Activity - {{ user.name }} - Project Pedia{% endblock %}
 
-{% block content %}
-<div class="container-fluid py-4">
-    <!-- User Info Card -->
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-user"></i> User Information
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-2 text-center">
-                    {% if user.profile_picture %}
-                    <img src="{{ user.profile_picture }}" class="rounded-circle mb-3" width="100" height="100">
-                    {% else %}
-                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2.5rem;">
-                        {{ user.name[0]|upper }}
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="col-md-5">
-                    <h4>{{ user.name }}</h4>
-                    <p class="text-muted mb-0">@{{ user.username }}</p>
-                    <p class="mb-0"><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
-                    <p class="mb-0">
-                        <i class="fas fa-shield-alt me-2"></i>
-                        <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
-                            {{ user.role|title }}
-                        </span>
-                    </p>
-                </div>
-                <div class="col-md-5">
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <h5>{{ statistics.login_count }}</h5>
-                            <p class="text-muted mb-0">Total Logins</p>
-                        </div>
-                        {% for activity_type, count in statistics.activity_counts.items() %}
-                        <div class="stat-item">
-                            <h5>{{ count }}</h5>
-                            <p class="text-muted mb-0">{{ activity_type|title }}</p>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Activity Timeline -->
-    <div class="card">
-        <div class="card-header bg-info text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-history"></i> Activity Timeline
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="timeline">
-                {% for activity in activity_history %}
-                <div class="timeline-item">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <h6 class="timeline-title">{{ activity.activity_type|title }}</h6>
-                        <p class="timeline-text">{{ activity.activity_details }}</p>
-                        <p class="timeline-date text-muted">
-                            <i class="fas fa-clock me-1"></i>
-                            {{ activity.timestamp|timeago }}
-                        </p>
-                    </div>
-                </div>
-                {% else %}
-                <p class="text-center text-muted my-4">No activity recorded yet</p>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-</div>
-
+{% block extra_styles %}
 <style>
 .stats-grid {
     display: grid;
@@ -146,5 +69,567 @@
     font-size: 0.875rem;
     margin-bottom: 0;
 }
+
+.progress-card {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.progress-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.topic-performance {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.topic-name {
+    flex: 1;
+    margin-right: 10px;
+}
+
+.topic-bar {
+    flex: 2;
+    height: 10px;
+    background: #eee;
+    border-radius: 5px;
+    overflow: hidden;
+    position: relative;
+}
+
+.topic-progress {
+    position: absolute;
+    height: 100%;
+    border-radius: 5px;
+}
+
+.nav-tabs .nav-link.active {
+    font-weight: bold;
+    border-bottom: 3px solid var(--primary);
+}
+
+.score-excellent { color: #28a745; }
+.score-good { color: #17a2b8; }
+.score-average { color: #ffc107; }
+.score-poor { color: #dc3545; }
+
+.quiz-summary-card {
+    border-left: 5px solid var(--primary);
+}
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'admin/sidebar.html' %}
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">User Activity: {{ user.name }}</h1>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+            
+            <ul class="nav nav-tabs mb-4">
+                <li class="nav-item">
+                    <a class="nav-link active" id="overview-tab" data-bs-toggle="tab" href="#overview">Overview</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="performance-tab" data-bs-toggle="tab" href="#performance">Performance</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="topics-tab" data-bs-toggle="tab" href="#topics">Topic Analysis</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="activity-tab" data-bs-toggle="tab" href="#activity">Activity Log</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Overview Tab -->
+                <div class="tab-pane fade show active" id="overview">
+                    <!-- User Info Card -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-user"></i> User Information
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-2 text-center">
+                                    {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture }}" class="rounded-circle mb-3" width="100" height="100">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                        {{ user.name[0]|upper }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-5">
+                                    <h4>{{ user.name }}</h4>
+                                    <p class="text-muted mb-0">@{{ user.username }}</p>
+                                    <p class="mb-0"><i class="fas fa-envelope me-2"></i>{{ user.email }}</p>
+                                    <p class="mb-0">
+                                        <i class="fas fa-shield-alt me-2"></i>
+                                        <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                            {{ user.role|title }}
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="stats-grid">
+                                        <div class="stat-item">
+                                            <h5>{{ statistics.login_count }}</h5>
+                                            <p class="text-muted mb-0">Total Logins</p>
+                                        </div>
+                                        {% for activity_type, count in statistics.activity_counts.items() %}
+                                        <div class="stat-item">
+                                            <h5>{{ count }}</h5>
+                                            <p class="text-muted mb-0">{{ activity_type|title }}</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Summary Card -->
+                    <div class="card mb-4 quiz-summary-card">
+                        <div class="card-header bg-light">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-line"></i> Performance Summary
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-3">
+                                    {% if performance.quiz_summary and performance.quiz_summary.average_score %}
+                                    <h2 class="display-4 {% if performance.quiz_summary.average_score > 85 %}score-excellent{% elif performance.quiz_summary.average_score > 70 %}score-good{% elif performance.quiz_summary.average_score > 50 %}score-average{% else %}score-poor{% endif %}">
+                                        {{ "%.1f"|format(performance.quiz_summary.average_score|float) }}%
+                                    </h2>
+                                    {% else %}
+                                    <h2 class="display-4 text-muted">-</h2>
+                                    {% endif %}
+                                    <p class="text-muted">Average Score</p>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <div class="card h-100 bg-light">
+                                                <div class="card-body py-3">
+                                                    <h5 class="fw-bold text-primary mb-0">{{ performance.quiz_summary.total_quizzes if performance.quiz_summary else 0 }}</h5>
+                                                    <small class="text-muted">Total Quizzes Completed</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card h-100 bg-light">
+                                                <div class="card-body py-3">
+                                                    <h5 class="fw-bold text-primary mb-0">
+                                                        {% if performance.quiz_summary %}
+                                                            {{ performance.quiz_summary.total_correct|default(0) }} / {{ performance.quiz_summary.total_questions|default(0) }}
+                                                        {% else %}
+                                                            0 / 0
+                                                        {% endif %}
+                                                    </h5>
+                                                    <small class="text-muted">Total Correct Answers</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card h-100 bg-light">
+                                                <div class="card-body py-3">
+                                                    <h5 class="fw-bold text-primary mb-0">
+                                                        {% if performance.quiz_summary and performance.quiz_summary.total_time_spent %}
+                                                            {{ (performance.quiz_summary.total_time_spent / 60)|int }} mins
+                                                        {% else %}
+                                                            0 mins
+                                                        {% endif %}
+                                                    </h5>
+                                                    <small class="text-muted">Total Time Spent</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="card h-100 bg-light">
+                                                <div class="card-body py-3">
+                                                    <h5 class="fw-bold text-primary mb-0">
+                                                        {% if performance.quiz_summary and performance.quiz_summary.last_quiz_date %}
+                                                            {{ performance.quiz_summary.last_quiz_date|format_datetime }}
+                                                        {% else %}
+                                                            Never
+                                                        {% endif %}
+                                                    </h5>
+                                                    <small class="text-muted">Last Quiz Date</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Strengths & Weaknesses -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card progress-card h-100">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-star"></i> Strongest Topics
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if performance.strongest_topics %}
+                                        {% for topic in performance.strongest_topics %}
+                                        <div class="topic-performance">
+                                            <div class="topic-name">{{ topic.chapter_name }}</div>
+                                            <div class="topic-bar">
+                                                <div class="topic-progress bg-success" 
+                                                     style="width: {% if topic.accuracy %}{{ topic.accuracy }}{% else %}0{% endif %}%;"></div>
+                                            </div>
+                                            <div class="ms-2 fw-bold">
+                                                {% if topic.accuracy %}
+                                                    {{ "%.1f"|format(topic.accuracy|float) }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted text-center py-3">Not enough topic data available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card progress-card h-100">
+                                <div class="card-header bg-danger text-white">
+                                    <h5 class="card-title mb-0">
+                                        <i class="fas fa-exclamation-triangle"></i> Weakest Topics
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if performance.weakest_topics %}
+                                        {% for topic in performance.weakest_topics %}
+                                        <div class="topic-performance">
+                                            <div class="topic-name">{{ topic.chapter_name }}</div>
+                                            <div class="topic-bar">
+                                                <div class="topic-progress bg-danger" 
+                                                     style="width: {% if topic.accuracy %}{{ topic.accuracy }}{% else %}0{% endif %}%;"></div>
+                                            </div>
+                                            <div class="ms-2 fw-bold">
+                                                {% if topic.accuracy %}
+                                                    {{ "%.1f"|format(topic.accuracy|float) }}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted text-center py-3">Not enough topic data available</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance Tab -->
+                <div class="tab-pane fade" id="performance">
+                    <!-- Monthly Performance Trend -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-chart-bar"></i> Monthly Performance Trend
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="monthlyPerformanceChart" height="250"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Recent Quizzes -->
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-history"></i> Recent Quiz Results
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Score</th>
+                                            <th>Percentage</th>
+                                            <th>Chapters</th>
+                                            <th>Time Spent</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for quiz in performance.recent_quizzes %}
+                                        <tr>
+                                            <td>{{ quiz.quiz_date|format_datetime }}</td>
+                                            <td>{{ quiz.score }} / {{ quiz.total_questions }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 10px;">
+                                                    <div class="progress-bar
+                                                            {% if quiz.percentage > 85 %}bg-success
+                                                            {% elif quiz.percentage > 70 %}bg-info
+                                                            {% elif quiz.percentage > 50 %}bg-warning
+                                                            {% else %}bg-danger{% endif %}"
+                                                        role="progressbar"
+                                                        style="width: {% if quiz.percentage %}{{ quiz.percentage }}{% else %}0{% endif %}%;"
+                                                        aria-valuenow="{% if quiz.percentage %}{{ quiz.percentage }}{% else %}0{% endif %}"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <small>{{ "%.1f"|format(quiz.percentage|float) }}%</small>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">{{ quiz.selected_chapters }}</small>
+                                            </td>
+                                            <td>{{ (quiz.time_spent / 60)|int }} mins</td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No quiz data available</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topics Tab -->
+                <div class="tab-pane fade" id="topics">
+                    <!-- Topic Performance -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-book"></i> Topic Performance Analysis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Topic</th>
+                                            <th>Correct</th>
+                                            <th>Incorrect</th>
+                                            <th>Accuracy</th>
+                                            <th>Last Practice</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for topic in performance.topic_performance %}
+                                        <tr>
+                                            <td>{{ topic.chapter_name }}</td>
+                                            <td class="text-success">{{ topic.correct_count }}</td>
+                                            <td class="text-danger">{{ topic.incorrect_count }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 10px;">
+                                                    <div class="progress-bar
+                                                            {% if topic.accuracy > 85 %}bg-success
+                                                            {% elif topic.accuracy > 70 %}bg-info
+                                                            {% elif topic.accuracy > 50 %}bg-warning
+                                                            {% else %}bg-danger{% endif %}"
+                                                        role="progressbar"
+                                                        style="width: {% if topic.accuracy %}{{ topic.accuracy }}{% else %}0{% endif %}%;"
+                                                        aria-valuenow="{% if topic.accuracy %}{{ topic.accuracy }}{% else %}0{% endif %}"
+                                                        aria-valuemin="0"
+                                                        aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                                <small>{{ "%.1f"|format(topic.accuracy|float) }}%</small>
+                                            </td>
+                                            <td>{{ topic.last_updated|format_datetime }}</td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">No topic data available</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Incorrect Questions -->
+                    <div class="card">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-exclamation-circle"></i> Recent Incorrect Questions
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if performance.recent_incorrect %}
+                                <div class="list-group">
+                                    {% for item in performance.recent_incorrect %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">Question #{{ item.id }}</h6>
+                                            <small>{{ item.quiz_date|format_datetime }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ item.question_text }}</p>
+                                        <small class="text-danger">Incorrect Answer: {{ item.selected_answer }}</small>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-center text-muted my-3">No recent incorrect questions</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Log Tab -->
+                <div class="tab-pane fade" id="activity">
+                    <!-- Activity Timeline -->
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-history"></i> Activity Timeline
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                {% for activity in activity_history %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker"></div>
+                                    <div class="timeline-content">
+                                        <h6 class="timeline-title">{{ activity.activity_type|title }}</h6>
+                                        <p class="timeline-text">{{ activity.activity_details }}</p>
+                                        <p class="timeline-date text-muted">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ activity.timestamp|format_datetime }}
+                                            {% if activity.ip_address %}
+                                            <span class="ms-3"><i class="fas fa-globe me-1"></i>{{ activity.ip_address }}</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <p class="text-center text-muted my-4">No activity recorded yet</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        // Monthly Performance Chart - with proper error handling
+        const monthlyData = {{ performance.monthly_trend|default([])|tojson|safe }};
+        
+        if (monthlyData && monthlyData.length > 0) {
+            const ctx = document.getElementById('monthlyPerformanceChart').getContext('2d');
+            
+            const months = monthlyData.map(item => item.month || '').reverse();
+            const scores = monthlyData.map(item => item.average_score || 0).reverse();
+            const quizCounts = monthlyData.map(item => item.quizzes_taken || 0).reverse();
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Average Score (%)',
+                            data: scores,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            yAxisID: 'y',
+                            tension: 0.1,
+                            fill: true
+                        },
+                        {
+                            label: 'Quizzes Taken',
+                            data: quizCounts,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                            yAxisID: 'y1',
+                            type: 'bar'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Score (%)'
+                            },
+                            min: 0,
+                            max: 100
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Number of Quizzes'
+                            },
+                            min: 0,
+                            grid: {
+                                drawOnChartArea: false,
+                            }
+                        }
+                    }
+                }
+            });
+        } else {
+            // No data available, hide or show placeholder
+            const chartContainer = document.getElementById('monthlyPerformanceChart').parentNode;
+            chartContainer.innerHTML = '<p class="text-center text-muted py-5">No performance data available</p>';
+        }
+    } catch (error) {
+        console.error('Error initializing chart:', error);
+        // Handle error gracefully
+        const chartContainer = document.getElementById('monthlyPerformanceChart').parentNode;
+        chartContainer.innerHTML = '<p class="text-center text-muted py-5">Error loading performance chart</p>';
+    }
+});
+</script>
 {% endblock %} 

@@ -81,7 +81,7 @@ def get_user_activity_history(user_id, limit=50):
     conn = get_db_connection()
     try:
         activities = conn.execute('''
-            SELECT activity_type, activity_details, timestamp
+            SELECT activity_type, activity_details, timestamp, ip_address
             FROM user_activity_logs
             WHERE user_id = ?
             ORDER BY timestamp DESC
@@ -124,6 +124,164 @@ def get_user_statistics(user_id):
             'activity_counts': {row['activity_type']: row['count'] for row in activity_counts},
             'first_activity': time_range['first_activity'],
             'last_activity': time_range['last_activity']
+        }
+    finally:
+        conn.close()
+
+def get_user_performance_metrics(user_id):
+    """Get detailed user performance metrics including quiz history and topic performance"""
+    conn = get_db_connection()
+    try:
+        # Get quiz history summary
+        quiz_summary = conn.execute('''
+            SELECT 
+                COUNT(*) as total_quizzes,
+                AVG(score * 100.0 / total_questions) as average_score,
+                SUM(score) as total_correct,
+                SUM(total_questions) as total_questions,
+                SUM(time_spent) as total_time_spent,
+                MAX(quiz_date) as last_quiz_date
+            FROM quiz_history
+            WHERE user_id = ?
+        ''', (user_id,)).fetchone()
+        
+        # If no quiz history, create a default structure with zero values
+        if quiz_summary and quiz_summary['total_quizzes'] == 0:
+            quiz_summary = {
+                'total_quizzes': 0,
+                'average_score': None,
+                'total_correct': 0,
+                'total_questions': 0,
+                'total_time_spent': 0,
+                'last_quiz_date': None
+            }
+        else:
+            # Convert Row to dict for JSON serialization
+            quiz_summary = dict(quiz_summary)
+        
+        # Get recent quiz history
+        recent_quizzes_raw = conn.execute('''
+            SELECT 
+                id,
+                quiz_date,
+                score,
+                total_questions,
+                (score * 100.0 / total_questions) as percentage,
+                selected_chapters,
+                selected_tags,
+                time_spent
+            FROM quiz_history
+            WHERE user_id = ?
+            ORDER BY quiz_date DESC
+            LIMIT 10
+        ''', (user_id,)).fetchall()
+        
+        # Convert Row objects to dictionaries
+        recent_quizzes = [dict(quiz) for quiz in recent_quizzes_raw]
+        
+        # Get topic performance
+        topic_perf_raw = conn.execute('''
+            SELECT 
+                tp.chapter_id,
+                c.name as chapter_name,
+                tp.correct_count,
+                tp.incorrect_count,
+                CASE
+                    WHEN (tp.correct_count + tp.incorrect_count) = 0 THEN 0
+                    ELSE (tp.correct_count * 100.0 / (tp.correct_count + tp.incorrect_count))
+                END as accuracy,
+                tp.last_updated
+            FROM topic_performance tp
+            JOIN chapters c ON tp.chapter_id = c.id
+            WHERE tp.user_id = ?
+            ORDER BY accuracy DESC
+        ''', (user_id,)).fetchall()
+        
+        # Convert Row objects to dictionaries
+        topic_performance = [dict(topic) for topic in topic_perf_raw]
+        
+        # Get strongest and weakest topics
+        strongest_raw = conn.execute('''
+            SELECT 
+                c.name as chapter_name,
+                tp.correct_count,
+                tp.incorrect_count,
+                CASE
+                    WHEN (tp.correct_count + tp.incorrect_count) = 0 THEN 0
+                    ELSE (tp.correct_count * 100.0 / (tp.correct_count + tp.incorrect_count))
+                END as accuracy
+            FROM topic_performance tp
+            JOIN chapters c ON tp.chapter_id = c.id
+            WHERE tp.user_id = ? AND (tp.correct_count + tp.incorrect_count) >= 5
+            ORDER BY accuracy DESC
+            LIMIT 3
+        ''', (user_id,)).fetchall()
+        
+        # Convert Row objects to dictionaries
+        strongest_topics = [dict(topic) for topic in strongest_raw]
+        
+        weakest_raw = conn.execute('''
+            SELECT 
+                c.name as chapter_name,
+                tp.correct_count,
+                tp.incorrect_count,
+                CASE
+                    WHEN (tp.correct_count + tp.incorrect_count) = 0 THEN 0
+                    ELSE (tp.correct_count * 100.0 / (tp.correct_count + tp.incorrect_count))
+                END as accuracy
+            FROM topic_performance tp
+            JOIN chapters c ON tp.chapter_id = c.id
+            WHERE tp.user_id = ? AND (tp.correct_count + tp.incorrect_count) >= 5
+            ORDER BY accuracy ASC
+            LIMIT 3
+        ''', (user_id,)).fetchall()
+        
+        # Convert Row objects to dictionaries
+        weakest_topics = [dict(topic) for topic in weakest_raw]
+        
+        # Get recent incorrect questions for targeted improvement
+        incorrect_raw = conn.execute('''
+            SELECT 
+                q.id,
+                q.question_text,
+                qa.selected_answer,
+                qh.quiz_date
+            FROM quiz_answers qa
+            JOIN quiz_history qh ON qa.quiz_history_id = qh.id
+            JOIN questions q ON qa.question_id = q.id
+            WHERE qh.user_id = ? AND qa.is_correct = 0
+            ORDER BY qh.quiz_date DESC
+            LIMIT 5
+        ''', (user_id,)).fetchall()
+        
+        # Convert Row objects to dictionaries
+        recent_incorrect = [dict(item) for item in incorrect_raw]
+        
+        # Performance trend over time (monthly)
+        monthly_raw = conn.execute('''
+            SELECT 
+                strftime('%Y-%m', quiz_date) as month,
+                COUNT(*) as quizzes_taken,
+                AVG(score * 100.0 / total_questions) as average_score,
+                SUM(time_spent) as time_spent
+            FROM quiz_history
+            WHERE user_id = ?
+            GROUP BY month
+            ORDER BY month DESC
+            LIMIT 6
+        ''', (user_id,)).fetchall()
+        
+        # Convert Row objects to dictionaries
+        monthly_trend = [dict(month) for month in monthly_raw]
+        
+        return {
+            'quiz_summary': quiz_summary,
+            'recent_quizzes': recent_quizzes,
+            'topic_performance': topic_performance,
+            'strongest_topics': strongest_topics,
+            'weakest_topics': weakest_topics,
+            'recent_incorrect': recent_incorrect,
+            'monthly_trend': monthly_trend
         }
     finally:
         conn.close() 

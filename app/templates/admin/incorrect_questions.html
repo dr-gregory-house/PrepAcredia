@@ -1,0 +1,164 @@
+{% extends 'layout.html' %}
+
+{% block title %}Top Incorrectly Answered Questions{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'admin/sidebar.html' %}
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Top 100 Incorrectly Answered Questions</h1>
+            </div>
+            
+            <div class="alert alert-info">
+                This report shows the top 100 questions with the highest incorrect answer rates (minimum 5 attempts).
+            </div>
+            
+            <div class="table-responsive mb-4">
+                <table class="table table-striped table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Question</th>
+                            <th>Chapters</th>
+                            <th>Total Attempts</th>
+                            <th>Incorrect Count</th>
+                            <th>Incorrect %</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in questions %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td class="text-truncate" style="max-width: 350px;" title="{{ question.question_text }}">
+                                {{ question.question_text }}
+                            </td>
+                            <td>
+                                {% for chapter in question.chapters %}
+                                <span class="badge bg-secondary">{{ chapter }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>{{ question.total_attempts }}</td>
+                            <td>{{ question.incorrect_count }}</td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" 
+                                         style="width: {{ question.incorrect_percentage }}%" 
+                                         aria-valuenow="{{ question.incorrect_percentage }}" 
+                                         aria-valuemin="0" 
+                                         aria-valuemax="100">
+                                        {{ question.incorrect_percentage }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary view-details" data-question-id="{{ loop.index0 }}">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Question Details Modal -->
+            <div class="modal fade" id="questionDetailsModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Question Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="question-text" class="mb-3"></div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6>Options:</h6>
+                                    <ul class="list-group" id="options-list">
+                                    </ul>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header bg-info text-white">
+                                            Statistics
+                                        </div>
+                                        <div class="card-body">
+                                            <p><strong>Total Attempts:</strong> <span id="modal-total-attempts"></span></p>
+                                            <p><strong>Incorrect Count:</strong> <span id="modal-incorrect-count"></span></p>
+                                            <p><strong>Incorrect Percentage:</strong> <span id="modal-incorrect-percentage"></span>%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="card mt-3">
+                                <div class="card-header bg-success text-white">
+                                    Correct Answer: <span id="correct-answer-letter"></span>
+                                </div>
+                                <div class="card-body">
+                                    <h6>Rationale/Explanation:</h6>
+                                    <div id="rationale"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Store all question data for modal
+        var questionData = JSON.parse('{{ questions|tojson|safe }}');
+        
+        // Add event listeners to view details buttons
+        document.querySelectorAll('.view-details').forEach(function(button) {
+            button.addEventListener('click', function() {
+                var questionIndex = this.getAttribute('data-question-id');
+                var question = questionData[questionIndex];
+                
+                // Populate modal with question details
+                document.getElementById('question-text').innerHTML = question.question_text;
+                document.getElementById('modal-total-attempts').textContent = question.total_attempts;
+                document.getElementById('modal-incorrect-count').textContent = question.incorrect_count;
+                document.getElementById('modal-incorrect-percentage').textContent = question.incorrect_percentage;
+                document.getElementById('correct-answer-letter').textContent = question.correct_answer;
+                document.getElementById('rationale').innerHTML = question.rationale;
+                
+                // Clear and populate options list
+                var optionsList = document.getElementById('options-list');
+                optionsList.innerHTML = '';
+                
+                question.options.forEach(function(option) {
+                    var li = document.createElement('li');
+                    li.className = 'list-group-item';
+                    
+                    if (option.option_letter === question.correct_answer) {
+                        li.className += ' list-group-item-success';
+                    }
+                    
+                    li.innerHTML = '<strong>' + option.option_letter + ':</strong> ' + option.option_text;
+                    optionsList.appendChild(li);
+                });
+                
+                // Show the modal
+                var modal = new bootstrap.Modal(document.getElementById('questionDetailsModal'));
+                modal.show();
+            });
+        });
+    });
+</script>
+{% endblock %} 

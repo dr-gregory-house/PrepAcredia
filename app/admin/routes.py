@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
 from app.utils.db import get_db_connection
 from app.utils.decorators import admin_required
-from app.utils.user_tracking import get_online_users, get_user_activity_history, get_user_statistics
+from app.utils.user_tracking import get_online_users, get_user_activity_history, get_user_statistics, get_user_performance_metrics
 from app.utils.spaced_repetition import (
     get_current_schedule, 
     set_review_schedule, 
@@ -61,10 +61,14 @@ def user_activity(user_id):
     # Get user statistics
     statistics = get_user_statistics(user_id)
     
+    # Get user performance metrics
+    performance_metrics = get_user_performance_metrics(user_id)
+    
     return render_template('admin/user_activity.html',
                          user=user,
                          activity_history=activity_history,
-                         statistics=statistics)
+                         statistics=statistics,
+                         performance=performance_metrics)
 
 @admin_bp.route('/user/<int:user_id>/toggle_active', methods=['POST'])
 @admin_required
@@ -270,4 +274,68 @@ def preview_schedule():
     return jsonify({
         'schedule': schedule,
         'total_days': total_days
-    }) 
+    })
+
+@admin_bp.route('/incorrect-questions')
+@admin_required
+def incorrect_questions():
+    """Show the top 100 questions that are answered incorrectly most often"""
+    conn = get_db_connection()
+    try:
+        # Get the top 100 questions with the highest incorrect answer rates
+        top_incorrect_questions = conn.execute('''
+            SELECT 
+                q.id, 
+                q.question_text, 
+                q.correct_answer, 
+                q.rationale,
+                COUNT(qa.id) AS total_attempts,
+                SUM(CASE WHEN qa.is_correct = 0 THEN 1 ELSE 0 END) AS incorrect_count,
+                ROUND((SUM(CASE WHEN qa.is_correct = 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(qa.id)), 2) AS incorrect_percentage
+            FROM 
+                questions q
+            JOIN 
+                quiz_answers qa ON q.id = qa.question_id
+            GROUP BY 
+                q.id
+            HAVING 
+                COUNT(qa.id) >= 5 -- Only include questions with at least 5 attempts
+            ORDER BY 
+                incorrect_percentage DESC, 
+                incorrect_count DESC
+            LIMIT 100
+        ''').fetchall()
+        
+        # Convert SQLite Row objects to dictionaries for modification
+        result_questions = []
+        
+        for question in top_incorrect_questions:
+            # Convert Row to dictionary
+            question_dict = dict(question)
+            
+            # Get chapters for each question
+            chapters = conn.execute('''
+                SELECT c.name
+                FROM chapters c
+                JOIN question_chapters qc ON c.id = qc.chapter_id
+                WHERE qc.question_id = ?
+            ''', (question['id'],)).fetchall()
+            
+            question_dict['chapters'] = [chapter['name'] for chapter in chapters]
+            
+            # Get the options for each question
+            options = conn.execute('''
+                SELECT option_letter, option_text
+                FROM options
+                WHERE question_id = ?
+                ORDER BY option_letter
+            ''', (question['id'],)).fetchall()
+            
+            question_dict['options'] = [dict(option) for option in options]
+            
+            result_questions.append(question_dict)
+        
+        return render_template('admin/incorrect_questions.html', 
+                             questions=result_questions)
+    finally:
+        conn.close() 

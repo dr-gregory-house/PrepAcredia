@@ -20,7 +20,17 @@ quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
 
 @quiz_bp.route('/', methods=['GET', 'POST'])
 @login_required
-def start_quiz():
+def display_quiz():
+    """Display the current question in a quiz session.
+    
+    This function handles:
+    1. Initializing quiz data if it's the first question
+    2. Displaying the current question in the quiz
+    3. Handling navigation through the quiz
+    
+    Note: The actual quiz creation happens in the main.home route, where
+    quiz_start activity is logged once per quiz.
+    """
     # Check if a quiz is in progress
     if 'quiz_id' not in session or 'selected_chapters' not in session or 'num_questions' not in session:
         return redirect(url_for('main.home'))
@@ -289,7 +299,7 @@ def next_question():
         session['user_answers'] = quiz_state['user_answers']
         return redirect(url_for('quiz.results'))
 
-    return redirect(url_for('quiz.start_quiz'))
+    return redirect(url_for('quiz.display_quiz'))
 
 @quiz_bp.route('/results')
 @login_required
@@ -501,7 +511,7 @@ def answer():
     # Verify question ID matches current question
     if str(quiz_data[current]['id']) != str(question_id):
         flash('Question ID mismatch, please try again', 'error')
-        return redirect(url_for('quiz.start_quiz'))
+        return redirect(url_for('quiz.display_quiz'))
     
     # Process the answer
     current_question = quiz_data[current]

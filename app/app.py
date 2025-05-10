@@ -7,7 +7,7 @@ from app.routes.quiz import quiz_bp
 from app.routes.main import main_bp
 from app.admin.routes import admin_bp
 from app.routes.profile import profile_bp
-from app.utils.filters import timeago, init_filters
+from app.utils.filters import timeago, format_datetime, init_filters
 from app.utils.middleware import track_user_activity
 import os
 import logging
@@ -54,6 +54,7 @@ def create_app(config_class=Config):
     # Register filters
     init_filters(app)
     app.jinja_env.filters['timeago'] = timeago
+    app.jinja_env.filters['format_datetime'] = format_datetime
     
     # Initialize the database within app context
     with app.app_context():

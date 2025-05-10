@@ -39,44 +39,116 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container-fluid">
     <div class="row">
-        <!-- Online Users Card -->
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-users"></i> Online Users
-                        <span class="badge bg-light text-primary float-end">{{ online_users|length }}</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="list-group list-group-flush">
-                        {% for user in online_users %}
-                        <div class="list-group-item d-flex align-items-center">
-                            {% if user.profile_picture %}
-                            <img src="{{ user.profile_picture }}" class="rounded-circle me-2" width="32" height="32">
-                            {% else %}
-                            <div class="rounded-circle bg-secondary text-white me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px">
-                                {{ user.name[0]|upper }}
-                            </div>
-                            {% endif %}
-                            <div>
-                                <h6 class="mb-0">{{ user.name }}</h6>
-                                <small class="text-muted">Last active: {{ user.last_activity|timeago }}</small>
+        {% include 'admin/sidebar.html' %}
+        
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Admin Dashboard</h1>
+            </div>
+            
+            <div class="row">
+                <!-- Online Users Card -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-users"></i> Online Users
+                                <span class="badge bg-light text-primary float-end">{{ online_users|length }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group list-group-flush">
+                                {% for user in online_users %}
+                                <div class="list-group-item d-flex align-items-center">
+                                    {% if user.profile_picture %}
+                                    <img src="{{ user.profile_picture }}" class="rounded-circle me-2" width="32" height="32">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary text-white me-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px">
+                                        {{ user.name[0]|upper }}
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <h6 class="mb-0">{{ user.name }}</h6>
+                                        <small class="text-muted">Last active: {{ user.last_activity|format_datetime }}</small>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <p class="text-muted text-center my-3">No users currently online</p>
+                                {% endfor %}
                             </div>
                         </div>
-                        {% else %}
-                        <p class="text-muted text-center my-3">No users currently online</p>
-                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- User Management Card -->
+                <div class="col-md-8 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-user-cog"></i> User Management
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Username</th>
+                                            <th>Email</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Created</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in users %}
+                                        <tr>
+                                            <td>{{ user.name }}</td>
+                                            <td>{{ user.username }}</td>
+                                            <td>{{ user.email }}</td>
+                                            <td>
+                                                <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
+                                                    {{ user.role }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-warning{% endif %}">
+                                                    {{ 'Active' if user.is_active else 'Pending' }}
+                                                </span>
+                                            </td>
+                                            <td>{{ user.created_at|format_datetime }}</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <a href="{{ url_for('admin.user_activity', user_id=user.id) }}" 
+                                                    class="btn btn-sm btn-info" 
+                                                    title="View detailed user performance and activity">
+                                                        <i class="fas fa-chart-line"></i> Performance
+                                                    </a>
+                                                    <form action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" method="post" style="display:inline;">
+                                                        <button type="submit" class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}"
+                                                                title="{{ 'Deactivate' if user.is_active else 'Activate' }}"
+                                                                onclick="return confirm('Are you sure you want to {{ 'deactivate' if user.is_active else 'activate' }} this user?');">
+                                                            <i class="fas {% if user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Recent Activity Card -->
-        <div class="col-md-8 mb-4">
-            <div class="card h-100">
+            <!-- Recent Activity Card -->
+            <div class="card mt-4">
                 <div class="card-header bg-info text-white">
                     <h5 class="card-title mb-0">
                         <i class="fas fa-history"></i> Recent Activity
@@ -90,6 +162,7 @@
                                     <th>User</th>
                                     <th>Activity</th>
                                     <th>Details</th>
+                                    <th>IP Address</th>
                                     <th>Time</th>
                                 </tr>
                             </thead>
@@ -103,11 +176,12 @@
                                     </td>
                                     <td>{{ activity.activity_type|title }}</td>
                                     <td>{{ activity.activity_details }}</td>
-                                    <td>{{ activity.timestamp|timeago }}</td>
+                                    <td>{{ activity.ip_address }}</td>
+                                    <td>{{ activity.timestamp|format_datetime }}</td>
                                 </tr>
                                 {% else %}
                                 <tr>
-                                    <td colspan="4" class="text-center">No recent activity</td>
+                                    <td colspan="5" class="text-center">No recent activity</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -115,92 +189,7 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- User Management Card -->
-    <div class="card mt-4">
-        <div class="card-header bg-dark text-white">
-            <h5 class="card-title mb-0">
-                <i class="fas fa-user-cog"></i> User Management
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for user in users %}
-                        <tr>
-                            <td>{{ user.name }}</td>
-                            <td>{{ user.username }}</td>
-                            <td>{{ user.email }}</td>
-                            <td>
-                                <span class="badge {% if user.role == 'admin' %}bg-danger{% else %}bg-primary{% endif %}">
-                                    {{ user.role }}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="badge {% if user.is_active %}bg-success{% else %}bg-warning{% endif %}">
-                                    {{ 'Active' if user.is_active else 'Pending' }}
-                                </span>
-                            </td>
-                            <td>{{ user.created_at }}</td>
-                            <td>
-                                <div class="btn-group">
-                                    <a href="{{ url_for('admin.user_activity', user_id=user.id) }}" 
-                                       class="btn btn-sm btn-info" 
-                                       title="View Activity">
-                                        <i class="fas fa-chart-line"></i>
-                                    </a>
-                                    <button class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}"
-                                            onclick="toggleUserStatus({{ user.id }}, {{ user.is_active }})"
-                                            title="{{ 'Deactivate' if user.is_active else 'Activate' }}">
-                                        <i class="fas {% if user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        </main>
     </div>
 </div>
-
-<script>
-function toggleUserStatus(userId, currentStatus) {
-    if (confirm('Are you sure you want to ' + (currentStatus ? 'deactivate' : 'activate') + ' this user?')) {
-        fetch(`/admin/user/${userId}/toggle_active`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while processing your request.');
-        });
-    }
-}
-</script>
 {% endblock %} 

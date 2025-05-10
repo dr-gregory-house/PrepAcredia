@@ -20,10 +20,8 @@ def track_user_activity():
                         activity_details = None
                         
                         # Map endpoints to activity types
-                        if request.endpoint == 'quiz.start_quiz':
-                            activity_type = 'quiz_start'
-                            activity_details = f"Started quiz with {request.args.get('num_questions', 'unknown')} questions"
-                        elif request.endpoint == 'quiz.submit_quiz':
+                        # Removed quiz.start_quiz to prevent excessive logging
+                        if request.endpoint == 'quiz.submit_quiz':
                             activity_type = 'quiz_complete'
                             activity_details = f"Completed quiz with score: {request.form.get('score', 'unknown')}"
                         elif request.endpoint == 'profile.update_profile':
