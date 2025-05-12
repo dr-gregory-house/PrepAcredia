@@ -168,7 +168,7 @@ def spaced_repetition_review():
     session['is_spaced_repetition'] = True  # Mark this as a spaced repetition session
     
     # Redirect to the quiz route which will handle the questions
-    return redirect(url_for('quiz.start_quiz'))
+    return redirect(url_for('quiz.display_quiz'))
 
 @profile_bp.route('/review_status')
 @login_required
