@@ -8,10 +8,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def download_db_from_bucket():
-    """Download the SQLite database file from GCS bucket to local /tmp directory"""
+    """Download the user SQLite database file from GCS bucket to local /tmp directory"""
     bucket_name = os.environ.get('GCS_BUCKET_NAME', 'pedia-sqlite-db')
-    source_blob_name = os.environ.get('GCS_DB_NAME', 'mcq_database.db')
-    destination_file_name = current_app.config['DB_PATH']
+    source_blob_name = os.environ.get('GCS_USER_DB_NAME', 'user.db')
+    destination_file_name = current_app.config['USER_DB_PATH']
     
     # Ensure the directory exists
     os.makedirs(os.path.dirname(destination_file_name), exist_ok=True)
@@ -35,10 +35,10 @@ def download_db_from_bucket():
         # This handles the first-time case as well
 
 def upload_db_to_bucket():
-    """Upload the SQLite database file from local /tmp directory to GCS bucket"""
+    """Upload the user SQLite database file from local /tmp directory to GCS bucket"""
     bucket_name = os.environ.get('GCS_BUCKET_NAME', 'pedia-sqlite-db')
-    destination_blob_name = os.environ.get('GCS_DB_NAME', 'mcq_database.db')
-    source_file_name = current_app.config['DB_PATH']
+    destination_blob_name = os.environ.get('GCS_USER_DB_NAME', 'user.db')
+    source_file_name = current_app.config['USER_DB_PATH']
     
     if not os.path.exists(source_file_name):
         logger.error(f"Local database file {source_file_name} not found")

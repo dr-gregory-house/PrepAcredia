@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection, get_content_db_connection
 from app.utils.decorators import admin_required
 from app.utils.user_tracking import get_online_users, get_user_activity_history, get_user_statistics, get_user_performance_metrics
 from app.utils.spaced_repetition import (
@@ -19,7 +19,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_bp.route('/')
 @admin_required
 def dashboard():
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get all users
         users = conn.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
@@ -47,7 +47,7 @@ def dashboard():
 @admin_required
 def user_activity(user_id):
     # Get user details
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
     
@@ -73,7 +73,7 @@ def user_activity(user_id):
 @admin_bp.route('/user/<int:user_id>/toggle_active', methods=['POST'])
 @admin_required
 def toggle_user_active(user_id):
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     
     if user:
@@ -96,7 +96,7 @@ def toggle_user_admin(user_id):
         flash('You cannot change your own admin status', 'error')
         return redirect(url_for('admin.dashboard'))
     
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     
     if user:
@@ -114,7 +114,7 @@ def toggle_user_admin(user_id):
 @admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
 @admin_required
 def delete_user(user_id):
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     # Check if user exists and is not an admin
     user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     
@@ -138,23 +138,28 @@ def delete_user(user_id):
 @admin_required
 def settings():
     """System settings page"""
-    conn = get_db_connection()
-    
-    # Get system stats for the dashboard
-    user_count = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
-    question_count = conn.execute('SELECT COUNT(*) as count FROM questions').fetchone()['count']
-    quiz_count = conn.execute('SELECT COUNT(*) as count FROM quiz_history').fetchone()['count']
-    sr_count = conn.execute('SELECT COUNT(*) as count FROM spaced_repetition').fetchone()['count']
-    
-    conn.close()
-    
+    # Gather stats from respective databases
+    user_conn = get_user_db_connection()
+    try:
+        user_count = user_conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+        quiz_count = user_conn.execute('SELECT COUNT(*) as count FROM quiz_history').fetchone()['count']
+        sr_count = user_conn.execute('SELECT COUNT(*) as count FROM spaced_repetition').fetchone()['count']
+    finally:
+        user_conn.close()
+
+    content_conn = get_content_db_connection()
+    try:
+        question_count = content_conn.execute('SELECT COUNT(*) as count FROM questions').fetchone()['count']
+    finally:
+        content_conn.close()
+
     # Get current spaced repetition settings
     current_schedule = get_current_schedule()
-    
+
     # Get saved schedule presets
     schedule_presets = get_schedule_presets()
-    
-    return render_template('admin/settings.html', 
+
+    return render_template('admin/settings.html',
                           current_schedule=current_schedule,
                           json_schedule=json.dumps(current_schedule),
                           schedule_presets=schedule_presets,
@@ -280,7 +285,7 @@ def preview_schedule():
 @admin_required
 def incorrect_questions():
     """Show the top 100 questions that are answered incorrectly most often"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get the top 100 questions with the highest incorrect answer rates
         top_incorrect_questions = conn.execute('''

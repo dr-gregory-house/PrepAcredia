@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify, session
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection, get_content_db_connection
 from app.utils.decorators import login_required, admin_required
 from app.utils.spaced_repetition import (
     get_current_schedule, 
@@ -17,11 +17,14 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 @admin_required
 def dashboard():
     """Admin dashboard"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     
     # Get system stats
     user_count = conn.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
-    question_count = conn.execute('SELECT COUNT(*) as count FROM questions').fetchone()['count']
+    # Count questions from content DB
+    content_conn = get_content_db_connection()
+    question_count = content_conn.execute('SELECT COUNT(*) as count FROM questions').fetchone()['count']
+    content_conn.close()
     quiz_count = conn.execute('SELECT COUNT(*) as count FROM quiz_history').fetchone()['count']
     sr_count = conn.execute('SELECT COUNT(*) as count FROM spaced_repetition').fetchone()['count']
     
@@ -46,7 +49,7 @@ def dashboard():
 @admin_required
 def user_list():
     """List all users"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     users = conn.execute('SELECT * FROM users ORDER BY created_at DESC').fetchall()
     conn.close()
     

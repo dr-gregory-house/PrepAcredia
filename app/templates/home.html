@@ -889,21 +889,8 @@
                 </div>
                 
                     <div class="widget tags-widget">
-                        <div class="widget-header">
-                            <i class="bi bi-tags-fill"></i>
-                            Filter by Tags
-                        </div>
-                        <div class="widget-content">
-                            <div class="tags-container">
-                                {% for tag_id, tag_info in tag_question_counts.items() %}
-                                <div class="tag-item">
-                                    <input type="checkbox" class="tag-checkbox" id="tag{{ tag_id }}" name="tags" value="{{ tag_id }}">
-                                    <label for="tag{{ tag_id }}" class="tag-name">{{ tag_info.name }}</label>
-                                    <span class="tag-count">{{ tag_info.question_count }}</span>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
+                        <div class="widget-header" style="display: none;"></div>
+                        <div class="widget-content" style="display: none;"></div>
                     </div>
                     </div>
                     
@@ -911,7 +898,7 @@
                     <div class="widget topic-widget">
                         <div class="widget-header">
                             <i class="bi bi-journal-text"></i>
-                            Select Topics to Practice
+                            Select Specialities to Practice
                         </div>
                         <div class="widget-content">
                             <div class="select-all-container" style="margin-bottom: 15px; display: flex; align-items: center; background: #f8fafc; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
@@ -919,38 +906,19 @@
                                 <label for="select-all-topics" style="font-weight: 600; cursor: pointer;">Select All Topics</label>
                             </div>
                             <div class="topics-container">
-                    {% for parent_chapter in parent_chapters %}
-                                <div class="topic-card" id="topic-card-{{ parent_chapter.id }}">
+                                {% for spec in specialities %}
+                                <div class="topic-card">
                                     <div class="topic-header">
-                                        <input type="checkbox" class="topic-checkbox parent-checkbox" id="ch{{ parent_chapter.id }}" name="chapters" value="{{ parent_chapter.id }}">
-                                        <label for="ch{{ parent_chapter.id }}" class="topic-name">{{ parent_chapter.name }}</label>
-                            
-                                        <div class="topic-count {% if parent_chapter.question_count == 0 %}empty{% endif %}">
+                                        <input type="checkbox" class="topic-checkbox parent-checkbox" id="sp{{ loop.index }}" name="specialities" value="{{ spec.name }}">
+                                        <label for="sp{{ loop.index }}" class="topic-name">{{ spec.name }}</label>
+                                        <div class="topic-count {% if (spec.question_count or 0) == 0 %}empty{% endif %}">
                                             <i class="bi bi-question-circle"></i>
-                                            {{ parent_chapter.question_count }}
-                            </div>
-                            
-                            {% if parent_chapter.subchapters %}
-                            <i class="bi bi-chevron-down toggle-icon"></i>
-                            {% endif %}
-                        </div>
-                        
-                        {% if parent_chapter.subchapters %}
-                                    <div class="subtopics-container">
-                            {% for subchapter in parent_chapter.subchapters %}
-                                        <div class="subtopic-item">
-                                            <input type="checkbox" class="topic-checkbox" id="ch{{ subchapter.id }}" name="chapters" value="{{ subchapter.id }}">
-                                <label for="ch{{ subchapter.id }}">{{ subchapter.name }}</label>
-                                            <div class="subtopic-count {% if subchapter.question_count == 0 %}empty{% endif %}">
-                                    {{ subchapter.question_count }}
+                                            {{ spec.question_count or 0 }}
+                                        </div>
+                                    </div>
                                 </div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% endfor %}
-                    </div>
                 </div>
                     </div>
                     
@@ -1170,7 +1138,7 @@
         
         // Update selected topics count
         function updateSelectedCount() {
-            const checkboxes = document.querySelectorAll('input[name="chapters"]:checked');
+            const checkboxes = document.querySelectorAll('input[name="specialities"]:checked');
             const counter = document.getElementById('selected-counter');
             const count = document.getElementById('selected-count');
             
@@ -1184,7 +1152,7 @@
         }
         
         // Listen for checkbox changes
-        document.querySelectorAll('input[name="chapters"]').forEach(checkbox => {
+        document.querySelectorAll('input[name="specialities"]').forEach(checkbox => {
             checkbox.addEventListener('change', updateSelectedCount);
         });
         
@@ -1192,12 +1160,7 @@
         updateSelectedCount();
 
         // Fetch and display tags when chapters are selected
-        document.querySelectorAll('input[name="chapters"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const selectedChapters = Array.from(document.querySelectorAll('input[name="chapters"]:checked')).map(cb => cb.value);
-                fetchTags(selectedChapters);
-            });
-        });
+        // Tags are deprecated in speciality-only mode
 
         function fetchTags(selectedChapters) {
             fetch('/get_tags', {
@@ -1230,7 +1193,7 @@
         // Select All Topics functionality
         const selectAllTopics = document.getElementById('select-all-topics');
         selectAllTopics.addEventListener('change', function() {
-            const allTopicCheckboxes = document.querySelectorAll('input[name="chapters"]');
+            const allTopicCheckboxes = document.querySelectorAll('input[name="specialities"]');
             
             // Set all checkboxes to match the select all checkbox state
             allTopicCheckboxes.forEach(checkbox => {
@@ -1251,10 +1214,10 @@
         });
         
         // Update select all checkbox when individual checkboxes change
-        document.querySelectorAll('input[name="chapters"]').forEach(checkbox => {
+        document.querySelectorAll('input[name="specialities"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
-                const allTopicCheckboxes = document.querySelectorAll('input[name="chapters"]');
-                const checkedTopicCheckboxes = document.querySelectorAll('input[name="chapters"]:checked');
+                const allTopicCheckboxes = document.querySelectorAll('input[name="specialities"]');
+                const checkedTopicCheckboxes = document.querySelectorAll('input[name="specialities"]:checked');
                 
                 // Set select all checkbox state based on whether all topics are checked
                 selectAllTopics.checked = allTopicCheckboxes.length === checkedTopicCheckboxes.length;

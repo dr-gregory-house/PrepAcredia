@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, flash, redirect, url_for, jsonify, request
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection, get_content_db_connection
 from app.utils.decorators import login_required
 from app.utils.analytics import get_topic_performance, get_activity_heatmap, get_learning_progress, get_user_stats_summary, get_day_streak
 from app.utils.spaced_repetition import get_spaced_repetition_questions, mark_question_reviewed, set_review_schedule, get_current_schedule
@@ -13,7 +13,7 @@ profile_bp = Blueprint('profile', __name__, url_prefix='/profile')
 @login_required
 def profile():
     user_id = session['user_id']
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     
     user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     quiz_history = conn.execute('''
@@ -98,33 +98,34 @@ def quiz_detail(quiz_id):
     
     # Get quiz answers
     answers = conn.execute('''
-        SELECT qa.*, q.question_text, q.correct_answer, q.rationale
+        SELECT qa.*
         FROM quiz_answers qa
-        JOIN questions q ON qa.question_id = q.id
         WHERE qa.quiz_history_id = ?
     ''', (quiz_id,)).fetchall()
     
     # Get options for each question
     questions_with_options = []
+    content_conn = get_content_db_connection()
     for answer in answers:
-        options = conn.execute('''
-            SELECT option_letter, option_text 
-            FROM options 
-            WHERE question_id = ? 
-            ORDER BY option_letter
-        ''', (answer['question_id'],)).fetchall()
-        
+        qrow = content_conn.execute('SELECT question_text_ru, question_text_en, explanation FROM questions WHERE id = ?', (answer['question_id'],)).fetchone()
+        options = content_conn.execute('SELECT letter, text_ru, text_en, is_correct FROM options WHERE question_id = ? ORDER BY letter', (answer['question_id'],)).fetchall()
         questions_with_options.append({
             'question_id': answer['question_id'],
-            'question_text': answer['question_text'],
-            'selected_answer': answer['selected_answer'],
-            'correct_answer': answer['correct_answer'],
+            'question_text': f"{(qrow['question_text_ru'] if qrow else '')}\n{(qrow['question_text_en'] if qrow else '')}",
+            'selected_answer': answer['selected_letter'],
             'is_correct': answer['is_correct'],
-            'rationale': answer['rationale'],
-            'options': [dict(option) for option in options]
+            'rationale': (qrow['explanation'] if qrow else ''),
+            'options': [
+                {
+                    'option_letter': o['letter'],
+                    'option_text': f"{o['text_ru'] or ''}\n{o['text_en'] or ''}",
+                    'is_correct': bool(o['is_correct'])
+                } for o in options
+            ]
         })
     
     conn.close()
+    content_conn.close()
     
     return render_template('profile/quiz_detail.html', 
                           quiz=quiz, 

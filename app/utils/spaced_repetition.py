@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection, get_content_db_connection
 import math
 import os
 import json
@@ -101,7 +101,7 @@ def add_to_spaced_repetition(user_id, question_id, difficulty=3):
     # Make sure we're using the current global config
     load_global_schedule()
     
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     
     # Calculate next review time (1 day by default for new entries)
     now = datetime.now()
@@ -143,17 +143,16 @@ def get_spaced_repetition_questions(user_id, count=5):
     """
     Get questions due for review based on spaced repetition schedule
     """
-    conn = get_db_connection()
+    user_conn = get_user_db_connection()
     try:
         # Find questions due for review
         now = datetime.now()
         
         # Get questions that are due for review
-        spaced_questions = conn.execute(
+        spaced_questions = user_conn.execute(
             '''SELECT sr.question_id, sr.difficulty_level, sr.repetition_count,
-                      q.question_text, q.correct_answer, q.rationale
+               sr.next_review
                FROM spaced_repetition sr
-               JOIN questions q ON sr.question_id = q.id
                WHERE sr.user_id = ? AND sr.next_review <= ?
                ORDER BY sr.next_review
                LIMIT ?''',
@@ -162,18 +161,21 @@ def get_spaced_repetition_questions(user_id, count=5):
         
         # Get options for each question
         result = []
+        content_conn = get_content_db_connection()
         for q in spaced_questions:
-            options = conn.execute(
-                'SELECT option_letter, option_text FROM options WHERE question_id = ? ORDER BY option_letter',
-                (q['question_id'],)
-            ).fetchall()
-            
+            qrow = content_conn.execute('SELECT question_text_ru, question_text_en, explanation FROM questions WHERE id = ?', (q['question_id'],)).fetchone()
+            options = content_conn.execute('SELECT letter, text_ru, text_en, is_correct FROM options WHERE question_id = ? ORDER BY letter', (q['question_id'],)).fetchall()
             result.append({
                 'id': q['question_id'],
-                'question_text': q['question_text'],
-                'correct_answer': q['correct_answer'],
-                'rationale': q['rationale'],
-                'options': [dict(option) for option in options],
+                'text': f"{(qrow['question_text_ru'] if qrow else '')}\n{(qrow['question_text_en'] if qrow else '')}",
+                'explanation': (qrow['explanation'] if qrow else ''),
+                'options': [
+                    {
+                        'id': o['letter'],
+                        'text': f"{o['text_ru'] or ''}\n{o['text_en'] or ''}",
+                        'is_correct': bool(o['is_correct'])
+                    } for o in options
+                ],
                 'difficulty_level': q['difficulty_level'],
                 'repetition_count': q['repetition_count'],
                 'is_review': True  # Flag to indicate this is a review question
@@ -181,13 +183,17 @@ def get_spaced_repetition_questions(user_id, count=5):
         
         return result
     finally:
-        conn.close()
+        user_conn.close()
+        try:
+            content_conn.close()
+        except Exception:
+            pass
 
 def mark_question_reviewed(user_id, question_id, is_correct):
     """
     Update a question after it has been reviewed
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Find current data
         question_data = conn.execute(
@@ -233,7 +239,7 @@ def remove_from_spaced_repetition(user_id, question_id):
     """
     Remove a question from spaced repetition (when user has mastered it)
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         conn.execute(
             'DELETE FROM spaced_repetition WHERE user_id = ? AND question_id = ?',

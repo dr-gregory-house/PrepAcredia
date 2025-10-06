@@ -1,21 +1,34 @@
 import sqlite3
 import os
 import logging
-from flask import current_app, g
+from flask import current_app
 from app.scripts.init_tracking_tables import init_tracking_tables
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def get_db_connection():
-    """Get a connection to the SQLite database"""
-    conn = sqlite3.connect(current_app.config['DB_PATH'])
+def get_content_db_connection():
+    """Get a read-only connection to the content SQLite database (master.db)."""
+    db_path = current_app.config['CONTENT_DB_PATH']
+    # Content DB is read-only; however sqlite3 in Python doesn't enforce read-only easily without URI.
+    # Use URI mode to open in read-only. Fallback to normal open if URI fails (e.g., Windows paths).
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+    except sqlite3.OperationalError:
+        conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def get_user_db_connection():
+    """Get a connection to the user/admin SQLite database (user.db)."""
+    db_path = current_app.config['USER_DB_PATH']
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
 
 def init_db():
-    """Initialize database with user tables if they don't exist"""
+    """Initialize user database (user.db) and ensure temp directories exist."""
     # This will be called with app context from create_app
     
     # First check if we're running in Cloud Run
@@ -30,25 +43,16 @@ def init_db():
         except Exception as e:
             logger.error(f"Error downloading database: {str(e)}")
     
-    # Ensure db directory exists
-    db_dir = os.path.dirname(current_app.config['DB_PATH'])
-    os.makedirs(db_dir, exist_ok=True)
+    # Ensure user db directory exists
+    user_db_dir = os.path.dirname(current_app.config['USER_DB_PATH'])
+    os.makedirs(user_db_dir, exist_ok=True)
     
     # Ensure temp directory exists
     os.makedirs(current_app.config['TEMP_DIR'], exist_ok=True)
     
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     
-    # Check if chapters table exists
-    chapters_exists = False
-    try:
-        # This will raise an OperationalError if the table doesn't exist
-        conn.execute('SELECT 1 FROM chapters LIMIT 1')
-        chapters_exists = True
-    except sqlite3.OperationalError:
-        # Table doesn't exist, we'll create it later
-        pass
-    
+    # Create user/admin and analytics schemas in user.db
     conn.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,63 +66,7 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
-    
-    # Only create chapters and related tables if they don't exist
-    if not chapters_exists:
-        logger.info("Creating chapters and related tables...")
-        
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS chapters (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            parent_id INTEGER,
-            FOREIGN KEY (parent_id) REFERENCES chapters (id)
-        )
-        ''')
-        
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS questions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            content TEXT NOT NULL,
-            option_a TEXT NOT NULL,
-            option_b TEXT NOT NULL,
-            option_c TEXT NOT NULL,
-            option_d TEXT NOT NULL,
-            correct_option TEXT NOT NULL,
-            explanation TEXT,
-            created_by INTEGER,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (created_by) REFERENCES users (id)
-        )
-        ''')
-        
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS question_chapters (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question_id INTEGER NOT NULL,
-            chapter_id INTEGER NOT NULL,
-            FOREIGN KEY (question_id) REFERENCES questions (id),
-            FOREIGN KEY (chapter_id) REFERENCES chapters (id)
-        )
-        ''')
-        
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT UNIQUE NOT NULL
-        )
-        ''')
-        
-        conn.execute('''
-        CREATE TABLE IF NOT EXISTS question_tags (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            question_id INTEGER NOT NULL,
-            tag_id INTEGER NOT NULL,
-            FOREIGN KEY (question_id) REFERENCES questions (id),
-            FOREIGN KEY (tag_id) REFERENCES tags (id)
-        )
-        ''')
-    
+
     conn.execute('''
     CREATE TABLE IF NOT EXISTS quiz_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -126,25 +74,93 @@ def init_db():
         quiz_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         score INTEGER NOT NULL,
         total_questions INTEGER NOT NULL,
-        selected_chapters TEXT NOT NULL,
-        selected_tags TEXT,
+        selected_specialities TEXT,
+        time_spent INTEGER DEFAULT 0,
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
-    
+
     conn.execute('''
     CREATE TABLE IF NOT EXISTS quiz_answers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         quiz_history_id INTEGER NOT NULL,
         question_id INTEGER NOT NULL,
-        selected_answer TEXT NOT NULL,
+        selected_letter TEXT NOT NULL,
         is_correct INTEGER NOT NULL,
-        FOREIGN KEY (quiz_history_id) REFERENCES quiz_history (id),
-        FOREIGN KEY (question_id) REFERENCES questions (id)
+        FOREIGN KEY (quiz_history_id) REFERENCES quiz_history (id)
     )
     ''')
-    
-    # Initialize user tracking tables
+
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS spaced_repetition (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        question_id INTEGER NOT NULL,
+        last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        next_review TIMESTAMP NOT NULL,
+        repetition_count INTEGER DEFAULT 1,
+        difficulty_level INTEGER DEFAULT 3,
+        UNIQUE(user_id, question_id)
+    )
+    ''')
+
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS topic_performance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        speciality TEXT NOT NULL,
+        correct_count INTEGER DEFAULT 0,
+        incorrect_count INTEGER DEFAULT 0,
+        last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, speciality)
+    )
+    ''')
+
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS user_activity (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        activity_date DATE NOT NULL,
+        quiz_count INTEGER DEFAULT 0,
+        question_count INTEGER DEFAULT 0,
+        correct_count INTEGER DEFAULT 0,
+        UNIQUE(user_id, activity_date)
+    )
+    ''')
+
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS user_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        session_token TEXT NOT NULL,
+        login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        is_active INTEGER DEFAULT 1,
+        ip_address TEXT,
+        user_agent TEXT
+    )
+    ''')
+
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS user_activity_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        activity_type TEXT NOT NULL,
+        activity_details TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        ip_address TEXT
+    )
+    ''')
+
+    # Indices for performance
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_user ON user_sessions(user_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_user_sessions_active ON user_sessions(is_active)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_user ON user_activity_logs(user_id)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_type ON user_activity_logs(activity_type)')
+    conn.execute('CREATE INDEX IF NOT EXISTS idx_activity_logs_timestamp ON user_activity_logs(timestamp)')
+
+    # Initialize user tracking tables (no-op if already created)
     init_tracking_tables()
     
     # Create default admin user if not exists
@@ -158,7 +174,7 @@ def init_db():
     conn.commit()
     conn.close()
     
-    # Upload the initialized database back to Cloud Storage if in Cloud Run
+    # Upload the initialized user database back to Cloud Storage if in Cloud Run
     if os.environ.get('K_SERVICE'):
         try:
             from app.utils.cloud_storage import upload_db_to_bucket

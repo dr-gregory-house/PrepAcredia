@@ -6,11 +6,15 @@ class Config:
     # Database
     # In Cloud Run, use /tmp directory which is writable
     if os.environ.get('K_SERVICE'):  # This environment variable is set in Cloud Run
-        DB_PATH = '/tmp/mcq_database.db'
+        # Content DB is read-only and bundled/deployed separately; keep under /workspace if needed
+        CONTENT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'db', 'master.db')
+        # User DB is writable and will be synced; use /tmp in Cloud Run
+        USER_DB_PATH = '/tmp/user.db'
         TEMP_DIR = '/tmp/pedia_temp'
     else:
         # Local development
-        DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'db', 'mcq_database.db')
+        CONTENT_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'db', 'master.db')
+        USER_DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'db', 'user.db')
         TEMP_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'temp')
     
     # Debug flag

@@ -1,6 +1,5 @@
 from functools import wraps
 from flask import session, redirect, url_for, flash, request
-from app.utils.db import get_db_connection
 
 def login_required(f):
     @wraps(f)

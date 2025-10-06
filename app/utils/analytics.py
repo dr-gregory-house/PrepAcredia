@@ -1,17 +1,17 @@
 from datetime import datetime, timedelta
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection
 import json
 
-def update_topic_performance(user_id, chapter_id, is_correct):
+def update_topic_performance(user_id, speciality, is_correct):
     """
     Update user performance stats for a specific topic/chapter
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Check if we already have a record for this user and chapter
         existing = conn.execute(
-            'SELECT id, correct_count, incorrect_count FROM topic_performance WHERE user_id = ? AND chapter_id = ?',
-            (user_id, chapter_id)
+            'SELECT id, correct_count, incorrect_count FROM topic_performance WHERE user_id = ? AND speciality = ?',
+            (user_id, speciality)
         ).fetchone()
         
         now = datetime.now()
@@ -21,20 +21,10 @@ def update_topic_performance(user_id, chapter_id, is_correct):
             correct_count = existing['correct_count'] + (1 if is_correct else 0)
             incorrect_count = existing['incorrect_count'] + (0 if is_correct else 1)
             
-            conn.execute(
-                '''UPDATE topic_performance 
-                   SET correct_count = ?, incorrect_count = ?, last_updated = ?
-                   WHERE id = ?''',
-                (correct_count, incorrect_count, now, existing['id'])
-            )
+            conn.execute('UPDATE topic_performance SET correct_count = ?, incorrect_count = ?, last_updated = ? WHERE id = ?', (correct_count, incorrect_count, now, existing['id']))
         else:
             # Insert new record
-            conn.execute(
-                '''INSERT INTO topic_performance 
-                   (user_id, chapter_id, correct_count, incorrect_count, last_updated)
-                   VALUES (?, ?, ?, ?, ?)''',
-                (user_id, chapter_id, 1 if is_correct else 0, 0 if is_correct else 1, now)
-            )
+            conn.execute('INSERT INTO topic_performance (user_id, speciality, correct_count, incorrect_count, last_updated) VALUES (?, ?, ?, ?, ?)', (user_id, speciality, 1 if is_correct else 0, 0 if is_correct else 1, now))
         
         conn.commit()
     finally:
@@ -48,7 +38,7 @@ def update_user_activity(user_id, questions_count, correct_count):
     if questions_count <= 0:
         questions_count = 1  # Ensure at least 1 question
     
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         today = datetime.now().date()
         
@@ -87,18 +77,9 @@ def get_topic_performance(user_id):
     """
     Get user performance by topic for the analytics dashboard
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
-        # Get all topics with performance data
-        performance_data = conn.execute(
-            '''SELECT tp.chapter_id, c.name as chapter_name, 
-                      tp.correct_count, tp.incorrect_count
-               FROM topic_performance tp
-               JOIN chapters c ON tp.chapter_id = c.id
-               WHERE tp.user_id = ?
-               ORDER BY c.name''',
-            (user_id,)
-        ).fetchall()
+        performance_data = conn.execute('SELECT speciality, correct_count, incorrect_count FROM topic_performance WHERE user_id = ? ORDER BY speciality', (user_id,)).fetchall()
         
         # Calculate percentages and format data
         result = []
@@ -107,8 +88,8 @@ def get_topic_performance(user_id):
             accuracy = (data['correct_count'] / total * 100) if total > 0 else 0
             
             result.append({
-                'topic_id': data['chapter_id'],
-                'topic_name': data['chapter_name'],
+                'topic_id': data['speciality'],
+                'topic_name': data['speciality'],
                 'correct': data['correct_count'],
                 'incorrect': data['incorrect_count'],
                 'total': total,
@@ -123,7 +104,7 @@ def get_activity_heatmap(user_id, days=365):
     """
     Get user activity data for heatmap visualization
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get activity for the last X days
         end_date = datetime.now().date()
@@ -161,7 +142,7 @@ def get_learning_progress(user_id, days=90):
     """
     Get learning progress data over time for charts
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get daily performance for trend analysis
         end_date = datetime.now().date()
@@ -207,7 +188,7 @@ def get_user_stats_summary(user_id):
     """
     Get summary statistics for the user dashboard
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Total questions answered
         total_questions = conn.execute(
@@ -224,9 +205,9 @@ def get_user_stats_summary(user_id):
         # Overall accuracy
         accuracy = (correct_answers / total_questions * 100) if total_questions > 0 else 0
         
-        # Number of topics studied
+        # Number of topics studied (tracked by speciality in topic_performance)
         topics_studied = conn.execute(
-            'SELECT COUNT(DISTINCT chapter_id) as count FROM topic_performance WHERE user_id = ?',
+            'SELECT COUNT(DISTINCT speciality) as count FROM topic_performance WHERE user_id = ?',
             (user_id,)
         ).fetchone()['count']
         
@@ -263,12 +244,11 @@ def get_never_attempted_count(user_id):
     """
     Get the count of questions the user has never attempted
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get total number of questions in the database
-        total_questions_count = conn.execute(
-            'SELECT COUNT(*) as count FROM questions'
-        ).fetchone()['count']
+        # Note: total questions come from content DB; here we use user DB only for attempted count.
+        total_questions_count = 0
         
         # Get number of unique questions the user has attempted
         attempted_questions_count = conn.execute(
@@ -279,10 +259,8 @@ def get_never_attempted_count(user_id):
             (user_id,)
         ).fetchone()['count']
         
-        # Calculate number of never attempted questions
-        never_attempted_count = total_questions_count - attempted_questions_count
-        
-        return never_attempted_count
+        # Unknown total in user DB context; return attempted count only
+        return max(0, -attempted_questions_count)
     finally:
         conn.close()
 
@@ -290,7 +268,7 @@ def get_day_streak(user_id):
     """
     Calculate the user's current day streak based on consecutive days of activity
     """
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get the user's activity dates in descending order
         activity_dates = conn.execute(

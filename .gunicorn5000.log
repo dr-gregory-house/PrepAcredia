@@ -1,0 +1,36 @@
+/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/gunicorn/util.py:25: UserWarning: pkg_resources is deprecated as an API. See https://setuptools.pypa.io/en/latest/pkg_resources.html. The pkg_resources package is slated for removal as early as 2025-11-30. Refrain from using this package or pin to Setuptools<81.
+  import pkg_resources
+[2025-10-06 21:20:16 +0300] [28350] [INFO] Starting gunicorn 20.1.0
+[2025-10-06 21:20:16 +0300] [28350] [INFO] Listening at: http://0.0.0.0:5000 (28350)
+[2025-10-06 21:20:16 +0300] [28350] [INFO] Using worker: gthread
+[2025-10-06 21:20:16 +0300] [28363] [INFO] Booting worker with pid: 28363
+[2025-10-06 21:21:17 +0300] [28363] [ERROR] Error handling request /quiz/answer
+Traceback (most recent call last):
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/gunicorn/workers/gthread.py", line 271, in handle
+    keepalive = self.handle_request(req, conn)
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/gunicorn/workers/gthread.py", line 323, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/flask/app.py", line 2213, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/flask/app.py", line 2193, in wsgi_app
+    response = self.handle_exception(e)
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/flask/app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/flask/app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/.venv/lib/python3.13/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/app/utils/decorators.py", line 10, in decorated_function
+    return f(*args, **kwargs)
+  File "/home/anubhav/Desktop/PrepAccredia/pediamcq/app/routes/quiz.py", line 540, in answer
+    'correct': correct,
+               ^^^^^^^
+NameError: name 'correct' is not defined. Did you mean: 'current'?
+[2025-10-06 21:22:37 +0300] [28350] [INFO] Handling signal: term
+[2025-10-06 21:22:37 +0300] [28363] [INFO] Worker exiting (pid: 28363)
+User tracking tables initialized successfully!
+[2025-10-06 21:22:37 +0300] [28350] [INFO] Shutting down: Master

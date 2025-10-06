@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection
 import uuid
 from flask import request
 
 def create_user_session(user_id):
     """Create a new session for a user"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         session_token = str(uuid.uuid4())
         conn.execute('''
@@ -20,7 +20,7 @@ def create_user_session(user_id):
 
 def end_user_session(session_token):
     """End a user session"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         conn.execute('''
             UPDATE user_sessions 
@@ -33,7 +33,7 @@ def end_user_session(session_token):
 
 def update_user_activity(user_id, session_token):
     """Update user's last activity timestamp"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         conn.execute('''
             UPDATE user_sessions 
@@ -46,7 +46,7 @@ def update_user_activity(user_id, session_token):
 
 def log_user_activity(user_id, activity_type, activity_details=None):
     """Log user activity"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         conn.execute('''
             INSERT INTO user_activity_logs 
@@ -59,7 +59,7 @@ def log_user_activity(user_id, activity_type, activity_details=None):
 
 def get_online_users(timeout_minutes=5):
     """Get list of currently online users"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         timeout = datetime.now() - timedelta(minutes=timeout_minutes)
         users = conn.execute('''

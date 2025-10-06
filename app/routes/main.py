@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
-from app.utils.db import get_db_connection
+from app.utils.db import get_content_db_connection
 from app.utils.decorators import login_required
 from app.utils.user_tracking import log_user_activity
 import random
@@ -12,90 +12,24 @@ def home():
     if 'user_id' not in session:
         return redirect(url_for('auth.login'))
         
-    conn = get_db_connection()
-    
-    # Get all chapters
-    all_chapters = conn.execute('SELECT id, name, parent_id FROM chapters ORDER BY name').fetchall()
-    
-    # Get question count for each chapter
-    chapter_question_counts = {}
-    counts = conn.execute('''
-        SELECT chapter_id, COUNT(DISTINCT question_id) as question_count 
-        FROM question_chapters 
-        GROUP BY chapter_id
+    conn = get_content_db_connection()
+    # Fetch specialities with counts, ordered by number of questions descending
+    rows = conn.execute('''
+        SELECT speciality, COUNT(*) AS question_count
+        FROM questions
+        WHERE speciality IS NOT NULL AND TRIM(speciality) != ''
+        GROUP BY speciality
+        ORDER BY question_count DESC
     ''').fetchall()
-    
-    for count in counts:
-        chapter_question_counts[count['chapter_id']] = count['question_count']
-    
-    # Organize chapters into a hierarchical structure
-    parent_chapters = []
-    subchapters_by_parent = {}
-    
-    # First, separate parent chapters and organize subchapters by parent_id
-    for chapter in all_chapters:
-        if chapter['parent_id'] is None:
-            # This is a parent chapter
-            parent_chapter = dict(chapter)
-            parent_chapter['subchapters'] = []
-            parent_chapter['own_question_count'] = chapter_question_counts.get(chapter['id'], 0)
-            parent_chapters.append(parent_chapter)
-        else:
-            # This is a subchapter
-            parent_id = chapter['parent_id']
-            if parent_id not in subchapters_by_parent:
-                subchapters_by_parent[parent_id] = []
-            subchapter = dict(chapter)
-            subchapter['question_count'] = chapter_question_counts.get(chapter['id'], 0)
-            subchapters_by_parent[parent_id].append(subchapter)
-    
-    # Add subchapters to their parent chapters and calculate total question counts
-    for parent in parent_chapters:
-        total_questions = parent['own_question_count']
-        if parent['id'] in subchapters_by_parent:
-            parent['subchapters'] = subchapters_by_parent[parent['id']]
-            # Add up all subchapter questions
-            for subchapter in parent['subchapters']:
-                total_questions += subchapter['question_count']
-        
-        parent['question_count'] = total_questions
-    
-    # Get tags and question counts for selected chapters
-    tag_question_counts = {}
-    if request.method == 'POST':
-        selected_chapters = request.form.getlist('chapters')
-        if selected_chapters:
-            # Fetch tags and their question counts
-            tag_counts = conn.execute('''
-                SELECT t.id, t.name, COUNT(DISTINCT qt.question_id) as question_count
-                FROM tags t
-                JOIN question_tags qt ON t.id = qt.tag_id
-                JOIN question_chapters qc ON qt.question_id = qc.question_id
-                WHERE qc.chapter_id IN ({})
-                GROUP BY t.id
-            '''.format(','.join('?' for _ in selected_chapters)), selected_chapters).fetchall()
-            
-            for tag in tag_counts:
-                tag_question_counts[tag['id']] = {
-                    'name': tag['name'],
-                    'question_count': tag['question_count']
-                }
-
     conn.close()
+    specialities = [{ 'name': row['speciality'], 'question_count': row['question_count'] } for row in rows]
     
     if request.method == 'POST':
-        selected_chapters = request.form.getlist('chapters')
+        selected_specialities = request.form.getlist('specialities')
         num_questions = int(request.form.get('num_questions', 1))
-        if not selected_chapters:
-            return render_template('home.html', parent_chapters=parent_chapters, error='Please select at least one chapter.', tag_question_counts=tag_question_counts)
+        if not selected_specialities:
+            return render_template('home.html', specialities=specialities, error='Please select at least one speciality.')
         
-        # Check if tags are being selected
-        selected_tags = request.form.getlist('tags')
-        if not selected_tags:
-            # If no tags are selected, use all questions from selected chapters
-            selected_tags = None
-        
-        # Check if only undiscovered questions should be displayed
         undiscovered_only = 'undiscovered_only' in request.form
         
         # Clear any existing quiz state
@@ -105,8 +39,7 @@ def home():
         # Generate a unique quiz ID
         quiz_id = str(random.randint(10000, 99999))
         session['quiz_id'] = quiz_id
-        session['selected_chapters'] = selected_chapters
-        session['selected_tags'] = selected_tags
+        session['selected_specialities'] = selected_specialities
         session['num_questions'] = num_questions
         session['undiscovered_only'] = undiscovered_only
         
@@ -115,26 +48,14 @@ def home():
             log_user_activity(
                 session['user_id'],
                 'quiz_start',
-                f"Started quiz with {num_questions} questions from {len(selected_chapters)} chapters"
+                f"Started quiz with {num_questions} questions from {len(selected_specialities)} specialities"
             )
         
         return redirect(url_for('quiz.display_quiz'))
     
-    return render_template('home.html', parent_chapters=parent_chapters, tag_question_counts=tag_question_counts)
+    return render_template('home.html', specialities=specialities)
 
 @main_bp.route('/get_tags', methods=['POST'])
 def get_tags():
-    selected_chapters = request.json.get('chapters', [])
-    conn = get_db_connection()
-    tag_counts = conn.execute('''
-        SELECT t.id, t.name, COUNT(DISTINCT qt.question_id) as question_count
-        FROM tags t
-        JOIN question_tags qt ON t.id = qt.tag_id
-        JOIN question_chapters qc ON qt.question_id = qc.question_id
-        WHERE qc.chapter_id IN ({})
-        GROUP BY t.id
-    '''.format(','.join('?' for _ in selected_chapters)), selected_chapters).fetchall()
-    conn.close()
-    
-    tag_question_counts = {tag['id']: {'name': tag['name'], 'question_count': tag['question_count']} for tag in tag_counts}
-    return jsonify({'tags': tag_question_counts}) 
+    # Deprecated in speciality-only model
+    return jsonify({'tags': {}})

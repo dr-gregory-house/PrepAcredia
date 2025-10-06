@@ -13,7 +13,7 @@ COPY . .
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 ENV GCS_BUCKET_NAME=pedia-sqlite-db
-ENV GCS_DB_NAME=mcq_database.db
+ENV GCS_USER_DB_NAME=user.db
 
 # Command to run the application
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 "app.app:create_app()" 

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
-from app.utils.db import get_db_connection
+from app.utils.db import get_user_db_connection
 from app.utils.user_tracking import create_user_session, end_user_session, log_user_activity
 import sys
 
@@ -25,7 +25,7 @@ def login():
         password = request.form.get('password')
         
         if username and password:
-            conn = get_db_connection()
+            conn = get_user_db_connection()
             user = conn.execute('SELECT * FROM users WHERE username = ? AND password_hash IS NOT NULL', (username,)).fetchone()
             conn.close()
             
@@ -74,7 +74,7 @@ def register():
         password = request.form.get('password')
         
         if email and username and name and password:
-            conn = get_db_connection()
+            conn = get_user_db_connection()
             try:
                 existing_email = conn.execute('SELECT 1 FROM users WHERE email = ?', (email,)).fetchone()
                 existing_username = conn.execute('SELECT 1 FROM users WHERE username = ?', (username,)).fetchone()

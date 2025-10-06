@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
-from app.utils.db import get_db_connection
+from app.utils.db import get_content_db_connection, get_user_db_connection
 from app.utils.decorators import login_required
 from app.utils.quiz import save_quiz_data, load_quiz_data, delete_quiz_data
 from app.utils.spaced_repetition import add_to_spaced_repetition, get_spaced_repetition_questions, mark_question_reviewed
@@ -32,7 +32,7 @@ def display_quiz():
     quiz_start activity is logged once per quiz.
     """
     # Check if a quiz is in progress
-    if 'quiz_id' not in session or 'selected_chapters' not in session or 'num_questions' not in session:
+    if 'quiz_id' not in session or 'selected_specialities' not in session or 'num_questions' not in session:
         return redirect(url_for('main.home'))
     
     quiz_id = session['quiz_id']
@@ -43,66 +43,34 @@ def display_quiz():
         # Get user ID for spaced repetition and analytics
         user_id = session.get('user_id')
         
-        # Fetch random questions from selected chapters and tags
-        conn = get_db_connection()
-        chapter_ids = ','.join('?' for _ in session['selected_chapters'])
-        tag_ids = ','.join('?' for _ in session['selected_tags']) if session['selected_tags'] else None
-        
-        # Check if we should include only undiscovered questions
+        # Fetch random questions by selected specialities from content DB
+        content_conn = get_content_db_connection()
+        placeholders = ','.join('?' for _ in session['selected_specialities'])
         undiscovered_only = session.get('undiscovered_only', False)
+        params = session['selected_specialities'].copy()
         
-        # Base query parameters will be populated based on selected chapters and tags
-        params = session['selected_chapters'].copy() if session['selected_chapters'] else []
-        
-        # Build the query based on filters
-        if tag_ids and undiscovered_only and user_id:
-            # Include chapters, tags, and filter out answered questions
-            query = f"""
-                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
-                JOIN question_chapters qc ON q.id = qc.question_id
-                JOIN question_tags qt ON q.id = qt.question_id
-                WHERE qc.chapter_id IN ({chapter_ids}) AND qt.tag_id IN ({tag_ids})
-                AND q.id NOT IN (
-                    SELECT DISTINCT qa.question_id
-                    FROM quiz_answers qa
-                    JOIN quiz_history qh ON qa.quiz_history_id = qh.id
-                    WHERE qh.user_id = ?
-                )
-            """
-            params.extend(session['selected_tags'])
-            params.append(user_id)
-        elif tag_ids:
-            # Include only chapters and tags
-            query = f"""
-                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
-                JOIN question_chapters qc ON q.id = qc.question_id
-                JOIN question_tags qt ON q.id = qt.question_id
-                WHERE qc.chapter_id IN ({chapter_ids}) AND qt.tag_id IN ({tag_ids})
-            """
-            params.extend(session['selected_tags'])
-        elif undiscovered_only and user_id:
-            # Include chapters and filter out answered questions
-            query = f"""
-                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
-                JOIN question_chapters qc ON q.id = qc.question_id
-                WHERE qc.chapter_id IN ({chapter_ids})
-                AND q.id NOT IN (
-                    SELECT DISTINCT qa.question_id
-                    FROM quiz_answers qa
-                    JOIN quiz_history qh ON qa.quiz_history_id = qh.id
-                    WHERE qh.user_id = ?
-                )
-            """
-            params.append(user_id)
+        if undiscovered_only and user_id:
+            # Exclude questions the user has already answered, by consulting user DB
+            user_conn = get_user_db_connection()
+            answered_ids = user_conn.execute('''
+                SELECT DISTINCT qa.question_id
+                FROM quiz_answers qa
+                JOIN quiz_history qh ON qa.quiz_history_id = qh.id
+                WHERE qh.user_id = ?
+            ''', (user_id,)).fetchall()
+            user_conn.close()
+            answered_set = {row['question_id'] for row in answered_ids}
+            questions = content_conn.execute(
+                f'SELECT id, question_text_ru, question_text_en, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
+                params
+            ).fetchall()
+            # Filter client-side due to cross-db limitation
+            questions = [q for q in questions if q['id'] not in answered_set]
         else:
-            # Only filter by chapters
-            query = f"""
-                SELECT DISTINCT q.id, q.question_text, q.correct_answer, q.rationale FROM questions q
-                JOIN question_chapters qc ON q.id = qc.question_id
-                WHERE qc.chapter_id IN ({chapter_ids})
-            """
-        
-        questions = conn.execute(query, params).fetchall()
+            questions = content_conn.execute(
+                f'SELECT id, question_text_ru, question_text_en, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
+                params
+            ).fetchall()
         
         # Check if we found any questions
         if not questions:
@@ -139,25 +107,22 @@ def display_quiz():
             # Use the specified number of questions
             questions = random.sample(list(questions), reg_question_count)
         
-        # Process regular questions
+        # Process regular questions with bilingual formatting and correctness via options.is_correct
         quiz_data = []
         for q in questions:
-            options = conn.execute('SELECT option_letter, option_text FROM options WHERE question_id = ? ORDER BY option_letter', (q['id'],)).fetchall()
+            opts = content_conn.execute('SELECT letter, text_ru, text_en, is_correct FROM options WHERE question_id = ? ORDER BY letter', (q['id'],)).fetchall()
             formatted_options = []
-            for option in options:
+            for o in opts:
                 formatted_options.append({
-                    'id': option['option_letter'],  # Use option_letter as id for form submission
-                    'text': option['option_text'],
-                    'is_correct': (option['option_letter'] == q['correct_answer'])
+                    'id': o['letter'],
+                    'text': f"{o['text_ru'] or ''}\n{o['text_en'] or ''}",
+                    'is_correct': bool(o['is_correct'])
                 })
             
             quiz_data.append({
                 'id': q['id'],
-                'text': q['question_text'],  # Use 'text' to match template
-                'question_text': q['question_text'],  # Keep original for backwards compatibility
-                'correct_answer': q['correct_answer'],
-                'explanation': q['rationale'],  # Use 'explanation' to match template
-                'rationale': q['rationale'],   # Keep original for backwards compatibility
+                'text': f"{q['question_text_ru'] or ''}\n{q['question_text_en'] or ''}",
+                'explanation': q['explanation'],
                 'options': formatted_options,
                 'is_review': False  # Regular question, not from spaced repetition
             })
@@ -186,8 +151,7 @@ def display_quiz():
         
         # Shuffle the combined questions
         random.shuffle(quiz_data)
-        
-        conn.close()
+        content_conn.close()
         
         # Check if we have valid quiz data
         if not quiz_data:
@@ -393,10 +357,9 @@ def results():
     quiz_history_id = None
     if 'user_id' in session and quiz_data and user_answers:
         user_id = session['user_id']
-        selected_chapters = ','.join(map(str, session.get('selected_chapters', [])))
-        selected_tags = ','.join(map(str, session.get('selected_tags', []))) if session.get('selected_tags') else None
+        selected_specialities = ','.join(session.get('selected_specialities', []))
         
-        conn = get_db_connection()
+        conn = get_user_db_connection()
         
         # Calculate total time spent from all answers
         total_time_spent = sum(answer.get('time_spent', 0) for answer in user_answers if answer) if user_answers else 0
@@ -405,9 +368,9 @@ def results():
         
         try:
             cursor.execute('''
-                INSERT INTO quiz_history (user_id, score, total_questions, selected_chapters, selected_tags, time_spent)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (user_id, score, total, selected_chapters, selected_tags, total_time_spent))
+                INSERT INTO quiz_history (user_id, score, total_questions, selected_specialities, time_spent)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (user_id, score, total, selected_specialities, total_time_spent))
             
             # Get the quiz history ID
             quiz_history_id = cursor.lastrowid
@@ -417,7 +380,7 @@ def results():
                 if i < len(user_answers) and user_answers[i]:
                     answer = user_answers[i]
                     conn.execute('''
-                        INSERT INTO quiz_answers (quiz_history_id, question_id, selected_answer, is_correct)
+                        INSERT INTO quiz_answers (quiz_history_id, question_id, selected_letter, is_correct)
                         VALUES (?, ?, ?, ?)
                     ''', (quiz_history_id, question['id'], answer['selected'], 1 if answer['is_correct'] else 0))
             
@@ -458,11 +421,19 @@ def results():
             }
             
             # Add options
+            # Determine the correct answer letter either from question data or by inspecting options
+            correct_letter = q_data.get('correct_answer')
+            if not correct_letter:
+                for _opt in q_data['options']:
+                    if _opt.get('is_correct'):
+                        correct_letter = _opt.get('id', _opt.get('option_letter', ''))
+                        break
+
             for opt in q_data['options']:
                 option = {
                     'id': opt.get('id', opt.get('option_letter', '')),
                     'text': opt.get('text', opt.get('option_text', '')),
-                    'is_correct': (opt.get('id', opt.get('option_letter', '')) == q_data['correct_answer'])
+                    'is_correct': (opt.get('id', opt.get('option_letter', '')) == correct_letter)
                 }
                 question['options'].append(option)
                 
@@ -556,8 +527,17 @@ def answer():
     
     # Process the answer
     current_question = quiz_data[current]
-    correct = current_question['correct_answer']
-    is_correct = (selected == correct)
+    # Determine correctness from options
+    is_correct = False
+    # Determine the correct option letter for the current question
+    correct = None
+    for opt in current_question['options']:
+        if str(opt.get('id')) == str(selected) and opt.get('is_correct'):
+            is_correct = True
+            break
+        if opt.get('is_correct'):
+            # Capture the correct answer letter
+            correct = str(opt.get('id'))
     
     # Update score if correct
     if is_correct:
@@ -595,17 +575,15 @@ def answer():
             db_changed = True
     
     # Get chapter IDs for this question for analytics
+    # Update performance by speciality
     if user_id:
-        conn = get_db_connection()
-        chapters = conn.execute(
-            'SELECT chapter_id FROM question_chapters WHERE question_id = ?', 
-            (quiz_data[current]['id'],)
-        ).fetchall()
-        conn.close()
-        
-        # Update performance for each chapter
-        for chapter in chapters:
-            update_topic_performance(user_id, chapter['chapter_id'], is_correct)
+        # Fetch speciality for the current question
+        content_conn = get_content_db_connection()
+        row = content_conn.execute('SELECT speciality FROM questions WHERE id = ?', (quiz_data[current]['id'],)).fetchone()
+        content_conn.close()
+        speciality = row['speciality'] if row else None
+        if speciality:
+            update_topic_performance(user_id, speciality, is_correct)
             
             # Explicitly mark database as changed
             if db_changed is not None:
