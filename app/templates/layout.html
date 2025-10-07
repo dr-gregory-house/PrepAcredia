@@ -27,6 +27,42 @@
             --transition: all 0.3s ease;
         }
 
+        /* Dark theme overrides */
+        body[data-theme="dark"] {
+            --primary: #8b93ff;
+            --primary-hover: #6f78ff;
+            --primary-light: #c7cbff;
+            --secondary: #34d399;
+            --accent: #f59e0b;
+            --danger: #f87171;
+            --dark: #e5e7eb;
+            --light: #0b1220;
+            --glass-bg: rgba(16, 24, 39, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --navbar-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Aurora theme - vibrant gradient-based design */
+        body[data-theme="aurora"] {
+            --primary: #a855f7;
+            --primary-hover: #9333ea;
+            --primary-light: #d8b4fe;
+            --secondary: #14b8a6;
+            --accent: #ec4899;
+            --danger: #f43f5e;
+            --dark: #f8fafc;
+            --light: #0f172a;
+            --glass-bg: rgba(15, 23, 42, 0.85);
+            --card-border: rgba(168, 85, 247, 0.2);
+            --card-shadow: 0 8px 32px rgba(168, 85, 247, 0.3);
+            --navbar-shadow: 0 4px 30px rgba(20, 184, 166, 0.4);
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --gradient-aurora: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: linear-gradient(135deg, #f0f4ff 0%, #e5e7fa 100%);
@@ -50,6 +86,84 @@
             z-index: -1;
             pointer-events: none;
         }
+
+        body[data-theme="dark"] {
+            background: linear-gradient(135deg, #0b1220 0%, #111827 100%);
+        }
+
+        body[data-theme="aurora"] {
+            background: linear-gradient(135deg, #1a0b2e 0%, #16213e 50%, #0f3460 100%);
+            position: relative;
+        }
+
+        body[data-theme="aurora"]::before {
+            background: radial-gradient(circle at 20% 50%, rgba(168, 85, 247, 0.2) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(20, 184, 166, 0.1) 0%, transparent 50%);
+            animation: aurora-flow 15s ease-in-out infinite;
+        }
+
+        @keyframes aurora-flow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        body[data-theme="aurora"] .navbar {
+            background: rgba(15, 23, 42, 0.7);
+            border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        body[data-theme="aurora"] .card-header {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        body[data-theme="aurora"] .btn-primary {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border: none;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        body[data-theme="aurora"] .btn-primary:hover {
+            background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.6);
+        }
+
+        body[data-theme="aurora"] .card:hover {
+            box-shadow: 0 12px 40px rgba(168, 85, 247, 0.4);
+        }
+
+        body[data-theme="aurora"] .badge {
+            background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+        }
+
+        .dropdown-item.theme-option {
+            color: var(--dark);
+            transition: var(--transition);
+        }
+
+        .dropdown-item.theme-option:hover {
+            background: rgba(168, 85, 247, 0.1);
+            color: var(--primary);
+        }
+
+        .dropdown-item.theme-option.active {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Polished theme button */
+        .btn-theme {
+            background: var(--glass-bg);
+            border: 1px solid var(--card-border);
+            color: var(--dark);
+        }
+        .btn-theme:hover {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--primary);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
         
         .navbar {
             background: rgba(255, 255, 255, 0.8);
@@ -59,6 +173,10 @@
             box-shadow: var(--navbar-shadow);
             padding: 15px 0;
             transition: var(--transition);
+        }
+
+        body[data-theme="dark"] .navbar {
+            background: rgba(17, 24, 39, 0.7);
         }
         
         .navbar-brand {
@@ -301,7 +419,7 @@
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
-<body>
+<body data-logged-in="{{ 1 if session.user_id else 0 }}">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
@@ -335,6 +453,23 @@
                 </ul>
                 
                 <ul class="navbar-nav ms-auto">
+                    <li class="nav-item dropdown d-flex align-items-center me-2">
+                        <button class="btn btn-theme btn-sm nav-button dropdown-toggle" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-palette"></i>
+                            <span class="ms-1">Theme</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeDropdown" style="background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border);">
+                            <li><a class="dropdown-item theme-option" href="#" data-theme="light">
+                                <i class="fas fa-sun me-2"></i> Light
+                            </a></li>
+                            <li><a class="dropdown-item theme-option" href="#" data-theme="dark">
+                                <i class="fas fa-moon me-2"></i> Dark
+                            </a></li>
+                            <li><a class="dropdown-item theme-option" href="#" data-theme="aurora">
+                                <i class="fas fa-star me-2"></i> Aurora
+                            </a></li>
+                        </ul>
+                    </li>
                     {% if session.user_id %}
                     <!-- Spaced Repetition Review Button -->
                     <li class="nav-item" id="nav-review-container">
@@ -382,6 +517,7 @@
             </div>
         </div>
     </nav>
+    <span id="review-status-endpoint" data-url="{{ url_for('profile.review_status') }}" class="d-none"></span>
     
     <!-- Flash Messages -->
     <div class="flash-messages">
@@ -430,6 +566,41 @@
     <!-- Initialize dropdowns -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Theme initialization
+            const storedTheme = localStorage.getItem('theme') || 'light';
+            if (storedTheme !== 'light') {
+                document.body.setAttribute('data-theme', storedTheme);
+            }
+
+            // Theme switcher
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const theme = this.getAttribute('data-theme');
+                    
+                    if (theme === 'light') {
+                        document.body.removeAttribute('data-theme');
+                    } else {
+                        document.body.setAttribute('data-theme', theme);
+                    }
+                    
+                    localStorage.setItem('theme', theme);
+                    
+                    // Update active state
+                    themeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Emit a custom event so pages (like charts) can react
+                    const evt = new CustomEvent('theme:changed', { detail: { theme } });
+                    window.dispatchEvent(evt);
+                });
+                
+                // Set active state on load
+                if (option.getAttribute('data-theme') === storedTheme) {
+                    option.classList.add('active');
+                }
+            });
             // Auto-close flash messages
             var flashMessages = document.querySelectorAll('.alert-dismissible');
             flashMessages.forEach(function(alert) {
@@ -442,8 +613,11 @@
             });
             
             // Check for spaced repetition cards due for review
-            {% if session.user_id %}
-            fetch("{{ url_for('profile.review_status') }}")
+            const isLoggedIn = document.body.getAttribute('data-logged-in') === '1';
+            const reviewUrlElement = document.getElementById('review-status-endpoint');
+            const reviewUrl = reviewUrlElement ? reviewUrlElement.getAttribute('data-url') : null;
+            if (isLoggedIn && reviewUrl) {
+                fetch(reviewUrl)
                 .then(response => response.json())
                 .then(data => {
                     if (data.has_due) {
@@ -458,7 +632,7 @@
                         document.getElementById('nav-review-container').classList.add('d-none');
                     }
                 });
-            {% endif %}
+            }
         });
     </script>
     {% block extra_scripts %}{% endblock %}

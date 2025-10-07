@@ -32,7 +32,7 @@
         max-width: 850px;
         width: 100%;
         margin: 0 auto;
-        background: rgba(255, 255, 255, 0.85);
+        background: var(--glass-bg);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid var(--card-border);
@@ -208,6 +208,51 @@
         animation: fadeIn 0.6s ease;
     }
 
+    /* Dual-language presentation */
+    .lang-toggle {
+        display: inline-flex;
+        gap: 6px;
+        background: var(--glass-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 999px;
+        padding: 6px;
+        margin-bottom: 14px;
+    }
+    .lang-toggle .lang-btn {
+        border: none;
+        background: transparent;
+        color: var(--dark);
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .lang-toggle .lang-btn.active {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+    }
+    .lang-line {
+        display: block;
+    }
+    .lang-ru .lang-badge { background: #e5efff; color: #3756d6; }
+    .lang-en .lang-badge { background: #e6fff6; color: #0d8b6a; }
+    .lang-badge {
+        display: inline-block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 999px;
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+    .question-text .lang-en { 
+        font-weight: 500; 
+        opacity: 0.9;
+        margin-top: 6px; 
+    }
+
     .options-container {
         margin-bottom: 30px;
     }
@@ -230,8 +275,8 @@
         border-radius: 16px;
         cursor: pointer;
         transition: all 0.3s ease;
-        border: 1px solid rgba(0, 0, 0, 0.05);
-        background: white;
+        border: 1px solid var(--card-border);
+        background: var(--glass-bg);
         position: relative;
         overflow: hidden;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
@@ -262,7 +307,9 @@
         font-size: 1.1rem;
         font-weight: 500;
         transition: all 0.3s ease;
+        color: var(--dark);
     }
+    .option-text .lang-en { opacity: 0.9; font-weight: 500; }
 
     input[type="radio"] {
         display: none;
@@ -316,14 +363,72 @@
     }
 
     .btn-prev {
-        border: 1px solid rgba(0, 0, 0, 0.1);
-        background: white;
+        border: 1px solid var(--card-border);
+        background: var(--glass-bg);
         color: var(--dark);
     }
 
     .btn-prev:hover {
         border-color: rgba(0, 0, 0, 0.2);
         box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Aurora theme quiz enhancements */
+    body[data-theme="aurora"] .quiz-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    }
+
+    body[data-theme="aurora"] .btn-next {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+        box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+    }
+
+    body[data-theme="aurora"] .btn-next:hover {
+        background: linear-gradient(135deg, #9333ea 0%, #db2777 100%);
+        box-shadow: 0 8px 20px rgba(236, 72, 153, 0.5);
+    }
+
+    body[data-theme="aurora"] .option-label:hover {
+        border-color: rgba(168, 85, 247, 0.5);
+        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.2);
+    }
+
+    body[data-theme="aurora"] input[type="radio"]:checked + .option-label {
+        border-color: #a855f7;
+        background: rgba(168, 85, 247, 0.15);
+    }
+
+    body[data-theme="aurora"] input[type="radio"]:checked + .option-label .option-circle {
+        background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+    }
+
+    body[data-theme="aurora"] input[type="radio"]:checked + .option-label .option-text {
+        color: #d8b4fe;
+    }
+
+    body[data-theme="aurora"] .feedback.correct {
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%);
+        border-color: rgba(20, 184, 166, 0.5);
+    }
+
+    body[data-theme="aurora"] .feedback.wrong {
+        background: linear-gradient(135deg, rgba(244, 63, 94, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+        border-color: rgba(244, 63, 94, 0.5);
+    }
+
+    body[data-theme="aurora"] .option-label.correct {
+        border-color: #14b8a6;
+        background: linear-gradient(135deg, rgba(20, 184, 166, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%);
+    }
+
+    body[data-theme="aurora"] .option-label.wrong {
+        border-color: #f43f5e;
+        background: linear-gradient(135deg, rgba(244, 63, 94, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%);
+    }
+
+    body[data-theme="aurora"] .quiz-badge {
+        background: rgba(20, 184, 166, 0.2);
+        border-color: rgba(20, 184, 166, 0.3);
     }
 
     /* Result state styles */
@@ -388,9 +493,9 @@
     .feedback-content {
         font-size: 1rem;
         line-height: 1.6;
-        background-color: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.3);
-        color: #3730a3;
+        background-color: var(--glass-bg);
+        border: 1px solid var(--card-border);
+        color: var(--dark);
         padding: 15px;
         border-radius: 12px;
         width: 100%;
@@ -478,13 +583,29 @@
                     <i class="fas fa-question-circle"></i> Question {{ current_question }}
                 </div>
             </div>
-            
+
+            <div class="lang-toggle" id="langToggle">
+                <button class="lang-btn" data-mode="ru">RU</button>
+                <button class="lang-btn" data-mode="en">EN</button>
+                <button class="lang-btn" data-mode="both">Both</button>
+            </div>
+
+            {% set raw_text = (question.text if question.text is defined else question.question_text) or '' %}
+            {% set parts = raw_text.split('\n') %}
+            {% set q_ru = (parts[0] if parts|length > 0 else '').strip() %}
+            {% set q_en = (parts[1] if parts|length > 1 else '').strip() %}
             <div class="question-text">
-                {{ question.text if question.text is defined else question.question_text }}
+                {% if q_ru %}
+                <span class="lang-line lang-ru"><span class="lang-badge">RU</span>{{ q_ru }}</span>
+                {% endif %}
+                {% if q_en %}
+                <span class="lang-line lang-en"><span class="lang-badge">EN</span>{{ q_en }}</span>
+                {% endif %}
             </div>
             
             <form method="post" action="{{ url_for('quiz.answer') }}" id="quiz-form">
                 <input type="hidden" name="question_id" value="{{ question.id }}">
+                <input type="hidden" name="hint_used" id="hint_used" value="0">
                 
                 <div class="options-container">
                     {% for option in question.options %}
@@ -495,7 +616,18 @@
                                {% if show_answer and option.is_correct %}correct
                                {% elif show_answer and (option.id == user_answer or option.option_letter == user_answer) and not option.is_correct %}wrong{% endif %}">
                             <div class="option-circle">{{ loop.index }}</div>
-                            <div class="option-text">{{ option.text if option.text is defined else option.option_text }}</div>
+                            {% set opt_raw = (option.text if option.text is defined else option.option_text) or '' %}
+                            {% set opt_parts = opt_raw.split('\n') %}
+                            {% set opt_ru = (opt_parts[0] if opt_parts|length > 0 else '').strip() %}
+                            {% set opt_en = (opt_parts[1] if opt_parts|length > 1 else '').strip() %}
+                            <div class="option-text">
+                                {% if opt_ru %}
+                                <span class="lang-line lang-ru"><span class="lang-badge">RU</span>{{ opt_ru }}</span>
+                                {% endif %}
+                                {% if opt_en %}
+                                <span class="lang-line lang-en"><span class="lang-badge">EN</span>{{ opt_en }}</span>
+                                {% endif %}
+                            </div>
                         </label>
                     </div>
                     {% endfor %}
@@ -526,9 +658,16 @@
                     {% endif %}
                     
                     {% if not show_answer %}
-                    <button type="submit" class="nav-button btn-next">
-                        Submit Answer <i class="fas fa-check"></i>
-                    </button>
+                    <div>
+                        {% if question.hint %}
+                        <button type="button" id="reveal-hint" class="nav-button btn-prev" style="margin-right:10px;">
+                            <i class="fas fa-lightbulb"></i> Hint
+                        </button>
+                        {% endif %}
+                        <button type="submit" class="nav-button btn-next">
+                            Submit Answer <i class="fas fa-check"></i>
+                        </button>
+                    </div>
                     {% endif %}
                 </div>
             </form>
@@ -590,6 +729,66 @@
             timeInput.value = seconds;
             this.appendChild(timeInput);
         });
+
+        // Hint reveal logic
+        const hintBtn = document.getElementById('reveal-hint');
+        if (hintBtn) {
+            hintBtn.addEventListener('click', function() {
+                const hintContent = `{{ (question.hint or '')|e }}`;
+                if (!hintContent) { return; }
+                // Create a hint box if not present
+                let hintBox = document.getElementById('hint-box');
+                if (!hintBox) {
+                    hintBox = document.createElement('div');
+                    hintBox.id = 'hint-box';
+                    hintBox.className = 'feedback';
+                    hintBox.style.marginTop = '16px';
+                    const header = document.createElement('div');
+                    header.className = 'feedback-header';
+                    header.innerHTML = '<i class="fas fa-lightbulb"></i> Hint';
+                    const content = document.createElement('div');
+                    content.className = 'feedback-content';
+                    content.innerHTML = hintContent;
+                    hintBox.appendChild(header);
+                    hintBox.appendChild(content);
+                    const form = document.getElementById('quiz-form');
+                    form.parentNode.insertBefore(hintBox, form.nextSibling);
+                }
+                // mark used and notify backend
+                const used = document.getElementById('hint_used');
+                if (used) { used.value = '1'; }
+                try {
+                    fetch('{{ url_for('quiz.hint') }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ question_id: '{{ question.id }}' })
+                    });
+                } catch (e) {}
+            });
+        }
+
+        // Language toggle logic
+        const toggle = document.getElementById('langToggle');
+        const buttons = toggle ? toggle.querySelectorAll('.lang-btn') : [];
+        const applyMode = (mode) => {
+            const ruEls = document.querySelectorAll('.lang-ru');
+            const enEls = document.querySelectorAll('.lang-en');
+            const badges = document.querySelectorAll('.lang-badge');
+            ruEls.forEach(el => el.style.display = (mode === 'ru' || mode === 'both') ? 'block' : 'none');
+            enEls.forEach(el => el.style.display = (mode === 'en' || mode === 'both') ? 'block' : 'none');
+            badges.forEach(el => el.style.display = (mode === 'both') ? 'inline-block' : 'none');
+            buttons.forEach(b => b.classList.toggle('active', b.getAttribute('data-mode') === mode));
+            try { localStorage.setItem('quizLangMode', mode); } catch(e) {}
+        };
+        let savedMode = 'both';
+        try { savedMode = localStorage.getItem('quizLangMode') || 'both'; } catch(e) {}
+        if (buttons.length) {
+            applyMode(savedMode);
+            buttons.forEach(b => b.addEventListener('click', (e) => {
+                e.preventDefault();
+                applyMode(b.getAttribute('data-mode'));
+            }));
+        }
     });
 </script>
 {% endblock %} 

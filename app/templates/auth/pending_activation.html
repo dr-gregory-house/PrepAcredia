@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}Account Pending Activation - Project Pedia{% endblock %}
+{% block title %}Account Pending Activation - PrepAccredia{% endblock %}
 
 {% block extra_styles %}
 <style>
@@ -15,13 +15,14 @@
     .pending-card {
         max-width: 600px;
         width: 100%;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.8));
+        background: var(--glass-bg);
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         border-radius: 24px;
         padding: 3rem;
         text-align: center;
-        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: var(--card-shadow);
+        border: 1px solid var(--card-border);
     }
     
     .pending-icon {
@@ -72,6 +73,7 @@
         border-radius: 16px;
         padding: 1.5rem;
         margin-bottom: 2rem;
+        border: 1px solid var(--card-border);
     }
     
     .contact-info h3 {
@@ -165,14 +167,14 @@
         <h1 class="pending-title">Welcome Aboard!</h1>
         
         <div class="pending-message">
-            <p>Thank you for registering with Project Pedia! 🎉 Your account has been created successfully, but it needs to be activated by an administrator before you can start your learning journey.</p>
+            <p>Thank you for registering with PrepAccredia! 🎉 Your account has been created successfully, but it needs to be activated by an administrator before you can start your learning journey.</p>
         </div>
         
         <div class="contact-info">
             <h3>📫 Contact Administrator</h3>
             <div class="contact-method">
                 <i class="fab fa-whatsapp"></i>
-                <a href="https://wa.me/+79964683147?text=Hi%20Admin,%20I%20just%20registered%20on%20Project%20Pedia%20and%20would%20like%20to%20request%20account%20activation.%20Thank%20you!" 
+                <a href="https://wa.me/+79964683147?text=Hi%20Admin,%20I%20just%20registered%20on%20PrepAccredia%20and%20would%20like%20to%20request%20account%20activation.%20Thank%20you!" 
                    target="_blank" 
                    class="whatsapp-link">
                     Click to contact via WhatsApp

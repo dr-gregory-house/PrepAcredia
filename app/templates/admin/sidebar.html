@@ -1,20 +1,20 @@
-<div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+<div class="col-md-3 col-lg-2 d-md-block sidebar collapse" style="background: var(--glass-bg); border-right: 1px solid var(--card-border); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
     <div class="position-sticky pt-3">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}" href="{{ url_for('admin.dashboard') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}" href="{{ url_for('admin.dashboard') }}" style="color: var(--dark);">
                     <i class="fas fa-tachometer-alt me-2"></i>
                     Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.settings' else '' }}" href="{{ url_for('admin.settings') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.settings' else '' }}" href="{{ url_for('admin.settings') }}" style="color: var(--dark);">
                     <i class="fas fa-cogs me-2"></i>
                     Settings
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.incorrect_questions' else '' }}" href="{{ url_for('admin.incorrect_questions') }}">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.incorrect_questions' else '' }}" href="{{ url_for('admin.incorrect_questions') }}" style="color: var(--dark);">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Top Incorrect Questions
                 </a>
@@ -26,7 +26,7 @@
         </h6>
         <ul class="nav flex-column mb-2">
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link" href="#" style="color: var(--dark);">
                     <i class="fas fa-chart-bar me-2"></i>
                     Performance Reports
                 </a>

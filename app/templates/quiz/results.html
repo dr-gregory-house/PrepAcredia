@@ -123,7 +123,7 @@
     }
     
     .results-section {
-        background: rgba(255, 255, 255, 0.85);
+        background: var(--glass-bg);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid var(--card-border);
@@ -167,7 +167,8 @@
     }
     
     .stat-card {
-        background: white;
+        background: var(--glass-bg);
+        border: 1px solid var(--card-border);
         border-radius: 16px;
         padding: 20px;
         text-align: center;
@@ -226,7 +227,8 @@
     }
     
     .badge-card {
-        background: white;
+        background: var(--glass-bg);
+        border: 1px solid var(--card-border);
         border-radius: 16px;
         padding: 25px 20px;
         text-align: center;
@@ -298,7 +300,8 @@
     }
     
     .question-item {
-        background: white;
+        background: var(--glass-bg);
+        border: 1px solid var(--card-border);
         border-radius: 16px;
         padding: 20px;
         margin-bottom: 15px;
@@ -481,9 +484,9 @@
     }
     
     .action-button.secondary {
-        background: white;
+        background: var(--glass-bg);
         color: var(--dark);
-        border: 1px solid rgba(0, 0, 0, 0.1);
+        border: 1px solid var(--card-border);
     }
     
     .action-button.secondary:hover {
@@ -762,12 +765,18 @@
         const correctAnswers = {{ score }};
         const incorrectAnswers = {{ total_questions - score }};
         
+        const prefersDark = document.body.getAttribute('data-theme') === 'dark' || document.body.getAttribute('data-theme') === 'aurora';
+        const textColor = prefersDark ? '#e5e7eb' : '#111827';
+        const subtle = prefersDark ? '#9ca3af' : '#6b7280';
+        const cardBg = getComputedStyle(document.body).getPropertyValue('--glass-bg') || (prefersDark ? 'rgba(16,24,39,0.75)' : 'rgba(255,255,255,0.85)');
+
         const options = {
             series: [correctAnswers, incorrectAnswers],
             chart: {
                 type: 'donut',
                 height: 300,
-                fontFamily: 'Outfit, sans-serif'
+                fontFamily: 'Outfit, sans-serif',
+                foreColor: textColor.trim()
             },
             colors: ['#10b981', '#ef4444'],
             labels: ['Correct', 'Incorrect'],
@@ -781,14 +790,14 @@
                                 show: true,
                                 fontSize: '22px',
                                 fontWeight: 600,
-                                color: undefined,
+                                color: textColor.trim(),
                                 offsetY: -10
                             },
                             value: {
                                 show: true,
                                 fontSize: '26px',
                                 fontWeight: 700,
-                                color: undefined,
+                                color: textColor.trim(),
                                 offsetY: 5,
                                 formatter: function (val) {
                                     return val
@@ -799,7 +808,7 @@
                                 label: 'Total',
                                 fontSize: '16px',
                                 fontWeight: 400,
-                                color: '#6b7280',
+                                color: subtle.trim(),
                                 formatter: function (w) {
                                     return '{{ total_questions }}'
                                 }
@@ -819,6 +828,9 @@
                     width: 12,
                     height: 12,
                     radius: 6
+                },
+                labels: {
+                    colors: [textColor.trim()]
                 }
             },
             states: {
@@ -835,12 +847,42 @@
             tooltip: {
                 style: {
                     fontSize: '14px'
-                }
+                },
+                theme: prefersDark ? 'dark' : 'light'
             }
         };
 
-        const chart = new ApexCharts(document.querySelector("#performance-chart"), options);
+        let chart = new ApexCharts(document.querySelector("#performance-chart"), options);
         chart.render();
+
+        // Re-render chart when theme changes
+        window.addEventListener('theme:changed', () => {
+            try { chart.destroy(); } catch(e) {}
+            const prefersDarkNew = document.body.getAttribute('data-theme') === 'dark' || document.body.getAttribute('data-theme') === 'aurora';
+            const textColorNew = prefersDarkNew ? '#e5e7eb' : '#111827';
+            const subtleNew = prefersDarkNew ? '#9ca3af' : '#6b7280';
+            const newOpts = { ...options };
+            newOpts.chart = { ...newOpts.chart, foreColor: textColorNew };
+            newOpts.plotOptions = {
+                ...newOpts.plotOptions,
+                pie: {
+                    ...newOpts.plotOptions.pie,
+                    donut: {
+                        ...newOpts.plotOptions.pie.donut,
+                        labels: {
+                            ...newOpts.plotOptions.pie.donut.labels,
+                            name: { ...newOpts.plotOptions.pie.donut.labels.name, color: textColorNew },
+                            value: { ...newOpts.plotOptions.pie.donut.labels.value, color: textColorNew },
+                            total: { ...newOpts.plotOptions.pie.donut.labels.total, color: subtleNew }
+                        }
+                    }
+                }
+            };
+            newOpts.legend = { ...newOpts.legend, labels: { colors: [textColorNew] } };
+            newOpts.tooltip = { ...newOpts.tooltip, theme: prefersDarkNew ? 'dark' : 'light' };
+            chart = new ApexCharts(document.querySelector("#performance-chart"), newOpts);
+            chart.render();
+        });
     });
 </script>
 {% endblock %} 

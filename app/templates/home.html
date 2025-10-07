@@ -1,13 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Pedia - MCQ Practice</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
+{% extends 'layout.html' %}
+
+{% block title %}Home - PrepAccredia{% endblock %}
+
+{% block extra_styles %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<style>
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -31,20 +28,63 @@
             padding: 0;
         }
         
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            color: var(--dark);
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0 20px;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23a5b4fc' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E"),
-            linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            background-attachment: fixed;
+        /* Page body inherits from layout */
+        
+        /* Aurora theme home page enhancements */
+        body[data-theme="aurora"] .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body[data-theme="aurora"] .hero-section::before {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        body[data-theme="aurora"] .hero-section::after {
+            background: rgba(236, 72, 153, 0.1);
+        }
+
+        body[data-theme="aurora"] .widget-header {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
+        }
+
+        body[data-theme="aurora"] .topic-checkbox:checked {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            border-color: #a855f7;
+        }
+
+        body[data-theme="aurora"] .start-button {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.5);
+        }
+
+        body[data-theme="aurora"] .start-button:hover {
+            box-shadow: 0 15px 30px rgba(236, 72, 153, 0.6);
+        }
+
+        body[data-theme="aurora"] .topic-count {
+            background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+            color: white;
+        }
+
+        body[data-theme="aurora"] .slider-fill {
+            background: linear-gradient(90deg, #a855f7 0%, #ec4899 100%);
+        }
+
+        body[data-theme="aurora"] .slider-thumb {
+            border-color: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+        }
+
+        body[data-theme="aurora"] .selected-count {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #d8b4fe;
+        }
+
+        body[data-theme="aurora"] input:checked + .slider {
+            background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
         }
         
         .page-container {
@@ -148,12 +188,12 @@
         }
         
         .widget {
-            background: white;
+            background: var(--glass-bg);
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--box-shadow);
             margin-bottom: 30px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--card-border);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
@@ -218,7 +258,8 @@
         .question-counter-label {
             display: block;
             font-weight: 500;
-            color: #64748b;
+            color: var(--dark);
+            opacity: 0.8;
             margin-bottom: 15px;
         }
         
@@ -323,7 +364,8 @@
         
         .all-questions-switch {
             margin-top: 15px;
-            background: #f1f5f9;
+            background: var(--glass-bg);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
             padding: 15px;
             display: flex;
@@ -334,7 +376,7 @@
         }
         
         .all-questions-switch:hover {
-            background: #e2e8f0;
+            background: rgba(255,255,255,0.06);
         }
         
         .switch-label {
@@ -342,6 +384,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            color: var(--dark);
         }
         
         .switch {
@@ -384,6 +427,12 @@
         input:checked + .slider {
             background-color: var(--primary);
         }
+
+        /* Aurora/Dark readability for toggles */
+        body[data-theme="dark"] .switch-label,
+        body[data-theme="aurora"] .switch-label {
+            color: var(--dark);
+        }
         
         input:checked + .slider:before {
             transform: translateX(26px);
@@ -417,9 +466,9 @@
         }
         
         .topic-card {
-            background: #f8fafc;
+            background: var(--glass-bg);
             border-radius: 14px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--card-border);
             overflow: hidden;
             transition: all 0.2s ease;
         }
@@ -471,6 +520,7 @@
         .topic-name {
             font-weight: 500;
             flex-grow: 1;
+            color: var(--dark);
         }
         
         .topic-count {
@@ -516,7 +566,7 @@
             align-items: center;
             padding: 12px 15px;
             margin: 10px 0;
-            background: white;
+            background: var(--glass-bg);
             border-radius: 10px;
             transition: all 0.2s ease;
             gap: 10px;
@@ -565,15 +615,26 @@
             flex-wrap: wrap;
             gap: 12px;
         }
+
+        /* Select all topics bar */
+        .select-all-container {
+            background: var(--glass-bg);
+            border: 1px solid var(--card-border);
+        }
+        .select-all-label {
+            font-weight: 600; 
+            cursor: pointer; 
+            color: var(--dark);
+        }
         
         .tag-item {
-            background: #f8fafc;
+            background: var(--glass-bg);
             border-radius: 12px;
             padding: 10px 15px;
             display: flex;
             align-items: center;
             gap: 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--card-border);
             transition: all 0.2s ease;
             cursor: pointer;
         }
@@ -583,6 +644,12 @@
             border-color: var(--primary-light);
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Highlighted state for switches */
+        .all-questions-switch.highlight {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(236, 72, 153, 0.15) 100%);
+            border-left: 3px solid var(--primary);
         }
         
         .tag-checkbox {
@@ -774,47 +841,16 @@
                 font-size: 0.85rem;
             }
         }
-    </style>
-</head>
-<body>
+</style>
+{% endblock %}
+
+{% block content %}
     <div class="page-container">
-        <!-- Add nav bar at the top -->
-        <div class="nav-header">
-            <div class="nav-logo">Project Pedia</div>
-            {% if session.user_id %}
-            <div class="nav-actions">
-                {% if session.user_role == 'admin' %}
-                <a href="{{ url_for('admin.dashboard') }}" class="nav-btn admin-btn">
-                    <i class="bi bi-gear-fill"></i>
-                    Admin Panel
-                </a>
-                {% endif %}
-                <a href="{{ url_for('profile.profile') }}" class="nav-btn profile-btn">
-                    <i class="bi bi-person-circle"></i>
-                    Profile
-                </a>
-                <a href="{{ url_for('auth.logout') }}" class="nav-btn logout-btn">
-                    <i class="bi bi-box-arrow-right"></i>
-                    Logout
-                </a>
-            </div>
-            {% else %}
-            <div class="nav-actions">
-                <a href="{{ url_for('auth.login') }}" class="nav-btn login-btn">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Login
-                </a>
-                <a href="{{ url_for('auth.register') }}" class="nav-btn register-btn">
-                    <i class="bi bi-person-plus"></i>
-                    Register
-                </a>
-            </div>
-            {% endif %}
-        </div>
+        <!-- Top nav is provided by layout -->
         
         <div class="hero-section">
             <div class="hero-content">
-                <h1 class="hero-title">Project Pedia</h1>
+                <h1 class="hero-title">PrepAccredia</h1>
                 <p class="hero-subtitle">Elevate your knowledge with personalized MCQ practice sessions designed for mastery</p>
             </div>
         </div>
@@ -901,9 +937,9 @@
                             Select Specialities to Practice
                         </div>
                         <div class="widget-content">
-                            <div class="select-all-container" style="margin-bottom: 15px; display: flex; align-items: center; background: #f8fafc; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                            <div class="select-all-container" style="margin-bottom: 15px; display: flex; align-items: center; padding: 12px 15px; border-radius: 10px;">
                                 <input type="checkbox" id="select-all-topics" class="topic-checkbox" style="margin-right: 10px;">
-                                <label for="select-all-topics" style="font-weight: 600; cursor: pointer;">Select All Topics</label>
+                                <label for="select-all-topics" class="select-all-label">Select All Topics</label>
                             </div>
                             <div class="topics-container">
                                 {% for spec in specialities %}
@@ -930,8 +966,10 @@
                         </div>
             </form>
     </div>
-    
-    <script>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
         // Initialize slider functionality
         const slider = document.getElementById('slider-thumb');
         const sliderContainer = document.querySelector('.slider-container');
@@ -1096,16 +1134,10 @@
         
         // Undiscovered questions toggle functionality
         const undiscoveredQuestionsToggle = document.getElementById('undiscovered_questions_toggle');
-        // Visually highlight the element when checked
+        // Visually highlight the element when checked using class, not inline styles
         undiscoveredQuestionsToggle.addEventListener('change', function() {
             const container = this.closest('.all-questions-switch');
-            if (this.checked) {
-                container.style.background = '#eef2ff';
-                container.style.borderLeft = '3px solid var(--primary)';
-            } else {
-                container.style.background = '#f1f5f9';
-                container.style.borderLeft = 'none';
-            }
+            container.classList.toggle('highlight', this.checked);
         });
         
         // Initialize the slider with default value
@@ -1226,5 +1258,4 @@
             });
         });
     </script>
-</body>
-</html>
+{% endblock %}

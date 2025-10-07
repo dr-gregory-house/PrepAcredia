@@ -163,11 +163,12 @@ def get_spaced_repetition_questions(user_id, count=5):
         result = []
         content_conn = get_content_db_connection()
         for q in spaced_questions:
-            qrow = content_conn.execute('SELECT question_text_ru, question_text_en, explanation FROM questions WHERE id = ?', (q['question_id'],)).fetchone()
+            qrow = content_conn.execute('SELECT question_text_ru, question_text_en, hint, explanation FROM questions WHERE id = ?', (q['question_id'],)).fetchone()
             options = content_conn.execute('SELECT letter, text_ru, text_en, is_correct FROM options WHERE question_id = ? ORDER BY letter', (q['question_id'],)).fetchall()
             result.append({
                 'id': q['question_id'],
                 'text': f"{(qrow['question_text_ru'] if qrow else '')}\n{(qrow['question_text_en'] if qrow else '')}",
+                'hint': (qrow['hint'] if qrow else ''),
                 'explanation': (qrow['explanation'] if qrow else ''),
                 'options': [
                     {

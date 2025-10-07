@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from app.utils.db import get_content_db_connection, get_user_db_connection
+from app.utils.user_tracking import log_user_activity
 from app.utils.decorators import login_required
 from app.utils.quiz import save_quiz_data, load_quiz_data, delete_quiz_data
 from app.utils.spaced_repetition import add_to_spaced_repetition, get_spaced_repetition_questions, mark_question_reviewed
@@ -61,16 +62,16 @@ def display_quiz():
             user_conn.close()
             answered_set = {row['question_id'] for row in answered_ids}
             questions = content_conn.execute(
-                f'SELECT id, question_text_ru, question_text_en, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
-                params
-            ).fetchall()
+				f'SELECT id, question_text_ru, question_text_en, hint, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
+				params
+			).fetchall()
             # Filter client-side due to cross-db limitation
             questions = [q for q in questions if q['id'] not in answered_set]
         else:
             questions = content_conn.execute(
-                f'SELECT id, question_text_ru, question_text_en, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
-                params
-            ).fetchall()
+				f'SELECT id, question_text_ru, question_text_en, hint, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
+				params
+			).fetchall()
         
         # Check if we found any questions
         if not questions:
@@ -120,12 +121,13 @@ def display_quiz():
                 })
             
             quiz_data.append({
-                'id': q['id'],
-                'text': f"{q['question_text_ru'] or ''}\n{q['question_text_en'] or ''}",
-                'explanation': q['explanation'],
-                'options': formatted_options,
-                'is_review': False  # Regular question, not from spaced repetition
-            })
+				'id': q['id'],
+				'text': f"{q['question_text_ru'] or ''}\n{q['question_text_en'] or ''}",
+				'hint': q['hint'],
+				'explanation': q['explanation'],
+				'options': formatted_options,
+				'is_review': False  # Regular question, not from spaced repetition
+			})
         
         # Add spaced repetition questions if any
         for q in sr_questions:
@@ -276,6 +278,25 @@ def display_quiz():
         show_answer=False,
         is_review=is_review
     )
+
+@quiz_bp.route('/hint', methods=['POST'])
+@login_required
+def hint():
+    """Log that a hint was shown for a question."""
+    user_id = session.get('user_id')
+    question_id = None
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        question_id = data.get('question_id')
+    else:
+        question_id = request.form.get('question_id')
+    try:
+        if user_id and question_id:
+            log_user_activity(user_id, 'hint_shown', f'Question {question_id}')
+    except Exception:
+        # Best-effort logging; do not break UX
+        pass
+    return ('', 204)
 
 @quiz_bp.route('/next', methods=['POST'])
 @login_required
@@ -554,7 +575,8 @@ def answer():
         'is_correct': is_correct,
         'rationale': current_question.get('rationale') or current_question.get('explanation', ''),
         'question_id': current_question['id'],
-        'time_spent': int(time_spent) if time_spent else 0
+        'time_spent': int(time_spent) if time_spent else 0,
+        'hint_used': request.form.get('hint_used', '0') == '1'
     }
     
     # Handle spaced repetition if user is logged in
