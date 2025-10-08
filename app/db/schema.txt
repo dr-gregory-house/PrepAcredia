@@ -1,0 +1,38 @@
+# Database Schema for PediaMCQ
+
+## Table: user_activity_logs
+### Columns:
+- id: INTEGER PRIMARY KEY
+- user_id: INTEGER NOT NULL
+- activity_type: TEXT NOT NULL
+- activity_details: TEXT
+- timestamp: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- ip_address: TEXT
+
+### Foreign Keys:
+- user_id -> users.id
+
+### Indexes:
+- idx_activity_logs_timestamp (unique: False)
+- idx_activity_logs_type (unique: False)
+- idx_activity_logs_user (unique: False)
+
+## Table: user_sessions
+### Columns:
+- id: INTEGER PRIMARY KEY
+- user_id: INTEGER NOT NULL
+- session_token: TEXT NOT NULL
+- login_time: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- last_activity: TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+- is_active: INTEGER DEFAULT 1
+- ip_address: TEXT
+- user_agent: TEXT
+
+### Foreign Keys:
+- user_id -> users.id
+
+### Indexes:
+- idx_user_sessions_active (unique: False)
+- idx_user_sessions_token (unique: False)
+- idx_user_sessions_user (unique: False)
+

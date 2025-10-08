@@ -285,31 +285,58 @@ def preview_schedule():
 @admin_required
 def incorrect_questions():
     """Show the top 100 questions that are answered incorrectly most often"""
-    conn = get_user_db_connection()
+    user_conn = get_user_db_connection()
+    content_conn = get_content_db_connection()
     try:
-        # Get the top 100 questions with the highest incorrect answer rates
-        top_incorrect_questions = conn.execute('''
-            SELECT 
-                q.id, 
-                q.question_text, 
-                q.correct_answer, 
-                q.rationale,
-                COUNT(qa.id) AS total_attempts,
-                SUM(CASE WHEN qa.is_correct = 0 THEN 1 ELSE 0 END) AS incorrect_count,
-                ROUND((SUM(CASE WHEN qa.is_correct = 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(qa.id)), 2) AS incorrect_percentage
-            FROM 
-                questions q
-            JOIN 
-                quiz_answers qa ON q.id = qa.question_id
-            GROUP BY 
-                q.id
-            HAVING 
-                COUNT(qa.id) >= 5 -- Only include questions with at least 5 attempts
-            ORDER BY 
-                incorrect_percentage DESC, 
-                incorrect_count DESC
-            LIMIT 100
+        # Get question statistics from user database first
+        question_stats = user_conn.execute('''
+            SELECT
+                question_id,
+                COUNT(*) AS total_attempts,
+                SUM(CASE WHEN is_correct = 0 THEN 1 ELSE 0 END) AS incorrect_count
+            FROM quiz_answers
+            GROUP BY question_id
+            HAVING COUNT(*) >= 5 -- Only include questions with at least 5 attempts
         ''').fetchall()
+
+        # Calculate percentages and sort
+        question_stats_with_pct = []
+        for stat in question_stats:
+            stat_dict = dict(stat)
+            total = stat_dict['total_attempts']
+            incorrect = stat_dict['incorrect_count']
+            stat_dict['incorrect_percentage'] = round((incorrect * 100.0 / total), 2)
+            question_stats_with_pct.append(stat_dict)
+
+        # Sort by incorrect_percentage DESC, then by incorrect_count DESC
+        question_stats_with_pct.sort(key=lambda x: (-x['incorrect_percentage'], -x['incorrect_count']))
+
+        # Get top 100 question IDs
+        top_question_ids = [stat['question_id'] for stat in question_stats_with_pct[:100]]
+
+        # Now get the full question details from content database
+        if top_question_ids:
+            placeholders = ','.join('?' for _ in top_question_ids)
+            top_incorrect_questions = content_conn.execute(f'''
+                SELECT id, question_text, correct_answer, rationale
+                FROM questions
+                WHERE id IN ({placeholders})
+            ''', top_question_ids).fetchall()
+
+            # Create a mapping of question_id to stats
+            stats_mapping = {stat['question_id']: stat for stat in question_stats_with_pct}
+
+            # Add stats to question results
+            for question in top_incorrect_questions:
+                question_dict = dict(question)
+                stats = stats_mapping.get(question_dict['id'])
+                if stats:
+                    question_dict['total_attempts'] = stats['total_attempts']
+                    question_dict['incorrect_count'] = stats['incorrect_count']
+                    question_dict['incorrect_percentage'] = stats['incorrect_percentage']
+                question_dict = dict(question_dict)  # Convert back
+        else:
+            top_incorrect_questions = []
         
         # Convert SQLite Row objects to dictionaries for modification
         result_questions = []
@@ -319,28 +346,29 @@ def incorrect_questions():
             question_dict = dict(question)
             
             # Get chapters for each question
-            chapters = conn.execute('''
+            chapters = content_conn.execute('''
                 SELECT c.name
                 FROM chapters c
                 JOIN question_chapters qc ON c.id = qc.chapter_id
                 WHERE qc.question_id = ?
             ''', (question['id'],)).fetchall()
-            
+
             question_dict['chapters'] = [chapter['name'] for chapter in chapters]
-            
+
             # Get the options for each question
-            options = conn.execute('''
+            options = content_conn.execute('''
                 SELECT option_letter, option_text
                 FROM options
                 WHERE question_id = ?
                 ORDER BY option_letter
             ''', (question['id'],)).fetchall()
-            
+
             question_dict['options'] = [dict(option) for option in options]
-            
+
             result_questions.append(question_dict)
-        
-        return render_template('admin/incorrect_questions.html', 
+
+        return render_template('admin/incorrect_questions.html',
                              questions=result_questions)
     finally:
-        conn.close() 
+        user_conn.close()
+        content_conn.close()

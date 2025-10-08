@@ -33,7 +33,11 @@ def display_quiz():
     quiz_start activity is logged once per quiz.
     """
     # Check if a quiz is in progress
-    if 'quiz_id' not in session or 'selected_specialities' not in session or 'num_questions' not in session:
+    # For spaced repetition reviews, selected_specialities may not be set
+    is_spaced_repetition = session.get('is_spaced_repetition', False)
+    if 'quiz_id' not in session or 'num_questions' not in session:
+        return redirect(url_for('main.home'))
+    if not is_spaced_repetition and 'selected_specialities' not in session:
         return redirect(url_for('main.home'))
     
     quiz_id = session['quiz_id']
@@ -141,9 +145,9 @@ def display_quiz():
             formatted_options = []
             for option in q.get('options', []):
                 formatted_options.append({
-                    'id': option.get('option_letter', ''),
-                    'text': option.get('option_text', ''),
-                    'is_correct': (option.get('option_letter', '') == q.get('correct_answer', ''))
+                    'option_letter': option.get('id', ''),
+                    'option_text': option.get('text', ''),
+                    'is_correct': option.get('is_correct', False)
                 })
                 
             if formatted_options:
@@ -631,4 +635,4 @@ def answer():
         user_answer=selected,
         is_correct=is_correct,
         next_question_url=url_for('quiz.next_question')
-    ) 
+    )

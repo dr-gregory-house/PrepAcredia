@@ -43,6 +43,22 @@
             --navbar-shadow: 0 4px 30px rgba(0, 0, 0, 0.6);
         }
 
+        body[data-theme="dark"] .form-control {
+            background: var(--glass-bg) !important;
+            color: var(--dark) !important;
+            border-color: var(--card-border);
+        }
+
+        body[data-theme="dark"] .input-group-text {
+            background: var(--glass-bg) !important;
+            color: var(--dark);
+            border-color: var(--card-border);
+        }
+
+        body[data-theme="dark"] .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
         /* Aurora theme - vibrant gradient-based design */
         body[data-theme="aurora"] {
             --primary: #a855f7;
@@ -134,6 +150,98 @@
 
         body[data-theme="aurora"] .badge {
             background: linear-gradient(135deg, #14b8a6 0%, #06b6d4 100%);
+        }
+
+        body[data-theme="aurora"] .form-control {
+            background: var(--glass-bg) !important;
+            color: var(--dark) !important;
+            border-color: var(--card-border);
+        }
+
+        body[data-theme="aurora"] .input-group-text {
+            background: var(--glass-bg) !important;
+            color: var(--dark);
+            border-color: var(--card-border);
+        }
+
+        body[data-theme="aurora"] .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        /* Additional theme overrides for profile and results pages */
+        body[data-theme="dark"] .history-item,
+        body[data-theme="dark"] .insight-card,
+        body[data-theme="dark"] .badge-card,
+        body[data-theme="dark"] .question-item,
+        body[data-theme="dark"] .stat-card {
+            background: var(--glass-bg) !important;
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .no-history,
+        body[data-theme="dark"] .explanation,
+        body[data-theme="dark"] .question-option.selected,
+        body[data-theme="dark"] .question-option.correct,
+        body[data-theme="dark"] .question-option.incorrect {
+            background: rgba(99, 102, 241, 0.1) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="aurora"] .history-item,
+        body[data-theme="aurora"] .insight-card,
+        body[data-theme="aurora"] .badge-card,
+        body[data-theme="aurora"] .question-item,
+        body[data-theme="aurora"] .stat-card {
+            background: var(--glass-bg) !important;
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="aurora"] .no-history,
+        body[data-theme="aurora"] .explanation,
+        body[data-theme="aurora"] .question-option.selected,
+        body[data-theme="aurora"] .question-option.correct,
+        body[data-theme="aurora"] .question-option.incorrect {
+            background: rgba(168, 85, 247, 0.1) !important;
+            color: var(--dark) !important;
+        }
+
+        /* Override white backgrounds in dark themes */
+        body[data-theme="dark"] .history-item,
+        body[data-theme="dark"] .insight-card,
+        body[data-theme="dark"] .celebration-card,
+        body[data-theme="aurora"] .history-item,
+        body[data-theme="aurora"] .insight-card,
+        body[data-theme="aurora"] .celebration-card {
+            border: 1px solid var(--card-border) !important;
+            background: var(--glass-bg) !important;
+        }
+
+        body[data-theme="aurora"] .celebration-card {
+            backdrop-filter: blur(10px) !important;
+        }
+
+        body[data-theme="dark"] .stat-card,
+        body[data-theme="aurora"] .stat-card {
+            background: var(--glass-bg) !important;
+            box-shadow: var(--card-shadow) !important;
+            border: 1px solid var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .celebration-header,
+        body[data-theme="aurora"] .celebration-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+        }
+
+        /* Text color overrides for review complete page */
+        body[data-theme="dark"] .memory-fact p,
+        body[data-theme="dark"] .stat-label,
+        body[data-theme="aurora"] .memory-fact p,
+        body[data-theme="aurora"] .stat-label {
+            color: var(--dark) !important;
+            opacity: 0.7 !important;
         }
 
         .dropdown-item.theme-option {
@@ -424,7 +532,7 @@
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.home') }}">
-                <i class="fas fa-brain"></i> Project Pedia
+                <i class="fas fa-brain"></i> PrepAcredia
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <i class="fas fa-bars text-primary"></i>
@@ -637,4 +745,4 @@
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
-</html> 
+</html>

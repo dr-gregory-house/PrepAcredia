@@ -78,7 +78,7 @@ def get_online_users(timeout_minutes=5):
 
 def get_user_activity_history(user_id, limit=50):
     """Get user's recent activity history"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         activities = conn.execute('''
             SELECT activity_type, activity_details, timestamp, ip_address
@@ -93,7 +93,7 @@ def get_user_activity_history(user_id, limit=50):
 
 def get_user_statistics(user_id):
     """Get user's activity statistics"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get total login count
         login_count = conn.execute('''
@@ -130,7 +130,7 @@ def get_user_statistics(user_id):
 
 def get_user_performance_metrics(user_id):
     """Get detailed user performance metrics including quiz history and topic performance"""
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     try:
         # Get quiz history summary
         quiz_summary = conn.execute('''
@@ -161,14 +161,13 @@ def get_user_performance_metrics(user_id):
         
         # Get recent quiz history
         recent_quizzes_raw = conn.execute('''
-            SELECT 
+            SELECT
                 id,
                 quiz_date,
                 score,
                 total_questions,
                 (score * 100.0 / total_questions) as percentage,
-                selected_chapters,
-                selected_tags,
+                selected_specialities,
                 time_spent
             FROM quiz_history
             WHERE user_id = ?
@@ -181,19 +180,18 @@ def get_user_performance_metrics(user_id):
         
         # Get topic performance
         topic_perf_raw = conn.execute('''
-            SELECT 
-                tp.chapter_id,
-                c.name as chapter_name,
-                tp.correct_count,
-                tp.incorrect_count,
+            SELECT
+                speciality as chapter_id,
+                speciality as chapter_name,
+                correct_count,
+                incorrect_count,
                 CASE
-                    WHEN (tp.correct_count + tp.incorrect_count) = 0 THEN 0
-                    ELSE (tp.correct_count * 100.0 / (tp.correct_count + tp.incorrect_count))
+                    WHEN (correct_count + incorrect_count) = 0 THEN 0
+                    ELSE (correct_count * 100.0 / (correct_count + incorrect_count))
                 END as accuracy,
-                tp.last_updated
-            FROM topic_performance tp
-            JOIN chapters c ON tp.chapter_id = c.id
-            WHERE tp.user_id = ?
+                last_updated
+            FROM topic_performance
+            WHERE user_id = ?
             ORDER BY accuracy DESC
         ''', (user_id,)).fetchall()
         
@@ -202,17 +200,16 @@ def get_user_performance_metrics(user_id):
         
         # Get strongest and weakest topics
         strongest_raw = conn.execute('''
-            SELECT 
-                c.name as chapter_name,
-                tp.correct_count,
-                tp.incorrect_count,
+            SELECT
+                speciality as chapter_name,
+                correct_count,
+                incorrect_count,
                 CASE
-                    WHEN (tp.correct_count + tp.incorrect_count) = 0 THEN 0
-                    ELSE (tp.correct_count * 100.0 / (tp.correct_count + tp.incorrect_count))
+                    WHEN (correct_count + incorrect_count) = 0 THEN 0
+                    ELSE (correct_count * 100.0 / (correct_count + incorrect_count))
                 END as accuracy
-            FROM topic_performance tp
-            JOIN chapters c ON tp.chapter_id = c.id
-            WHERE tp.user_id = ? AND (tp.correct_count + tp.incorrect_count) >= 5
+            FROM topic_performance
+            WHERE user_id = ? AND (correct_count + incorrect_count) >= 5
             ORDER BY accuracy DESC
             LIMIT 3
         ''', (user_id,)).fetchall()
@@ -221,17 +218,16 @@ def get_user_performance_metrics(user_id):
         strongest_topics = [dict(topic) for topic in strongest_raw]
         
         weakest_raw = conn.execute('''
-            SELECT 
-                c.name as chapter_name,
-                tp.correct_count,
-                tp.incorrect_count,
+            SELECT
+                speciality as chapter_name,
+                correct_count,
+                incorrect_count,
                 CASE
-                    WHEN (tp.correct_count + tp.incorrect_count) = 0 THEN 0
-                    ELSE (tp.correct_count * 100.0 / (tp.correct_count + tp.incorrect_count))
+                    WHEN (correct_count + incorrect_count) = 0 THEN 0
+                    ELSE (correct_count * 100.0 / (correct_count + incorrect_count))
                 END as accuracy
-            FROM topic_performance tp
-            JOIN chapters c ON tp.chapter_id = c.id
-            WHERE tp.user_id = ? AND (tp.correct_count + tp.incorrect_count) >= 5
+            FROM topic_performance
+            WHERE user_id = ? AND (correct_count + incorrect_count) >= 5
             ORDER BY accuracy ASC
             LIMIT 3
         ''', (user_id,)).fetchall()
@@ -240,22 +236,8 @@ def get_user_performance_metrics(user_id):
         weakest_topics = [dict(topic) for topic in weakest_raw]
         
         # Get recent incorrect questions for targeted improvement
-        incorrect_raw = conn.execute('''
-            SELECT 
-                q.id,
-                q.question_text,
-                qa.selected_answer,
-                qh.quiz_date
-            FROM quiz_answers qa
-            JOIN quiz_history qh ON qa.quiz_history_id = qh.id
-            JOIN questions q ON qa.question_id = q.id
-            WHERE qh.user_id = ? AND qa.is_correct = 0
-            ORDER BY qh.quiz_date DESC
-            LIMIT 5
-        ''', (user_id,)).fetchall()
-        
-        # Convert Row objects to dictionaries
-        recent_incorrect = [dict(item) for item in incorrect_raw]
+        # Note: Currently simplified to return only user.db data due to database separation
+        recent_incorrect = []
         
         # Performance trend over time (monthly)
         monthly_raw = conn.execute('''
@@ -284,4 +266,4 @@ def get_user_performance_metrics(user_id):
             'monthly_trend': monthly_trend
         }
     finally:
-        conn.close() 
+        conn.close()
