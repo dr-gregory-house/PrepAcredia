@@ -83,7 +83,7 @@ def display_quiz():
                 flash('No undiscovered questions found for the selected criteria. Try including discovered questions.', 'warning')
             else:
                 flash('No questions found for the selected chapters and tags.', 'error')
-            conn.close()
+                content_conn.close()
             return redirect(url_for('main.home'))
         
         # If the user is logged in, get their spaced repetition questions

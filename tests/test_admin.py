@@ -76,3 +76,43 @@ def test_admin_settings_schedule_preview_and_update(client, app):
     assert b'Review schedule updated' in resp.data
 
 
+def test_custom_schedule_persists_after_reload(client, app):
+    """
+    GIVEN an admin user sets a custom spaced repetition schedule
+    WHEN the application configuration is reloaded (simulating a restart)
+    THEN the custom schedule should be correctly loaded and not revert to default.
+    """
+    import json
+    from app.utils.spaced_repetition import load_global_schedule, DEFAULT_REVIEW
+
+    # 1. Define a custom schedule and create/login as an admin user
+    admin_user = 'admin_schedule_tester'
+    _make_admin_active(app, admin_user)
+    _login(client, app, admin_user)
+
+    custom_schedule = {
+        1: [10, 20, 30, 40, 50],
+        2: [11, 21, 31, 41, 51],
+        3: [12, 22, 32, 42, 52],
+        4: [13, 23, 33, 43, 53],
+        5: [14, 24, 34, 44, 54],
+    }
+
+    # 2. Set the custom schedule via the admin endpoint. This saves it to a file.
+    resp = client.post('/admin/settings/spaced_repetition', data={
+        'schedule_type': 'custom',
+        'custom_intervals': json.dumps(custom_schedule)
+    }, follow_redirects=True)
+    assert resp.status_code == 200
+    assert b'Custom spaced repetition schedule' in resp.data
+
+    # 3. Simulate an application restart by reloading the schedule from the config file.
+    # This is where the bug occurs: loading from JSON converts int keys to strings,
+    # causing validation to fail and the schedule to revert to default.
+    reloaded_schedule = load_global_schedule()
+
+    # 4. Assert that the reloaded schedule is the custom one.
+    # This assertion will fail before the fix because the keys will be strings.
+    # The _validate_custom_intervals function expects integer keys.
+    assert reloaded_schedule != DEFAULT_REVIEW
+    assert reloaded_schedule == custom_schedule

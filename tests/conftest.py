@@ -67,12 +67,12 @@ def client(app):
 def _seed_content_db(path):
     conn = sqlite3.connect(path)
     try:
-        conn.execute('CREATE TABLE IF NOT EXISTS questions (id INTEGER PRIMARY KEY, question_text_ru TEXT, question_text_en TEXT, explanation TEXT, speciality TEXT)')
+        conn.execute('CREATE TABLE IF NOT EXISTS questions (id INTEGER PRIMARY KEY, question_text_ru TEXT, question_text_en TEXT, hint TEXT, explanation TEXT, speciality TEXT)')
         conn.execute('CREATE TABLE IF NOT EXISTS options (id INTEGER PRIMARY KEY AUTOINCREMENT, question_id INTEGER, letter TEXT, text_ru TEXT, text_en TEXT, is_correct INTEGER)')
         # Insert one question if empty
         cur = conn.execute('SELECT COUNT(*) FROM questions')
         if cur.fetchone()[0] == 0:
-            conn.execute('INSERT INTO questions (id, question_text_ru, question_text_en, explanation, speciality) VALUES (?,?,?, ?, ?)', (1, 'Q RU', 'Q EN', 'Because...', 'General'))
+            conn.execute('INSERT INTO questions (id, question_text_ru, question_text_en, hint, explanation, speciality) VALUES (?,?,?,?, ?, ?)', (1, 'Q RU', 'Q EN', 'Hint text', 'Because...', 'General'))
             conn.executemany(
                 'INSERT INTO options (question_id, letter, text_ru, text_en, is_correct) VALUES (?,?,?,?,?)',
                 [
