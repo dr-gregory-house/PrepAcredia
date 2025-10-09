@@ -500,7 +500,7 @@ def results():
         session['quiz_id'] = None
     
     # Keep user session data, but clear quiz-related data
-    keys_to_remove = ['selected_chapters', 'selected_tags', 'num_questions', 'score', 'total', 'quiz_data', 'user_answers']
+    keys_to_remove = ['selected_chapters', 'selected_tags', 'num_questions', 'score', 'total', 'quiz_data', 'user_answers', 'selected_specialities']
     for key in keys_to_remove:
         if key in session:
             session.pop(key)

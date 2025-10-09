@@ -52,3 +52,21 @@ def test_quiz_flow_answer_and_results(client, app):
     assert b'Quiz Results' in resp.data
 
 
+def test_quiz_session_cleanup_after_results(client, app):
+    _login_user(client, app, username='cleanup_user')
+
+    # Start and complete a quiz
+    client.post('/', data={'specialities': ['General'], 'num_questions': '1'}, follow_redirects=True)
+    client.post('/quiz/answer', data={'answer': 'B', 'question_id': '1', 'time_spent': '5'}, follow_redirects=True)
+    client.post('/quiz/next', follow_redirects=True)
+
+    # After results, check that session is cleaned up
+    with client.session_transaction() as session:
+        assert 'selected_specialities' not in session
+        assert 'num_questions' not in session
+        assert 'quiz_data' not in session
+
+    # Start a new quiz without selecting a speciality
+    resp = client.post('/', data={'num_questions': '1'}, follow_redirects=True)
+    # Expect an error because no speciality is selected
+    assert b'Please select at least one speciality' in resp.data
