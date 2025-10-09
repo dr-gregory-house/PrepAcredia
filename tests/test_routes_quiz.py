@@ -28,14 +28,14 @@ def test_start_quiz_with_no_undiscovered_questions(client, app):
         # Log in
         client.post('/auth/login', data={'username': 'u2', 'password': 'password'}, follow_redirects=True)
 
-        # 2. Mark the only existing question (id=1) as answered for this user
-        # Create a quiz history entry
+        # 2. Mark all 'General' questions as answered for this user
+        # In the test seed, these are questions 1, 2, and 5.
         hist_cursor = conn.cursor()
-        hist_cursor.execute('INSERT INTO quiz_history (user_id, score, total_questions) VALUES (?, ?, ?)', (user_id, 1, 1))
+        hist_cursor.execute('INSERT INTO quiz_history (user_id, score, total_questions) VALUES (?, ?, ?)', (user_id, 3, 3))
         history_id = hist_cursor.lastrowid
 
-        # Create a quiz answer entry for question 1
-        conn.execute('INSERT INTO quiz_answers (quiz_history_id, question_id, selected_letter, is_correct) VALUES (?, ?, ?, ?)', (history_id, 1, 'B', 1))
+        answered_questions = [(history_id, 1, 'B', 1), (history_id, 2, 'A', 1), (history_id, 5, 'A', 1)]
+        conn.executemany('INSERT INTO quiz_answers (quiz_history_id, question_id, selected_letter, is_correct) VALUES (?, ?, ?, ?)', answered_questions)
         conn.commit()
         conn.close()
 

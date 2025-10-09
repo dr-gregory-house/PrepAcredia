@@ -69,18 +69,28 @@ def _seed_content_db(path):
     try:
         conn.execute('CREATE TABLE IF NOT EXISTS questions (id INTEGER PRIMARY KEY, question_text_ru TEXT, question_text_en TEXT, hint TEXT, explanation TEXT, speciality TEXT)')
         conn.execute('CREATE TABLE IF NOT EXISTS options (id INTEGER PRIMARY KEY AUTOINCREMENT, question_id INTEGER, letter TEXT, text_ru TEXT, text_en TEXT, is_correct INTEGER)')
-        # Insert one question if empty
+        # Insert questions if empty
         cur = conn.execute('SELECT COUNT(*) FROM questions')
         if cur.fetchone()[0] == 0:
-            conn.execute('INSERT INTO questions (id, question_text_ru, question_text_en, hint, explanation, speciality) VALUES (?,?,?,?, ?, ?)', (1, 'Q RU', 'Q EN', 'Hint text', 'Because...', 'General'))
+            questions_to_add = [
+                (1, 'Q1 RU', 'Q1 EN', 'Hint 1', 'Exp 1', 'General'),
+                (2, 'Q2 RU', 'Q2 EN', 'Hint 2', 'Exp 2', 'General'),
+                (3, 'Q3 RU', 'Q3 EN', 'Hint 3', 'Exp 3', 'Cardiology'),
+                (4, 'Q4 RU', 'Q4 EN', 'Hint 4', 'Exp 4', 'Neurology'),
+                (5, 'Q5 RU', 'Q5 EN', 'Hint 5', 'Exp 5', 'General'),
+            ]
+            conn.executemany('INSERT INTO questions (id, question_text_ru, question_text_en, hint, explanation, speciality) VALUES (?,?,?,?,?,?)', questions_to_add)
+
+            options_to_add = [
+                (1, 'A', 'A', 'A', 0), (1, 'B', 'B', 'B', 1), (1, 'C', 'C', 'C', 0),
+                (2, 'A', 'A', 'A', 1), (2, 'B', 'B', 'B', 0), (2, 'C', 'C', 'C', 0),
+                (3, 'A', 'A', 'A', 0), (3, 'B', 'B', 'B', 0), (3, 'C', 'C', 'C', 1),
+                (4, 'A', 'A', 'A', 0), (4, 'B', 'B', 'B', 1), (4, 'C', 'C', 'C', 0),
+                (5, 'A', 'A', 'A', 1), (5, 'B', 'B', 'B', 0), (5, 'C', 'C', 'C', 0),
+            ]
             conn.executemany(
                 'INSERT INTO options (question_id, letter, text_ru, text_en, is_correct) VALUES (?,?,?,?,?)',
-                [
-                    (1, 'A', 'Option A RU', 'Option A EN', 0),
-                    (1, 'B', 'Option B RU', 'Option B EN', 1),
-                    (1, 'C', 'Option C RU', 'Option C EN', 0),
-                    (1, 'D', 'Option D RU', 'Option D EN', 0),
-                ]
+                options_to_add
             )
         conn.commit()
     finally:

@@ -58,3 +58,46 @@ def test_quiz_detail_page_loads_with_data(client, app):
     assert resp.status_code == 200
     assert b'Quiz Details' in resp.data
     assert b'Question 1' in resp.data # Check for some expected content
+
+
+def test_get_never_attempted_count_logic(client, app):
+    """
+    GIVEN a user who has answered some questions
+    WHEN the get_never_attempted_count function is called
+    THEN it should return the total number of questions minus the number of unique questions answered by the user.
+    """
+    from app.utils.analytics import get_never_attempted_count
+    from app.utils.db import get_user_db_connection, get_content_db_connection
+
+    with app.app_context():
+        # 1. Setup a user
+        username = 'never_attempted_user'
+        _ensure_user_logged_in(client, app, username)
+
+        user_conn = get_user_db_connection()
+        user_id = user_conn.execute('SELECT id FROM users WHERE username = ?', (username,)).fetchone()['id']
+
+        # 2. Get total questions from content DB
+        content_conn = get_content_db_connection()
+        total_questions = content_conn.execute('SELECT COUNT(id) FROM questions').fetchone()[0]
+        content_conn.close()
+
+        # 3. Simulate user answering 2 unique questions
+        cursor = user_conn.cursor()
+        cursor.execute('INSERT INTO quiz_history (user_id, score, total_questions) VALUES (?, ?, ?)', (user_id, 2, 2))
+        quiz_history_id = cursor.lastrowid
+        # Assuming question IDs 1 and 2 exist in content.db
+        cursor.execute('INSERT INTO quiz_answers (quiz_history_id, question_id, selected_letter, is_correct) VALUES (?, ?, ?, ?)',
+                         (quiz_history_id, 1, 'A', 1))
+        cursor.execute('INSERT INTO quiz_answers (quiz_history_id, question_id, selected_letter, is_correct) VALUES (?, ?, ?, ?)',
+                         (quiz_history_id, 2, 'B', 1))
+        user_conn.commit()
+
+        # 4. Call the function and assert the correct count
+        # The buggy version will return 0, so this will fail.
+        never_attempted = get_never_attempted_count(user_id)
+
+        # There are 5 questions in the content DB seed. User has seen 2.
+        assert never_attempted == total_questions - 2
+
+        user_conn.close()
