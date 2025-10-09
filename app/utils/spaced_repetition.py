@@ -202,6 +202,9 @@ def mark_question_reviewed(user_id, question_id, is_correct):
     """
     Update a question after it has been reviewed
     """
+    # Ensure we are using the latest schedule from config
+    load_global_schedule()
+
     conn = get_user_db_connection()
     try:
         # Find current data
