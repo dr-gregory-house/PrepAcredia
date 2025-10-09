@@ -12,7 +12,11 @@ def _login_user(client, app, username='quiz_user'):
     client.post('/auth/login', data={'username': username, 'password': 'x'})
 
 
-def test_quiz_flow_answer_and_results(client, app):
+def test_quiz_flow_answer_and_results(client, app, monkeypatch):
+    # Make question selection predictable
+    monkeypatch.setattr('app.routes.quiz.random.sample', lambda population, k: population[:k])
+    monkeypatch.setattr('app.routes.quiz.random.shuffle', lambda x: x)
+
     _login_user(client, app)
 
     # Start from home to create quiz selection
@@ -33,9 +37,8 @@ def test_quiz_flow_answer_and_results(client, app):
     assert resp.status_code == 200
     assert b'Custom Quiz' in resp.data
 
-    # Submit an answer to the first question (choose B which is correct in seed)
-    # We need the current question id from the page; since templates aren't parsed here,
-    # use knowledge of seed (question id = 1) and submit accordingly.
+    # Submit an answer to the first question (choose B which is correct in seed for Q1)
+    # With shuffle disabled, the first 'General' question (ID 1) should be picked.
     resp = client.post('/quiz/answer', data={'answer': 'B', 'question_id': '1', 'time_spent': '3'}, follow_redirects=True)
     assert resp.status_code == 200
     assert b'show_answer' in resp.data or b'Next' in resp.data or b'Custom Quiz' in resp.data
@@ -52,3 +55,27 @@ def test_quiz_flow_answer_and_results(client, app):
     assert b'Quiz Results' in resp.data
 
 
+def test_quiz_session_cleanup_after_results(client, app, monkeypatch):
+    # Make question selection predictable
+    monkeypatch.setattr('app.routes.quiz.random.sample', lambda population, k: population[:k])
+    monkeypatch.setattr('app.routes.quiz.random.shuffle', lambda x: x)
+
+    _login_user(client, app, username='cleanup_user')
+
+    # Start and complete a quiz
+    client.post('/', data={'specialities': ['General'], 'num_questions': '1'}, follow_redirects=True)
+
+    # The first question for 'General' speciality is ID 1. Correct answer is 'B'.
+    client.post('/quiz/answer', data={'answer': 'B', 'question_id': '1', 'time_spent': '5'}, follow_redirects=True)
+    client.post('/quiz/next', follow_redirects=True)
+
+    # After results, check that session is cleaned up
+    with client.session_transaction() as session:
+        assert 'selected_specialities' not in session
+        assert 'num_questions' not in session
+        assert 'quiz_data' not in session
+
+    # Start a new quiz without selecting a speciality
+    resp = client.post('/', data={'num_questions': '1'}, follow_redirects=True)
+    # Expect an error because no speciality is selected
+    assert b'Please select at least one speciality' in resp.data

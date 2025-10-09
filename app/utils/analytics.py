@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from app.utils.db import get_user_db_connection
+from app.utils.db import get_user_db_connection, get_content_db_connection
 import json
 
 def update_topic_performance(user_id, speciality, is_correct):
@@ -244,14 +244,16 @@ def get_never_attempted_count(user_id):
     """
     Get the count of questions the user has never attempted
     """
-    conn = get_user_db_connection()
+    user_conn = get_user_db_connection()
+    content_conn = get_content_db_connection()
     try:
-        # Get total number of questions in the database
-        # Note: total questions come from content DB; here we use user DB only for attempted count.
-        total_questions_count = 0
+        # Get total number of questions from the content database
+        total_questions_count = content_conn.execute(
+            'SELECT COUNT(id) FROM questions'
+        ).fetchone()[0]
         
-        # Get number of unique questions the user has attempted
-        attempted_questions_count = conn.execute(
+        # Get number of unique questions the user has attempted from the user database
+        attempted_questions_count = user_conn.execute(
             '''SELECT COUNT(DISTINCT qa.question_id) as count 
                FROM quiz_answers qa 
                JOIN quiz_history qh ON qa.quiz_history_id = qh.id 
@@ -259,10 +261,11 @@ def get_never_attempted_count(user_id):
             (user_id,)
         ).fetchone()['count']
         
-        # Unknown total in user DB context; return attempted count only
-        return max(0, -attempted_questions_count)
+        # Calculate the difference
+        return max(0, total_questions_count - attempted_questions_count)
     finally:
-        conn.close()
+        user_conn.close()
+        content_conn.close()
 
 def get_day_streak(user_id):
     """

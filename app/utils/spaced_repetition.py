@@ -71,6 +71,14 @@ def _load_config():
         try:
             with open(config_path, 'r') as f:
                 config = json.load(f)
+                # After loading, if custom_intervals exists, convert its keys to integers
+                if config.get('custom_intervals'):
+                    try:
+                        config['custom_intervals'] = {int(k): v for k, v in config['custom_intervals'].items()}
+                    except (ValueError, TypeError):
+                        # If conversion fails, treat it as invalid and revert to default
+                        config['custom_intervals'] = None
+                        config['schedule_type'] = 'default'
                 return config
         except (json.JSONDecodeError, IOError):
             # Return default if file is corrupted or can't be read
@@ -194,6 +202,9 @@ def mark_question_reviewed(user_id, question_id, is_correct):
     """
     Update a question after it has been reviewed
     """
+    # Ensure we are using the latest schedule from config
+    load_global_schedule()
+
     conn = get_user_db_connection()
     try:
         # Find current data
