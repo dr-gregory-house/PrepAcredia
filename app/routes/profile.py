@@ -84,7 +84,7 @@ def analytics():
 @login_required
 def quiz_detail(quiz_id):
     user_id = session['user_id']
-    conn = get_db_connection()
+    conn = get_user_db_connection()
     
     # Get quiz and verify it belongs to the user
     quiz = conn.execute('''
