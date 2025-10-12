@@ -36,8 +36,10 @@ def display_quiz():
     # For spaced repetition reviews, selected_specialities may not be set
     is_spaced_repetition = session.get('is_spaced_repetition', False)
     if 'quiz_id' not in session or 'num_questions' not in session:
+        flash('Quiz session expired or not found. Please start a new quiz.', 'warning')
         return redirect(url_for('main.home'))
     if not is_spaced_repetition and 'selected_specialities' not in session:
+        flash('Quiz configuration incomplete. Please start a new quiz.', 'error')
         return redirect(url_for('main.home'))
     
     quiz_id = session['quiz_id']
@@ -71,6 +73,11 @@ def display_quiz():
 			).fetchall()
             # Filter client-side due to cross-db limitation
             questions = [q for q in questions if q['id'] not in answered_set]
+            # Ensure we have questions after filtering
+            if not questions:
+                content_conn.close()
+                flash('No undiscovered questions found for the selected criteria. Try including discovered questions.', 'warning')
+                return redirect(url_for('main.home'))
         else:
             questions = content_conn.execute(
 				f'SELECT id, question_text_ru, question_text_en, hint, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
@@ -386,8 +393,18 @@ def results():
         
         conn = get_user_db_connection()
         
-        # Calculate total time spent from all answers
-        total_time_spent = sum(answer.get('time_spent', 0) for answer in user_answers if answer) if user_answers else 0
+    # Calculate total time spent from all answers safely
+    total_time_spent = 0
+    if user_answers:
+        for answer in user_answers:
+            if answer and isinstance(answer, dict) and 'time_spent' in answer:
+                try:
+                    time_value = answer['time_spent']
+                    if time_value is not None:
+                        total_time_spent += int(time_value)
+                except (ValueError, TypeError):
+                    # Skip invalid time values
+                    pass
         
         cursor = conn.cursor()
         
@@ -544,6 +561,14 @@ def answer():
     selected = request.form.get('answer')
     question_id = request.form.get('question_id')
     time_spent = request.form.get('time_spent', 0)
+
+    # Validate input parameters
+    if not selected:
+        flash('Please select an answer.', 'error')
+        return redirect(url_for('quiz.display_quiz'))
+    if not question_id:
+        flash('Question ID is missing. Please try again.', 'error')
+        return redirect(url_for('quiz.display_quiz'))
     
     # Verify question ID matches current question
     if str(quiz_data[current]['id']) != str(question_id):
