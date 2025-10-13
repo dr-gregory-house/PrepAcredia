@@ -2,35 +2,70 @@
     <div class="position-sticky pt-3">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}" href="{{ url_for('admin.dashboard') }}" style="color: var(--dark);">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.dashboard' else '' }}" href="{{ url_for('admin.dashboard') }}" style="color: var(--dark);" data-theme-aware>
                     <i class="fas fa-tachometer-alt me-2"></i>
                     Dashboard
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.settings' else '' }}" href="{{ url_for('admin.settings') }}" style="color: var(--dark);">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.settings' else '' }}" href="{{ url_for('admin.settings') }}" style="color: var(--dark);" data-theme-aware>
                     <i class="fas fa-cogs me-2"></i>
                     Settings
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link {{ 'active' if request.endpoint == 'admin.incorrect_questions' else '' }}" href="{{ url_for('admin.incorrect_questions') }}" style="color: var(--dark);">
+                <a class="nav-link {{ 'active' if request.endpoint == 'admin.incorrect_questions' else '' }}" href="{{ url_for('admin.incorrect_questions') }}" style="color: var(--dark);" data-theme-aware>
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     Top Incorrect Questions
                 </a>
             </li>
         </ul>
-        
-        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+
+        <h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1" style="color: var(--dark); opacity: 0.7;">
             <span>Analytics</span>
         </h6>
         <ul class="nav flex-column mb-2">
             <li class="nav-item">
-                <a class="nav-link" href="#" style="color: var(--dark);">
+                <a class="nav-link" href="#" style="color: var(--dark); opacity: 0.8;" data-theme-aware>
                     <i class="fas fa-chart-bar me-2"></i>
                     Performance Reports
                 </a>
             </li>
         </ul>
     </div>
-</div> 
+</div>
+
+<style>
+/* Enhanced sidebar styling for dark/aurora themes */
+body[data-theme="dark"] .sidebar,
+body[data-theme="aurora"] .sidebar {
+    background: rgba(16, 24, 39, 0.85) !important;
+    border-right-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body[data-theme="dark"] .sidebar .nav-link,
+body[data-theme="aurora"] .sidebar .nav-link {
+    color: var(--dark) !important;
+    transition: var(--transition);
+}
+
+body[data-theme="dark"] .sidebar .nav-link:hover,
+body[data-theme="aurora"] .sidebar .nav-link:hover {
+    background: rgba(99, 102, 241, 0.1) !important;
+    color: var(--primary) !important;
+}
+
+body[data-theme="dark"] .sidebar .nav-link.active,
+body[data-theme="aurora"] .sidebar .nav-link.active {
+    background: rgba(99, 102, 241, 0.15) !important;
+    color: var(--primary) !important;
+    border-right: 3px solid var(--primary);
+}
+
+body[data-theme="dark"] .sidebar-heading,
+body[data-theme="aurora"] .sidebar-heading {
+    color: var(--dark) !important;
+    opacity: 0.8 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+</style>

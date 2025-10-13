@@ -536,6 +536,46 @@ def results():
     # Return the template with the captured data
     return render_template('quiz/results.html', **result_data)
 
+@quiz_bp.route('/exit', methods=['POST', 'GET'])
+@login_required
+def exit_quiz():
+    """Handle quiz exit - clean up session data and redirect to home."""
+    if 'quiz_id' not in session:
+        flash('No active quiz session found.', 'info')
+        return redirect(url_for('main.home'))
+
+    quiz_id = session['quiz_id']
+
+    # Log the exit activity if user is logged in
+    user_id = session.get('user_id')
+    if user_id:
+        try:
+            log_user_activity(user_id, 'quiz_exited', f'Quiz {quiz_id} exited early')
+        except Exception:
+            # Best-effort logging; don't break UX
+            pass
+
+    # Clean up quiz data
+    try:
+        delete_quiz_data(quiz_id)
+    except Exception:
+        # Best-effort cleanup; don't break UX
+        pass
+
+    # Clear quiz-related session data
+    keys_to_remove = [
+        'quiz_id', 'selected_chapters', 'selected_tags', 'num_questions',
+        'score', 'total', 'quiz_data', 'user_answers', 'selected_specialities',
+        'is_spaced_repetition', 'undiscovered_only'
+    ]
+
+    for key in keys_to_remove:
+        if key in session:
+            session.pop(key)
+
+    flash('Quiz exited successfully. Progress has been cleared.', 'info')
+    return redirect(url_for('main.home'))
+
 @quiz_bp.route('/answer', methods=['POST'])
 @login_required
 def answer():

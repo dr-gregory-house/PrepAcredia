@@ -2,16 +2,151 @@
 
 {% block title %}Admin Dashboard - PrepAccredia{% endblock %}
 
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle toggle user active/inactive confirmation
+    const toggleButtons = document.querySelectorAll('.toggle-user-form button[data-action]');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const action = this.getAttribute('data-action');
+            const confirmed = confirm(`Are you sure you want to ${action} this user?`);
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+
 {% block extra_styles %}
 <style>
     .stats-card {
         border-radius: 10px;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
+        background: var(--glass-bg) !important;
+        border-color: var(--card-border) !important;
+        color: var(--dark) !important;
     }
     .stats-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Theme-specific admin card styling */
+    body[data-theme="dark"] .stats-card,
+    body[data-theme="aurora"] .stats-card {
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    body[data-theme="dark"] .stats-card:hover,
+    body[data-theme="aurora"] .stats-card:hover {
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* Admin Dashboard Theme Overrides for Dark Mode */
+    body[data-theme="dark"] .card-header.bg-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+        color: white;
+    }
+
+    body[data-theme="dark"] .card-header.bg-dark {
+        background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+        color: white;
+    }
+
+    body[data-theme="dark"] .card-header.bg-info {
+        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+        color: white;
+    }
+
+    body[data-theme="dark"] .table {
+        color: var(--dark) !important;
+    }
+
+    body[data-theme="dark"] .table th {
+        background-color: rgba(75, 85, 99, 0.2) !important;
+        border-color: var(--card-border) !important;
+        color: var(--dark) !important;
+    }
+
+    body[data-theme="dark"] .table td {
+        border-color: var(--card-border) !important;
+        color: var(--dark) !important;
+    }
+
+    body[data-theme="dark"] .badge.bg-primary {
+        background: var(--primary) !important;
+        color: white !important;
+    }
+
+    body[data-theme="dark"] .badge.bg-danger {
+        background: var(--danger) !important;
+        color: white !important;
+    }
+
+    body[data-theme="dark"] .text-muted {
+        color: var(--dark) !important;
+        opacity: 0.6 !important;
+    }
+
+    /* Admin Dashboard Theme Overrides for Aurora Mode */
+    body[data-theme="aurora"] .card-header.bg-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+        color: white;
+    }
+
+    body[data-theme="aurora"] .card-header.bg-dark {
+        background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%) !important;
+        color: white;
+    }
+
+    body[data-theme="aurora"] .card-header.bg-info {
+        background: linear-gradient(135deg, #0e7c86 0%, #0891b2 100%) !important;
+        color: white;
+    }
+
+    body[data-theme="aurora"] .table {
+        color: var(--dark) !important;
+    }
+
+    body[data-theme="aurora"] .table th {
+        background-color: rgba(168, 85, 247, 0.1) !important;
+        border-color: var(--card-border) !important;
+        color: var(--dark) !important;
+    }
+
+    body[data-theme="aurora"] .table td {
+        border-color: var(--card-border) !important;
+        color: var(--dark) !important;
+    }
+
+    body[data-theme="aurora"] .badge.bg-primary {
+        background: var(--primary) !important;
+        color: white !important;
+    }
+
+    body[data-theme="aurora"] .badge.bg-danger {
+        background: var(--danger) !important;
+        color: white !important;
+    }
+
+    body[data-theme="aurora"] .text-muted {
+        color: var(--dark) !important;
+        opacity: 0.7 !important;
+    }
+
+    body[data-theme="aurora"] .btn-info {
+        background: linear-gradient(135deg, #0891b2 0%, #0e9498 100%) !important;
+        border-color: rgba(6, 182, 212, 0.5) !important;
+        color: white !important;
+    }
+
+    body[data-theme="aurora"] .btn-info:hover {
+        background: linear-gradient(135deg, #0e9498 0%, #0f766e 100%) !important;
+        transform: translateY(-2px);
     }
     .card-icon {
         width: 60px;
@@ -128,10 +263,10 @@
                                                     title="View detailed user performance and activity">
                                                         <i class="fas fa-chart-line"></i> Performance
                                                     </a>
-                                                    <form action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" method="post" style="display:inline;">
+                                                    <form action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" method="post" style="display:inline;" class="toggle-user-form">
                                                         <button type="submit" class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}"
                                                                 title="{{ 'Deactivate' if user.is_active else 'Activate' }}"
-                                                                onclick="return confirm('Are you sure you want to {{ 'deactivate' if user.is_active else 'activate' }} this user?');">
+                                                                data-action="{{ 'deactivate' if user.is_active else 'activate' }}">
                                                             <i class="fas {% if user.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
                                                         </button>
                                                     </form>
@@ -192,4 +327,4 @@
         </main>
     </div>
 </div>
-{% endblock %} 
+{% endblock %}

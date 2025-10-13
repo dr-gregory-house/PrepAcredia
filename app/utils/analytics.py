@@ -109,7 +109,7 @@ def get_activity_heatmap(user_id, days=365):
         # Get activity for the last X days
         end_date = datetime.now().date()
         start_date = end_date - timedelta(days=days)
-        
+
         activity_data = conn.execute(
             '''SELECT activity_date, quiz_count, question_count, correct_count
                FROM user_activity
@@ -117,23 +117,24 @@ def get_activity_heatmap(user_id, days=365):
                ORDER BY activity_date''',
             (user_id, start_date, end_date)
         ).fetchall()
-        
+
         # Format for heatmap (date: value pairs)
         heatmap_data = {}
-        
+
         # First create a dictionary with all dates in the range (to avoid gaps)
         current_date = start_date
         while current_date <= end_date:
             date_str = current_date.strftime('%Y-%m-%d')
             heatmap_data[date_str] = 0
             current_date += timedelta(days=1)
-        
+
         # Then fill in actual activity data
         for data in activity_data:
             date_str = data['activity_date']
-            # Use question count as the intensity value
-            heatmap_data[date_str] = data['question_count']
-        
+            if date_str:  # Ensure date is not None
+                # Use question count as the intensity value
+                heatmap_data[date_str] = data['question_count'] or 0
+
         return heatmap_data
     finally:
         conn.close()
@@ -312,4 +313,4 @@ def get_day_streak(user_id):
         
         return streak
     finally:
-        conn.close() 
+        conn.close()

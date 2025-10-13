@@ -244,6 +244,98 @@
             opacity: 0.7 !important;
         }
 
+        /* Analytics page text color fixes for dark and aurora themes */
+        body[data-theme="dark"] .analytics-page .card,
+        body[data-theme="aurora"] .analytics-page .card {
+            background: var(--glass-bg) !important;
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .card-header,
+        body[data-theme="aurora"] .analytics-page .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+            color: white !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .card-body,
+        body[data-theme="aurora"] .analytics-page .card-body {
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .card-text,
+        body[data-theme="aurora"] .analytics-page .card-text {
+            color: var(--dark) !important;
+            opacity: 0.8 !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .card-subtitle,
+        body[data-theme="aurora"] .analytics-page .card-subtitle {
+            color: var(--dark) !important;
+            opacity: 0.7 !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .text-muted,
+        body[data-theme="aurora"] .analytics-page .text-muted {
+            color: var(--dark) !important;
+            opacity: 0.6 !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .topic-card,
+        body[data-theme="aurora"] .analytics-page .topic-card {
+            background: var(--glass-bg) !important;
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .stat-card,
+        body[data-theme="aurora"] .analytics-page .stat-card {
+            background: var(--glass-bg) !important;
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .stat-card::before,
+        body[data-theme="aurora"] .analytics-page .stat-card::before {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-hover) 100%) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .table,
+        body[data-theme="aurora"] .analytics-page .table {
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .table th,
+        body[data-theme="aurora"] .analytics-page .table th {
+            background-color: rgba(99, 102, 241, 0.1) !important;
+            color: var(--dark) !important;
+            border-color: var(--card-border) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .table td,
+        body[data-theme="aurora"] .analytics-page .table td {
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .form-check-label,
+        body[data-theme="aurora"] .analytics-page .form-check-label {
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .card-footer,
+        body[data-theme="aurora"] .analytics-page .card-footer {
+            background: var(--glass-bg) !important;
+            border-color: var(--card-border) !important;
+            color: var(--dark) !important;
+        }
+
+        body[data-theme="dark"] .analytics-page .heatmap-container,
+        body[data-theme="aurora"] .analytics-page .heatmap-container {
+            background: var(--glass-bg) !important;
+            border-radius: 8px;
+        }
+
         .dropdown-item.theme-option {
             color: var(--dark);
             transition: var(--transition);
@@ -524,6 +616,341 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--primary);
         }
+
+        /* Mobile navbar improvements */
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background: var(--glass-bg);
+                backdrop-filter: blur(10px);
+                -webkit-backdrop-filter: blur(10px);
+                border-radius: 12px;
+                margin-top: 10px;
+                padding: 15px;
+                border: 1px solid var(--card-border);
+                box-shadow: var(--card-shadow);
+            }
+
+            .navbar-nav .nav-item {
+                margin-bottom: 8px;
+            }
+
+            .navbar .nav-link {
+                padding: 10px 15px;
+                border-radius: 8px;
+                margin-bottom: 2px;
+            }
+
+            /* Mobile user menu styling */
+            .navbar .d-lg-none .d-flex.flex-column {
+                gap: 8px;
+            }
+
+            .navbar .d-lg-none .text-muted {
+                font-size: 0.8rem;
+                padding: 8px 0;
+                border-bottom: 1px solid var(--card-border);
+                margin-bottom: 8px !important;
+            }
+
+            .navbar .d-lg-none .d-flex.gap-1 {
+                gap: 6px !important;
+            }
+
+            .navbar .d-lg-none .btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+                min-height: 40px;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+
+            /* Ensure buttons take equal width on mobile */
+            .navbar .d-lg-none .flex-fill {
+                flex: 1 1 calc(50% - 3px);
+                min-width: calc(50% - 3px);
+            }
+
+            /* Make theme button slightly smaller on mobile */
+            .navbar .d-lg-none .btn-theme {
+                flex: 0 0 auto;
+                min-width: 45px;
+                padding: 8px 10px;
+            }
+
+            /* Improve navbar brand spacing on mobile */
+            .navbar-brand {
+                font-size: 1.3rem;
+            }
+
+            .navbar-brand i {
+                font-size: 1.5rem;
+            }
+
+            /* Better spacing for mobile navbar toggler */
+            .navbar-toggler {
+                border: none;
+                background: rgba(99, 102, 241, 0.1);
+                padding: 8px 10px;
+                border-radius: 6px;
+                transition: var(--transition);
+            }
+
+            .navbar-toggler:hover {
+                background: rgba(99, 102, 241, 0.15);
+            }
+
+            /* Ensure proper spacing for mobile dropdown */
+            .navbar .dropdown-menu {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
+
+        /* Tablet adjustments */
+        @media (min-width: 768px) and (max-width: 991.98px) {
+            .navbar .d-lg-none .flex-fill {
+                flex: 1 1 calc(33.333% - 4px);
+                min-width: calc(33.333% - 4px);
+            }
+        }
+
+        /* Improve button layout on very small screens */
+        @media (max-width: 575.98px) {
+            .navbar .d-lg-none .flex-fill {
+                flex: 1 1 100%;
+                min-width: 100%;
+                margin-bottom: 4px;
+            }
+
+            .navbar .d-lg-none .d-flex.gap-1 {
+                flex-direction: column;
+                gap: 4px !important;
+            }
+
+            .navbar .d-lg-none .btn-theme {
+                width: 100%;
+                margin-bottom: 8px;
+            }
+        }
+
+        /* Creative Mobile Button Design */
+        .mobile-nav-button {
+            position: relative;
+            border-radius: 12px;
+            padding: 2px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+            transition: var(--transition);
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+        }
+
+        .mobile-nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.25);
+        }
+
+        .mobile-nav-button.theme-button {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.4), rgba(16, 185, 129, 0.4));
+            box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+        }
+
+        .mobile-nav-button.theme-button:hover {
+            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
+        }
+
+        .mobile-nav-button.profile-button {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.4));
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+        }
+
+        .mobile-nav-button.profile-button:hover {
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .mobile-nav-button.logout-button {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(220, 38, 127, 0.4));
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+        }
+
+        .mobile-nav-button.logout-button:hover {
+            box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .mobile-nav-button.login-button {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(59, 130, 246, 0.4));
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+        }
+
+        .mobile-nav-button.login-button:hover {
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .mobile-nav-button.register-button {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(34, 197, 94, 0.4));
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+        }
+
+        .mobile-nav-button.register-button:hover {
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-mobile-nav {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: none;
+            color: var(--dark);
+            font-size: 0.75rem;
+            padding: 10px 8px;
+            min-height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: var(--transition);
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .btn-mobile-nav:hover {
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--primary);
+            transform: none;
+        }
+
+        .btn-mobile-nav.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-mobile-nav.primary:hover {
+            background: linear-gradient(135deg, var(--primary-hover) 0%, #4338ca 100%);
+            color: white;
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-mobile-nav i {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .btn-mobile-nav .button-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        .btn-theme-mobile {
+            background: linear-gradient(135deg, #14b8a6 0%, #10b981 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            font-size: 0.75rem;
+            padding: 10px 8px;
+            min-height: 44px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: var(--transition);
+            border-radius: 10px;
+            width: 100%;
+            box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+        }
+
+        .btn-theme-mobile:hover {
+            background: linear-gradient(135deg, #0f766e 0%, #059669 100%);
+            color: white;
+            transform: none;
+            box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
+        }
+
+        .btn-theme-mobile i {
+            font-size: 1.1rem;
+        }
+
+        .btn-theme-mobile .button-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1;
+        }
+
+        /* Mobile User Info Styling */
+        .mobile-user-info {
+            color: var(--dark);
+            opacity: 0.8;
+            font-weight: 500;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid var(--card-border);
+        }
+
+        body[data-theme="dark"] .mobile-user-info,
+        body[data-theme="aurora"] .mobile-user-info {
+            color: var(--dark);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-user-info i {
+            opacity: 0.7;
+        }
+
+        .mobile-user-info strong {
+            opacity: 1;
+        }
+
+        /* Enhanced mobile dropdown styling */
+        .navbar .dropdown-menu {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-top: 8px;
+        }
+
+        .navbar .dropdown-item {
+            color: var(--dark);
+            padding: 10px 15px;
+            transition: var(--transition);
+        }
+
+        .navbar .dropdown-item:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        /* Aurora theme mobile button overrides */
+        body[data-theme="aurora"] .mobile-nav-button.theme-button {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.5), rgba(16, 185, 129, 0.5));
+        }
+
+        body[data-theme="aurora"] .mobile-nav-button.profile-button {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.5), rgba(139, 92, 246, 0.5));
+        }
+
+        body[data-theme="aurora"] .mobile-nav-button.logout-button {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.5), rgba(219, 39, 119, 0.5));
+        }
+
+        body[data-theme="aurora"] .mobile-nav-button.login-button {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(29, 78, 216, 0.5));
+        }
+
+        body[data-theme="aurora"] .mobile-nav-button.register-button {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.5));
+        }
     </style>
     {% block extra_styles %}{% endblock %}
 </head>
@@ -559,9 +986,70 @@
                     {% endif %}
                     {% endif %}
                 </ul>
-                
+
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item dropdown d-flex align-items-center me-2">
+                    <!-- Mobile User Menu (visible only on mobile) -->
+                    <li class="nav-item d-lg-none">
+                        <div class="d-flex flex-column w-100">
+                            {% if session.user_id %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="mobile-user-info small">
+                                    <i class="fas fa-user-circle me-1"></i>
+                                    <strong>{{ session.user_name or 'User' }}</strong>
+                                </span>
+                            </div>
+                            {% endif %}
+                            <div class="d-flex gap-2 flex-wrap">
+                                <div class="mobile-nav-button theme-button">
+                                    <button class="btn btn-theme-mobile dropdown-toggle" type="button" id="mobileThemeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-palette"></i>
+                                        <span class="button-label">Theme</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mobileThemeDropdown" style="background: var(--glass-bg); backdrop-filter: blur(10px); border: 1px solid var(--card-border);">
+                                        <li><a class="dropdown-item theme-option" href="#" data-theme="light">
+                                            <i class="fas fa-sun me-2"></i> Light
+                                        </a></li>
+                                        <li><a class="dropdown-item theme-option" href="#" data-theme="dark">
+                                            <i class="fas fa-moon me-2"></i> Dark
+                                        </a></li>
+                                        <li><a class="dropdown-item theme-option" href="#" data-theme="aurora">
+                                            <i class="fas fa-star me-2"></i> Aurora
+                                        </a></li>
+                                    </ul>
+                                </div>
+                                {% if session.user_id %}
+                                <div class="mobile-nav-button profile-button">
+                                    <a class="btn btn-mobile-nav" href="{{ url_for('profile.profile') }}">
+                                        <i class="fas fa-user"></i>
+                                        <span class="button-label">Profile</span>
+                                    </a>
+                                </div>
+                                <div class="mobile-nav-button logout-button">
+                                    <a class="btn btn-mobile-nav" href="{{ url_for('auth.logout') }}">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span class="button-label">Logout</span>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="mobile-nav-button login-button">
+                                    <a class="btn btn-mobile-nav" href="{{ url_for('auth.login') }}">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        <span class="button-label">Login</span>
+                                    </a>
+                                </div>
+                                <div class="mobile-nav-button register-button">
+                                    <a class="btn btn-mobile-nav primary" href="{{ url_for('auth.register') }}">
+                                        <i class="fas fa-user-plus"></i>
+                                        <span class="button-label">Register</span>
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+
+                    <!-- Desktop User Menu (visible only on desktop) -->
+                    <li class="nav-item dropdown d-none d-lg-flex align-items-center me-2">
                         <button class="btn btn-theme btn-sm nav-button dropdown-toggle" type="button" id="themeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-palette"></i>
                             <span class="ms-1">Theme</span>
@@ -578,10 +1066,11 @@
                             </a></li>
                         </ul>
                     </li>
+
                     {% if session.user_id %}
-                    <!-- Spaced Repetition Review Button -->
-                    <li class="nav-item" id="nav-review-container">
-                        <a class="btn btn-warning btn-sm nav-button me-2 position-relative" 
+                    <!-- Desktop Review Button -->
+                    <li class="nav-item d-none d-lg-block" id="nav-review-container">
+                        <a class="btn btn-warning btn-sm nav-button me-2 position-relative"
                            href="{{ url_for('profile.spaced_repetition_review') }}"
                            id="nav-review-btn">
                             <i class="fas fa-sync me-1"></i> Review Cards
@@ -590,29 +1079,30 @@
                             </span>
                         </a>
                     </li>
-                    
-                    <!-- Quiz Exit Button (if in a quiz) -->
+
+                    <!-- Desktop Quiz Exit Button -->
                     {% if session.quiz_id %}
-                    <li class="nav-item">
-                        <a class="btn btn-outline-warning btn-sm nav-button me-2" href="{{ url_for('main.home') }}" 
-                           onclick="return confirm('Are you sure you want to exit the quiz? Your progress will be lost.')">
-                            <i class="fas fa-times-circle me-1"></i> Exit Quiz
-                        </a>
+                    <li class="nav-item d-none d-lg-block">
+                        <form method="post" action="{{ url_for('quiz.exit_quiz') }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to exit the quiz? Your progress will be lost.')">
+                            <button type="submit" class="btn btn-outline-warning btn-sm nav-button me-2">
+                                <i class="fas fa-times-circle me-1"></i> Exit Quiz
+                            </button>
+                        </form>
                     </li>
                     {% endif %}
-                    
-                    <li class="nav-item d-flex align-items-center">
-                        <!-- Profile Button -->
+
+                    <!-- Desktop User Actions -->
+                    <li class="nav-item d-none d-lg-flex align-items-center">
                         <a class="btn btn-outline-primary btn-sm nav-button me-2" href="{{ url_for('profile.profile') }}">
                             <i class="fas fa-user me-1"></i> Profile
                         </a>
-                        <!-- Logout Button -->
                         <a class="btn btn-outline-danger btn-sm nav-button" href="{{ url_for('auth.logout') }}">
                             <i class="fas fa-sign-out-alt me-1"></i> Logout
                         </a>
                     </li>
                     {% else %}
-                    <li class="nav-item d-flex align-items-center">
+                    <!-- Desktop Auth Buttons -->
+                    <li class="nav-item d-none d-lg-flex align-items-center">
                         <a class="btn btn-outline-primary btn-sm nav-button me-2" href="{{ url_for('auth.login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i> Login
                         </a>

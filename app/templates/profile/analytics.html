@@ -12,11 +12,25 @@
         transition: all 0.3s ease;
         position: relative;
         overflow: hidden;
+        background: var(--glass-bg) !important;
+        border-color: var(--card-border) !important;
+        color: var(--dark) !important;
     }
-    
+
     .stat-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Theme-specific stat card styling */
+    body[data-theme="dark"] .stat-card,
+    body[data-theme="aurora"] .stat-card {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    body[data-theme="dark"] .stat-card:hover,
+    body[data-theme="aurora"] .stat-card:hover {
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4) !important;
     }
     
     .stat-card::before {
@@ -159,7 +173,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4 mb-5">
+<div class="container mt-4 mb-5 analytics-page">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Learning Analytics</h2>
         <a href="{{ url_for('profile.profile') }}" class="btn btn-outline-primary">
@@ -491,19 +505,40 @@
     // Review schedule data
     const reviewSchedule = {{ json_review_schedule|safe }};
     
-    // Color constants
-    const CHART_COLORS = {
-        blue: '#4D61FC',
-        lightBlue: 'rgba(77, 97, 252, 0.2)',
-        green: '#36B37E',
-        lightGreen: 'rgba(54, 179, 126, 0.2)',
-        red: '#FF5630',
-        lightRed: 'rgba(255, 86, 48, 0.2)',
-        orange: '#FFAB00',
-        lightOrange: 'rgba(255, 171, 0, 0.2)',
-        purple: '#6554C0',
-        lightPurple: 'rgba(101, 84, 192, 0.2)'
-    };
+    // Color constants - theme-aware colors
+    function getChartColors() {
+        const isDark = document.body.hasAttribute('data-theme') &&
+                      (document.body.getAttribute('data-theme') === 'dark' ||
+                       document.body.getAttribute('data-theme') === 'aurora');
+
+        if (isDark) {
+            return {
+                blue: '#8b93ff',
+                lightBlue: 'rgba(139, 147, 255, 0.3)',
+                green: '#34d399',
+                lightGreen: 'rgba(52, 211, 153, 0.3)',
+                red: '#f87171',
+                lightRed: 'rgba(248, 113, 113, 0.3)',
+                orange: '#fbbf24',
+                lightOrange: 'rgba(251, 191, 36, 0.3)',
+                purple: '#a78bfa',
+                lightPurple: 'rgba(167, 139, 250, 0.3)'
+            };
+        }
+
+        return {
+            blue: '#4D61FC',
+            lightBlue: 'rgba(77, 97, 252, 0.2)',
+            green: '#36B37E',
+            lightGreen: 'rgba(54, 179, 126, 0.2)',
+            red: '#FF5630',
+            lightRed: 'rgba(255, 86, 48, 0.2)',
+            orange: '#FFAB00',
+            lightOrange: 'rgba(255, 171, 0, 0.2)',
+            purple: '#6554C0',
+            lightPurple: 'rgba(101, 84, 192, 0.2)'
+        };
+    }
     
     // Initialize charts when the document is loaded
     document.addEventListener('DOMContentLoaded', function() {
@@ -515,10 +550,11 @@
     
     // Topic performance chart
     function initTopicChart() {
+        const CHART_COLORS = getChartColors();
         // Process data for the chart
         const topics = topicData.slice(0, 5).map(topic => topic.topic_name);
         const accuracy = topicData.slice(0, 5).map(topic => topic.accuracy);
-        
+
         // Create the chart
         const ctx = document.getElementById('topicChart').getContext('2d');
         new Chart(ctx, {
@@ -565,11 +601,12 @@
     
     // Learning progress chart
     function initLearningProgressChart() {
+        const CHART_COLORS = getChartColors();
         // Process data for the chart
         const dates = progressData.map(item => item.date);
         const dailyAccuracy = progressData.map(item => item.daily_accuracy);
         const cumulativeAccuracy = progressData.map(item => item.cumulative_accuracy);
-        
+
         // Create the chart
         const ctx = document.getElementById('learningProgressChart').getContext('2d');
         new Chart(ctx, {
@@ -641,17 +678,23 @@
     // Activity heatmap
     function initHeatmap() {
         if (Object.keys(heatmapData).length === 0) {
-            document.getElementById('heatmap').innerHTML = 
+            document.getElementById('heatmap').innerHTML =
                 '<div class="text-center py-4"><p class="text-muted">Not enough activity data to display heatmap</p></div>';
             return;
         }
-        
+
+        // Check if CalHeatMap is loaded
+        if (typeof CalHeatMap === 'undefined') {
+            createFallbackHeatmap();
+            return;
+        }
+
         // Convert the data to the format required by cal-heatmap
         const dataForHeatmap = {};
-        
+
         // Track the maximum value for better color scaling
         let maxValue = 0;
-        
+
         Object.entries(heatmapData).forEach(([date, value]) => {
             // Parse date properly (ensure format: YYYY-MM-DD)
             let dateObj;
@@ -660,70 +703,162 @@
                 const [year, month, day] = date.split('-').map(num => parseInt(num, 10));
                 // Note: months are 0-indexed in JavaScript Date
                 dateObj = new Date(year, month - 1, day);
-                
+
                 // Only add valid dates (some DB entries might have invalid formats)
                 if (dateObj instanceof Date && !isNaN(dateObj)) {
-                    const timestamp = Math.floor(dateObj.getTime() / 1000);
-                    dataForHeatmap[timestamp] = value;
-                    
+                    // For CalHeatMap v4, use date string format instead of timestamp
+                    const dateKey = dateObj.toISOString().split('T')[0];
+                    dataForHeatmap[dateKey] = value;
+
                     // Update max value
                     if (value > maxValue) {
                         maxValue = value;
                     }
                 }
             } catch (e) {
-                console.error(`Invalid date format: ${date}`);
+                console.error(`Invalid date format: ${date}`, e);
             }
         });
-        
+
         // Calculate better legend values based on actual data
         // Default if maxValue is too small
         let legendValues = [1, 5, 10, 15];
-        
+
         // If we have larger values, create a more appropriate scale
         if (maxValue > 20) {
             const step = Math.ceil(maxValue / 4);
             legendValues = [
-                Math.ceil(step * 0.25), 
-                Math.ceil(step), 
-                Math.ceil(step * 2), 
+                Math.ceil(step * 0.25),
+                Math.ceil(step),
+                Math.ceil(step * 2),
                 Math.ceil(step * 3)
             ];
         }
-        
-        // Initialize the heatmap with improved options
-        const cal = new CalHeatMap();
-        cal.init({
-            itemSelector: '#heatmap',
-            domain: 'month',
-            subDomain: 'day',
-            data: dataForHeatmap,
-            start: new Date(new Date().setMonth(new Date().getMonth() - 5)),
-            cellSize: 12,
-            cellRadius: 2,
-            range: 6,
-            legend: legendValues,
-            legendColors: {
-                min: '#ebedf0',
-                max: '#196127',
-                empty: '#ebedf0'
-            },
-            displayLegend: true,
-            tooltip: true,
-            subDomainDateFormat: function(date) {
-                return new Intl.DateTimeFormat('en-US', { 
-                    month: 'short', 
-                    day: 'numeric',
-                    year: 'numeric'
-                }).format(date);
-            },
-            subDomainTextFormat: '',
-            legendTitleFormat: {
-                lower: 'Less than {min} questions',
-                inner: 'Between {down} and {up} questions',
-                upper: 'More than {max} questions'
+
+        try {
+            // Initialize the heatmap with improved options for v4
+            const cal = new CalHeatMap();
+            cal.init({
+                itemSelector: '#heatmap',
+                domain: {
+                    type: 'month',
+                    gutter: 5,
+                    label: {
+                        position: 'top'
+                    }
+                },
+                subDomain: {
+                    type: 'day',
+                    radius: 2,
+                    width: 12,
+                    height: 12
+                },
+                data: {
+                    source: dataForHeatmap,
+                    x: 'date',
+                    y: 'value'
+                },
+                date: {
+                    start: new Date(new Date().setMonth(new Date().getMonth() - 5))
+                },
+                scale: {
+                    color: {
+                        type: 'linear',
+                        range: ['#ebedf0', '#c6e48b', '#7bc96f', '#196127'],
+                        domain: legendValues
+                    }
+                },
+                legend: {
+                    show: true,
+                    position: 'bottom',
+                    align: 'center',
+                    label: {
+                        format: function(value) {
+                            if (value === 0) return 'No activity';
+                            return value + (value === 1 ? ' question' : ' questions');
+                        }
+                    }
+                },
+                tooltip: {
+                    show: true,
+                    format: function(date, value) {
+                        if (!value) return null;
+                        return {
+                            date: date.toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                            }),
+                            value: value + (value === 1 ? ' question' : ' questions')
+                        };
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error initializing heatmap:', error);
+            createFallbackHeatmap();
+        }
+    }
+
+    // Fallback heatmap visualization using simple CSS
+    function createFallbackHeatmap() {
+        const container = document.getElementById('heatmap');
+        if (!container) return;
+
+        // Get the last 90 days of data
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(endDate.getDate() - 90);
+
+        let html = '<div class="fallback-heatmap" style="display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; max-width: 600px;">';
+
+        // Create header for months
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        html += '<div style="font-size: 10px; text-align: center; margin-bottom: 5px; grid-column: 1 / -1;">📅 Activity Overview (Last 90 Days)</div>';
+
+        // Create cells for each day
+        let currentDate = new Date(startDate);
+        let dayCount = 0;
+
+        while (currentDate <= endDate && dayCount < 90) {
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const value = heatmapData[dateStr] || 0;
+
+            // Determine intensity class
+            let intensityClass = 'intensity-0';
+            if (value > 0 && value <= 2) intensityClass = 'intensity-1';
+            else if (value > 2 && value <= 5) intensityClass = 'intensity-2';
+            else if (value > 5 && value <= 10) intensityClass = 'intensity-3';
+            else if (value > 10) intensityClass = 'intensity-4';
+
+            html += `<div class="heatmap-cell ${intensityClass}"
+                      style="width: 10px; height: 10px; border-radius: 2px; cursor: pointer;"
+                      title="${dateStr}: ${value} questions"
+                      data-value="${value}"
+                      data-date="${dateStr}"></div>`;
+
+            currentDate.setDate(currentDate.getDate() + 1);
+            dayCount++;
+        }
+
+        html += '</div>';
+
+        // Add CSS for intensity levels
+        html += `
+        <style>
+            .fallback-heatmap .intensity-0 { background-color: #ebedf0; }
+            .fallback-heatmap .intensity-1 { background-color: #c6e48b; }
+            .fallback-heatmap .intensity-2 { background-color: #7bc96f; }
+            .fallback-heatmap .intensity-3 { background-color: #239a3b; }
+            .fallback-heatmap .intensity-4 { background-color: #196127; }
+            .fallback-heatmap .heatmap-cell:hover {
+                opacity: 0.8;
+                transform: scale(1.2);
+                transition: all 0.2s ease;
             }
-        });
+        </style>`;
+
+        container.innerHTML = html;
     }
     
     // Fill the schedule table
@@ -772,4 +907,4 @@
         }
     }
 </script>
-{% endblock %} 
+{% endblock %}
