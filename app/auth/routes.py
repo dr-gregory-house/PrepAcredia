@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from app.utils.db import get_user_db_connection
 from app.utils.user_tracking import create_user_session, end_user_session, log_user_activity
+from werkzeug.security import generate_password_hash, check_password_hash
 import sys
 
 # Import global variable for tracking database changes
@@ -26,28 +27,28 @@ def login():
         
         if username and password:
             conn = get_user_db_connection()
-            user = conn.execute('SELECT * FROM users WHERE username = ? AND password_hash IS NOT NULL', (username,)).fetchone()
+            user = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
             conn.close()
-            
-            if user:
+
+            if user and user['password_hash'] and check_password_hash(user['password_hash'], password):
                 if not user['is_active']:
                     flash('Your account is pending activation. Please contact the administrator.', 'warning')
                     return redirect(url_for('auth.pending_activation'))
-                
+
                 # Create user session and store token
                 session_token = create_user_session(user['id'])
                 session['session_token'] = session_token
-                
+
                 # Store user info in session
                 session['user_id'] = user['id']
                 session['user_name'] = user['name']
                 session['user_role'] = user['role']
-                
+
                 # Log the login activity
                 log_user_activity(user['id'], 'login', f'User logged in from {request.remote_addr}')
-                
+
                 flash('Login successful!', 'success')
-                
+
                 next_page = request.args.get('next')
                 if next_page:
                     return redirect(next_page)
@@ -84,10 +85,13 @@ def register():
                 elif existing_username:
                     error = 'Username already taken'
                 else:
+                    # Hash the password before storing
+                    hashed_password = generate_password_hash(password)
+
                     # Set is_active to 0 by default
                     conn.execute(
                         'INSERT INTO users (username, email, name, password_hash, is_active) VALUES (?, ?, ?, ?, ?)',
-                        (username, email, name, password, 0)
+                        (username, email, name, hashed_password, 0)
                     )
                     conn.commit()
                     
@@ -124,4 +128,4 @@ def logout():
     # Clear session data
     session.clear()
     flash('You have been logged out.', 'info')
-    return redirect(url_for('auth.login')) 
+    return redirect(url_for('auth.login'))
