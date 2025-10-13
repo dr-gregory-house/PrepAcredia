@@ -31,18 +31,6 @@ def init_db():
     """Initialize user database (user.db) and ensure temp directories exist."""
     # This will be called with app context from create_app
     
-    # First check if we're running in Cloud Run
-    if os.environ.get('K_SERVICE'):
-        # Download DB from Cloud Storage if in Cloud Run
-        try:
-            from app.utils.cloud_storage import download_db_from_bucket
-            download_db_from_bucket()
-            logger.info("Database downloaded from Cloud Storage")
-        except ImportError:
-            logger.error("Could not import cloud_storage module")
-        except Exception as e:
-            logger.error(f"Error downloading database: {str(e)}")
-    
     # Ensure user db directory exists
     user_db_dir = os.path.dirname(current_app.config['USER_DB_PATH'])
     os.makedirs(user_db_dir, exist_ok=True)
@@ -173,27 +161,3 @@ def init_db():
     
     conn.commit()
     conn.close()
-    
-    # Upload the initialized user database back to Cloud Storage if in Cloud Run
-    if os.environ.get('K_SERVICE'):
-        try:
-            from app.utils.cloud_storage import upload_db_to_bucket
-            upload_db_to_bucket()
-            logger.info("Database uploaded to Cloud Storage after initialization")
-        except ImportError:
-            logger.error("Could not import cloud_storage module")
-        except Exception as e:
-            logger.error(f"Error uploading database: {str(e)}")
-
-def sync_db_to_cloud():
-    """Sync the current database state to cloud storage"""
-    if os.environ.get('K_SERVICE'):
-        try:
-            from app.utils.cloud_storage import upload_db_to_bucket
-            upload_db_to_bucket()
-            logger.info("Database synced to Cloud Storage")
-            return True
-        except Exception as e:
-            logger.error(f"Error syncing database to cloud: {str(e)}")
-            return False
-    return False 
