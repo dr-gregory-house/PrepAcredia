@@ -635,7 +635,7 @@
                                     <div class="question-number {% if question.is_correct %}correct{% else %}incorrect{% endif %}">
                                         {{ loop.index }}
                                     </div>
-                                    <div class="question-text">{{ question.text }}</div>
+                                    <div class="question-text">{{ question.text|escape_html }}</div>
                                     <div class="question-status {% if question.is_correct %}correct{% else %}incorrect{% endif %}">
                                         {% if question.is_correct %}
                                             <i class="fas fa-check"></i> Correct
@@ -667,7 +667,7 @@
                                         <div class="explanation-title">
                                             <i class="fas fa-lightbulb"></i> Explanation
                                         </div>
-                                        <div>{{ question.explanation|markdown|safe }}</div>
+                                        <div>{{ question.explanation|markdown }}</div>
                                     </div>
                                     {% endif %}
                                 </div>

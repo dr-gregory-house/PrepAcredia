@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify
+from flask_wtf import FlaskForm
+from wtforms import HiddenField
 from app.utils.db import get_user_db_connection, get_content_db_connection
 from app.utils.decorators import admin_required
 from app.utils.user_tracking import get_online_users, get_user_activity_history, get_user_statistics, get_user_performance_metrics
@@ -70,68 +72,143 @@ def user_activity(user_id):
                          statistics=statistics,
                          performance=performance_metrics)
 
+class ToggleUserForm(FlaskForm):
+    user_id = HiddenField('user_id')
+
 @admin_bp.route('/user/<int:user_id>/toggle_active', methods=['POST'])
 @admin_required
 def toggle_user_active(user_id):
-    conn = get_user_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-    
-    if user:
-        # Toggle active status
-        new_status = 0 if user['is_active'] == 1 else 1
-        conn.execute('UPDATE users SET is_active = ? WHERE id = ?', (new_status, user_id))
-        conn.commit()
-        flash(f"User {'activated' if new_status == 1 else 'deactivated'} successfully", 'success')
+    form = ToggleUserForm()
+    if form.validate_on_submit():
+        conn = get_user_db_connection()
+        try:
+            user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+
+            if user:
+                # Additional security: prevent admins from deactivating themselves
+                if user_id == session.get('user_id'):
+                    flash('You cannot deactivate your own account', 'error')
+                else:
+                    # Toggle active status
+                    new_status = 0 if user['is_active'] == 1 else 1
+                    conn.execute('UPDATE users SET is_active = ? WHERE id = ?', (new_status, user_id))
+                    conn.commit()
+                    flash(f"User {'activated' if new_status == 1 else 'deactivated'} successfully", 'success')
+            else:
+                flash('User not found', 'error')
+        finally:
+            conn.close()
     else:
-        flash('User not found', 'error')
-    
-    conn.close()
+        flash('Invalid form submission', 'error')
+
     return redirect(url_for('admin.dashboard'))
+
+class ToggleAdminForm(FlaskForm):
+    user_id = HiddenField('user_id')
 
 @admin_bp.route('/user/<int:user_id>/toggle_admin', methods=['POST'])
 @admin_required
 def toggle_user_admin(user_id):
-    # Don't allow admin to remove their own admin status
-    if user_id == session.get('user_id'):
-        flash('You cannot change your own admin status', 'error')
-        return redirect(url_for('admin.dashboard'))
-    
-    conn = get_user_db_connection()
-    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-    
-    if user:
-        # Toggle admin status
-        new_role = 'user' if user['role'] == 'admin' else 'admin'
-        conn.execute('UPDATE users SET role = ? WHERE id = ?', (new_role, user_id))
-        conn.commit()
-        flash(f"User {'promoted to admin' if new_role == 'admin' else 'demoted to regular user'} successfully", 'success')
+    form = ToggleAdminForm()
+    if form.validate_on_submit():
+        # Enhanced security: prevent admin from removing their own admin status
+        if user_id == session.get('user_id'):
+            flash('You cannot change your own admin status', 'error')
+            return redirect(url_for('admin.dashboard'))
+
+        conn = get_user_db_connection()
+        try:
+            user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+
+            if user:
+                # Additional security: ensure at least one admin always exists
+                if user['role'] == 'admin':
+                    # Count other active admins
+                    other_admins = conn.execute(
+                        'SELECT COUNT(*) as count FROM users WHERE role = "admin" AND is_active = 1 AND id != ?',
+                        (user_id,)
+                    ).fetchone()
+                    if other_admins['count'] == 0:
+                        flash('Cannot remove admin status - at least one active admin must exist', 'error')
+                        conn.close()
+                        return redirect(url_for('admin.dashboard'))
+
+                # Toggle admin status
+                new_role = 'user' if user['role'] == 'admin' else 'admin'
+                conn.execute('UPDATE users SET role = ? WHERE id = ?', (new_role, user_id))
+                conn.commit()
+                flash(f"User {'promoted to admin' if new_role == 'admin' else 'demoted to regular user'} successfully", 'success')
+            else:
+                flash('User not found', 'error')
+        finally:
+            conn.close()
     else:
-        flash('User not found', 'error')
-    
-    conn.close()
+        flash('Invalid form submission', 'error')
+
     return redirect(url_for('admin.dashboard'))
+
+class DeleteUserForm(FlaskForm):
+    user_id = HiddenField('user_id')
 
 @admin_bp.route('/user/<int:user_id>/delete', methods=['POST'])
 @admin_required
 def delete_user(user_id):
-    conn = get_user_db_connection()
-    # Check if user exists and is not an admin
-    user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
-    
-    if user and user['role'] != 'admin':
-        # Delete user's quiz history and answers
-        quiz_histories = conn.execute('SELECT id FROM quiz_history WHERE user_id = ?', (user_id,)).fetchall()
-        for history in quiz_histories:
-            conn.execute('DELETE FROM quiz_answers WHERE quiz_history_id = ?', (history['id'],))
-        
-        conn.execute('DELETE FROM quiz_history WHERE user_id = ?', (user_id,))
-        conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
-        conn.commit()
-        flash('User deleted successfully', 'success')
+    form = DeleteUserForm()
+    if form.validate_on_submit():
+        # Prevent admin from deleting themselves
+        if user_id == session.get('user_id'):
+            flash('You cannot delete your own account', 'error')
+            return redirect(url_for('admin.dashboard'))
+
+        conn = get_user_db_connection()
+        try:
+            # Check if user exists and is not an admin
+            user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+
+            if user and user['role'] != 'admin':
+                # Additional security: ensure at least one admin exists after deletion
+                if user['is_active'] == 1:
+                    active_admins = conn.execute(
+                        'SELECT COUNT(*) as count FROM users WHERE role = "admin" AND is_active = 1 AND id != ?',
+                        (user_id,)
+                    ).fetchone()
+                    if active_admins['count'] == 0:
+                        flash('Cannot delete user - at least one active admin must remain', 'error')
+                        conn.close()
+                        return redirect(url_for('admin.dashboard'))
+
+                # Delete user's associated data in correct order
+                # Delete quiz answers first (foreign key constraint)
+                quiz_histories = conn.execute('SELECT id FROM quiz_history WHERE user_id = ?', (user_id,)).fetchall()
+                for history in quiz_histories:
+                    conn.execute('DELETE FROM quiz_answers WHERE quiz_history_id = ?', (history['id'],))
+
+                # Delete quiz history
+                conn.execute('DELETE FROM quiz_history WHERE user_id = ?', (user_id,))
+
+                # Delete spaced repetition data
+                conn.execute('DELETE FROM spaced_repetition WHERE user_id = ?', (user_id,))
+
+                # Delete user statistics
+                conn.execute('DELETE FROM topic_performance WHERE user_id = ?', (user_id,))
+                conn.execute('DELETE FROM user_activity WHERE user_id = ?', (user_id,))
+                conn.execute('DELETE FROM user_sessions WHERE user_id = ?', (user_id,))
+                conn.execute('DELETE FROM user_activity_logs WHERE user_id = ?', (user_id,))
+
+                # Finally delete the user
+                conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
+                conn.commit()
+                flash('User deleted successfully', 'success')
+            else:
+                flash('Cannot delete user (not found or is admin)', 'error')
+        except Exception as e:
+            conn.rollback()
+            flash(f'Error deleting user: {str(e)}', 'error')
+        finally:
+            conn.close()
     else:
-        flash('Cannot delete user (not found or is admin)', 'error')
-    
-    conn.close()
+        flash('Invalid form submission', 'error')
+
     return redirect(url_for('admin.dashboard'))
 
 @admin_bp.route('/settings')

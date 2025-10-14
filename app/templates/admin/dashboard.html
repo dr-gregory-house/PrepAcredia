@@ -258,12 +258,14 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <td>{{ user.created_at|format_datetime }}</td>
                                             <td>
                                                 <div class="btn-group">
-                                                    <a href="{{ url_for('admin.user_activity', user_id=user.id) }}" 
-                                                    class="btn btn-sm btn-info" 
+                                                    <a href="{{ url_for('admin.user_activity', user_id=user.id) }}"
+                                                    class="btn btn-sm btn-info"
                                                     title="View detailed user performance and activity">
                                                         <i class="fas fa-chart-line"></i> Performance
                                                     </a>
                                                     <form action="{{ url_for('admin.toggle_user_active', user_id=user.id) }}" method="post" style="display:inline;" class="toggle-user-form">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                        <input type="hidden" name="user_id" value="{{ user.id }}"/>
                                                         <button type="submit" class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}"
                                                                 title="{{ 'Deactivate' if user.is_active else 'Activate' }}"
                                                                 data-action="{{ 'deactivate' if user.is_active else 'activate' }}">

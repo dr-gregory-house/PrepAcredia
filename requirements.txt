@@ -1,5 +1,6 @@
-flask==2.3.3
-markdown2==2.4.10
-werkzeug==2.3.7
-gunicorn==20.1.0
-
+Flask==2.3.3
+Flask-WTF==1.1.1
+Werkzeug==2.3.7
+WTForms==3.0.1
+sqlite3
+requests

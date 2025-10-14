@@ -1,25 +1,38 @@
 import markdown2
 from datetime import datetime
+import html
 
 def init_filters(app):
     """Initialize template filters and context processors"""
-    
+
     @app.template_filter('markdown')
     def markdown_filter(text):
-        return markdown2.markdown(text or "")
-    
+        """Safe markdown filter that escapes HTML before processing"""
+        if not text:
+            return ""
+        # Escape HTML first to prevent XSS
+        safe_text = html.escape(text)
+        # Then process markdown
+        return markdown2.markdown(safe_text)
+
     # Make zip available in templates
     @app.template_global('zip')
     def zip_filter(*args):
-        return __builtins__.zip(*args)
-    
+        return zip(*args)
+
     # Provide datetime to all templates
     @app.context_processor
     def inject_now():
         return {'now': datetime.now}
-    
+
     # Register format_datetime filter
     app.jinja_env.filters['format_datetime'] = format_datetime
+
+    # Register additional security filters
+    @app.template_filter('escape_html')
+    def escape_html_filter(text):
+        """Escape HTML characters to prevent XSS"""
+        return html.escape(str(text or ""))
 
 def format_datetime(timestamp):
     """Format a timestamp as HH:MM DD-MM-YYYY"""
@@ -76,4 +89,4 @@ def timeago(timestamp):
         return f'{months} month{"s" if months != 1 else ""} ago'
     else:
         years = days // 365
-        return f'{years} year{"s" if years != 1 else ""} ago' 
+        return f'{years} year{"s" if years != 1 else ""} ago'
