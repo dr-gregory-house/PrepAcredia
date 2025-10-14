@@ -1,5 +1,5 @@
 # Version 1.0.1 - Removed before_first_request for Flask 2.0+ compatibility
-from flask import Flask, request
+from flask import Flask, request, session
 from flask_wtf.csrf import CSRFProtect
 from app.config.config import Config
 from app.utils.db import init_db
@@ -10,11 +10,15 @@ from app.admin.routes import admin_bp
 from app.routes.profile import profile_bp
 from app.utils.filters import timeago, format_datetime, init_filters
 from app.utils.middleware import track_user_activity
+from app.utils.cloud_storage import SyncManager
 import os
 import logging
 
 # Global variable to track database changes - needed for auth routes
 db_changed = False
+
+# Centralized sync manager
+sync_manager = SyncManager()
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +51,8 @@ def create_app(config_class=Config):
 
     # Initialize the database within app context
     with app.app_context():
+        # Centralized startup sync
+        sync_manager.on_startup(app)
         init_db()
 
     # Register activity tracking middleware
@@ -54,5 +60,26 @@ def create_app(config_class=Config):
     @track_user_activity()
     def track_activity():
         pass
+
+    # Centralized sync after each request
+    @app.after_request
+    def maybe_sync(response):
+        global db_changed
+        try:
+            user_active = ('user_id' in session)
+            sync_manager.on_request_end(app, db_changed, user_active)
+            db_changed = False
+        except Exception:
+            # Best-effort; never break response
+            pass
+        return response
+
+    # Best-effort sync on shutdown/teardown
+    @app.teardown_appcontext
+    def on_shutdown(exc):
+        try:
+            sync_manager.on_shutdown(app)
+        except Exception:
+            pass
 
     return app

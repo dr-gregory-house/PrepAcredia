@@ -27,3 +27,10 @@ class Config:
 
     # Debug flag - should be False in production
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+
+    # Sync controls
+    SYNC_ON_STARTUP = os.environ.get('SYNC_ON_STARTUP', 'True').lower() == 'true'
+    SYNC_ON_SHUTDOWN = os.environ.get('SYNC_ON_SHUTDOWN', 'True').lower() == 'true'
+    SYNC_DEBOUNCE_SECONDS = int(os.environ.get('SYNC_DEBOUNCE_SECONDS', '10'))
+    SYNC_HOURLY_ON_ACTIVITY = os.environ.get('SYNC_HOURLY_ON_ACTIVITY', 'True').lower() == 'true'
+    SYNC_HOURLY_INTERVAL = int(os.environ.get('SYNC_HOURLY_INTERVAL', '3600'))

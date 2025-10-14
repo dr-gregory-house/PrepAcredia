@@ -2,5 +2,5 @@ Flask==2.3.3
 Flask-WTF==1.1.1
 Werkzeug==2.3.7
 WTForms==3.0.1
-sqlite3
 requests
+google-cloud-storage==2.16.0
