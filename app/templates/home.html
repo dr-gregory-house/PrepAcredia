@@ -856,6 +856,7 @@
         </div>
         
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {% if error %}
             <div class="error-banner">
                 <i class="bi bi-exclamation-circle-fill"></i>
@@ -1198,7 +1199,8 @@
             fetch('/get_tags', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify({ chapters: selectedChapters })
             })

@@ -604,6 +604,7 @@
             </div>
             
             <form method="post" action="{{ url_for('quiz.answer') }}" id="quiz-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <input type="hidden" name="question_id" value="{{ question.id }}">
                 <input type="hidden" name="hint_used" id="hint_used" value="0">
                 
@@ -675,6 +676,7 @@
             {% if show_answer %}
             <div class="quiz-navigation text-end mt-3">
                 <form method="post" action="{{ url_for('quiz.next_question') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                     <button type="submit" class="nav-button btn-next">
                         Next <i class="fas fa-arrow-right"></i>
                     </button>
@@ -760,7 +762,10 @@
                 try {
                     fetch('{{ url_for('quiz.hint') }}', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
+                        },
                         body: JSON.stringify({ question_id: '{{ question.id }}' })
                     });
                 } catch (e) {}

@@ -331,6 +331,7 @@
                                 <p>Select a review schedule that matches your study style:</p>
                                 
                                 <form action="{{ url_for('profile.change_review_schedule') }}" method="post">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                                     <div class="form-check mb-2">
                                         <input class="form-check-input" type="radio" name="schedule_type" id="schedule_default" value="default" checked>
                                         <label class="form-check-label" for="schedule_default">

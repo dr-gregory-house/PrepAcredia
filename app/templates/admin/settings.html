@@ -568,7 +568,8 @@
                     fetch(`{{ url_for('admin.remove_preset', preset_name='PLACEHOLDER') }}`.replace('PLACEHOLDER', encodeURIComponent(presetName)), {
                         method: 'DELETE',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token() }}'
                         }
                     })
                     .then(response => response.json())
