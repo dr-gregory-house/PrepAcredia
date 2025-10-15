@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def download_db_from_bucket():
     """Download the user SQLite database file from GCS bucket to local /tmp directory"""
-    bucket_name = os.environ.get('GCS_BUCKET_NAME', 'pedia-sqlite-db')
+    bucket_name = os.environ.get('GCS_BUCKET_NAME', 'prepacredia-db')
     source_blob_name = os.environ.get('GCS_USER_DB_NAME', 'user.db')
     destination_file_name = current_app.config['USER_DB_PATH']
     
