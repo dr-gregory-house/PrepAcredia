@@ -30,3 +30,4 @@ Thumbs.db
 # GCP credentials
 key.json
 *-key.json
+requirements_generated.txt

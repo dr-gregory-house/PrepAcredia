@@ -1,8 +1,20 @@
+# Core Flask dependencies
 Flask==2.3.3
 Flask-WTF==1.1.1
 Werkzeug==2.3.7
 WTForms==3.0.1
-requests
+
+# Form validation
+email-validator==2.1.0
+
+# Markdown rendering
+markdown2==2.4.12
+
+# Cloud storage
 google-cloud-storage==2.16.0
+
+# HTTP requests
+requests==2.32.3
+
+# Production server
 gunicorn==21.2.0
-email-validator
