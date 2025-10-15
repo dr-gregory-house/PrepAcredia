@@ -5,3 +5,4 @@ WTForms==3.0.1
 requests
 google-cloud-storage==2.16.0
 gunicorn==21.2.0
+email-validator
