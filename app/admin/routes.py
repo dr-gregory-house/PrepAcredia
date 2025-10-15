@@ -193,7 +193,12 @@ def delete_user(user_id):
                 conn.execute('DELETE FROM topic_performance WHERE user_id = ?', (user_id,))
                 conn.execute('DELETE FROM user_activity WHERE user_id = ?', (user_id,))
                 conn.execute('DELETE FROM user_sessions WHERE user_id = ?', (user_id,))
-                conn.execute('DELETE FROM user_activity_logs WHERE user_id = ?', (user_id,))
+                # Check if user_activity_logs table exists before deleting
+                table_exists = conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='user_activity_logs';"
+                ).fetchone()
+                if table_exists:
+                    conn.execute('DELETE FROM user_activity_logs WHERE user_id = ?', (user_id,))
 
                 # Finally delete the user
                 conn.execute('DELETE FROM users WHERE id = ?', (user_id,))
