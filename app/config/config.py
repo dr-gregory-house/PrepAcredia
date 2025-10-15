@@ -28,9 +28,21 @@ class Config:
     # Debug flag - should be False in production
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-    # Sync controls
+    # Sync controls - Optimized for reduced frequency
+    # Download DB on startup to get latest data
     SYNC_ON_STARTUP = os.environ.get('SYNC_ON_STARTUP', 'True').lower() == 'true'
+    
+    # Upload DB on shutdown (best-effort)
     SYNC_ON_SHUTDOWN = os.environ.get('SYNC_ON_SHUTDOWN', 'True').lower() == 'true'
-    SYNC_DEBOUNCE_SECONDS = int(os.environ.get('SYNC_DEBOUNCE_SECONDS', '10'))
+    
+    # Debounce time between uploads (prevents rapid successive syncs)
+    # Increased from 10s to 30s to reduce unnecessary uploads
+    SYNC_DEBOUNCE_SECONDS = int(os.environ.get('SYNC_DEBOUNCE_SECONDS', '30'))
+    
+    # Periodic backup when there are changes
+    # This is a safety net - only triggers if DB has changed AND interval has passed
     SYNC_HOURLY_ON_ACTIVITY = os.environ.get('SYNC_HOURLY_ON_ACTIVITY', 'True').lower() == 'true'
-    SYNC_HOURLY_INTERVAL = int(os.environ.get('SYNC_HOURLY_INTERVAL', '3600'))
+    
+    # Hourly interval for periodic backups (only if DB has changes)
+    # Increased from 1 hour to 2 hours to reduce frequency
+    SYNC_HOURLY_INTERVAL = int(os.environ.get('SYNC_HOURLY_INTERVAL', '7200'))

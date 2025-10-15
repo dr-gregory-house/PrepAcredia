@@ -23,6 +23,12 @@ env/
 instance/
 temp/
 
+# Database files
+app/db/user.db
+app/db/user.db-journal
+app/db/user.db-wal
+app/db/user.db-shm
+
 # System files
 .DS_Store
 Thumbs.db

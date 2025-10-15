@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, g
 from app.utils.db import get_content_db_connection, get_user_db_connection
 from app.utils.user_tracking import log_user_activity
 from app.utils.decorators import login_required
@@ -7,15 +7,6 @@ from app.utils.spaced_repetition import add_to_spaced_repetition, get_spaced_rep
 from app.utils.analytics import update_topic_performance, update_user_activity
 import random
 import sys
-
-# Import global variable for tracking database changes
-# This will be shared with app.py
-# This needs to be at module level
-try:
-    from app.app import db_changed
-except ImportError:
-    # Fallback if not available directly
-    db_changed = None
 
 quiz_bp = Blueprint('quiz', __name__, url_prefix='/quiz')
 
@@ -341,8 +332,6 @@ def next_question():
 @quiz_bp.route('/results')
 @login_required
 def results():
-    global db_changed  # Access the global variable
-    
     # Capture score values at the beginning
     score = session.get('score', 0)
     total = session.get('total', 0)
@@ -428,17 +417,13 @@ def results():
             
             conn.commit()
             
-            # Explicitly mark database as changed
-            if db_changed is not None:
-                db_changed = True
-                
             # Update activity tracking for analytics
             if total > 0:  # Ensure we don't track quizzes with zero questions
                 update_user_activity(user_id, total, score)
-                
-                # Explicitly mark database as changed again (though update_user_activity already modifies DB)
-                if db_changed is not None:
-                    db_changed = True
+            
+            # Mark as significant database change (quiz completion)
+            # This is a major event that should trigger sync
+            g.significant_db_change = True
                     
         except Exception as e:
             conn.rollback()
@@ -579,8 +564,6 @@ def exit_quiz():
 @quiz_bp.route('/answer', methods=['POST'])
 @login_required
 def answer():
-    global db_changed  # Access the global variable
-    
     if 'quiz_id' not in session:
         return redirect(url_for('main.home'))
     
@@ -653,17 +636,14 @@ def answer():
     if user_id and not is_correct:
         # Add incorrectly answered question to spaced repetition
         add_to_spaced_repetition(user_id, quiz_data[current]['id'])
+        # Note: Individual answers don't trigger immediate sync
+        # Changes will be synced on quiz completion or periodic backup
+        g.db_changed = True  # Track that DB was modified (but not significant enough for immediate sync)
         
-        # Explicitly mark database as changed
-        if db_changed is not None:
-            db_changed = True
     elif user_id and is_correct and quiz_data[current].get('is_review', False):
         # Update spaced repetition for correctly answered review question
         mark_question_reviewed(user_id, quiz_data[current]['id'], True)
-        
-        # Explicitly mark database as changed
-        if db_changed is not None:
-            db_changed = True
+        g.db_changed = True
     
     # Get chapter IDs for this question for analytics
     # Update performance by speciality
@@ -675,10 +655,7 @@ def answer():
         speciality = row['speciality'] if row else None
         if speciality:
             update_topic_performance(user_id, speciality, is_correct)
-            
-            # Explicitly mark database as changed
-            if db_changed is not None:
-                db_changed = True
+            g.db_changed = True
     
     quiz_state['user_answers'] = user_answers
     quiz_state['answer_submitted'] = True  # Mark that this question has been answered

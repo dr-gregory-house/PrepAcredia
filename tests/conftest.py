@@ -9,6 +9,7 @@ class TestConfig:
     SECRET_KEY = 'test'
     DEBUG = False
     TESTING = True
+    WTF_CSRF_ENABLED = False  # Disable CSRF for testing
     # Use temporary files/directories per-test session
     CONTENT_DB_PATH = ''  # will be set in fixture
     USER_DB_PATH = ''  # will be set in fixture

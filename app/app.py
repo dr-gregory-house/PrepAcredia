@@ -1,5 +1,5 @@
-# Version 1.0.1 - Removed before_first_request for Flask 2.0+ compatibility
-from flask import Flask, request, session
+# Version 1.0.2 - Optimized database syncing with Flask g object
+from flask import Flask, request, session, g
 from flask_wtf.csrf import CSRFProtect
 from app.config.config import Config
 from app.utils.db import init_db
@@ -13,9 +13,6 @@ from app.utils.middleware import track_user_activity
 from app.utils.cloud_storage import SyncManager
 import os
 import logging
-
-# Global variable to track database changes - needed for auth routes
-db_changed = False
 
 # Centralized sync manager
 sync_manager = SyncManager()
@@ -55,6 +52,13 @@ def create_app(config_class=Config):
         sync_manager.on_startup(app)
         init_db()
 
+    # Initialize db_changed flag for each request
+    @app.before_request
+    def init_request_context():
+        """Initialize request-specific context variables"""
+        g.db_changed = False
+        g.significant_db_change = False  # For major changes like quiz completion
+    
     # Register activity tracking middleware
     @app.before_request
     @track_user_activity()
@@ -64,11 +68,11 @@ def create_app(config_class=Config):
     # Centralized sync after each request
     @app.after_request
     def maybe_sync(response):
-        global db_changed
         try:
             user_active = ('user_id' in session)
+            # Use significant_db_change flag for optimized syncing
+            db_changed = getattr(g, 'significant_db_change', False)
             sync_manager.on_request_end(app, db_changed, user_active)
-            db_changed = False
         except Exception:
             # Best-effort; never break response
             pass

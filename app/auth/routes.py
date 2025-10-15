@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app, g
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, EmailField
 from wtforms.validators import DataRequired, Email, Length, EqualTo
@@ -6,14 +6,6 @@ from app.utils.db import get_user_db_connection
 from app.utils.user_tracking import create_user_session, end_user_session, log_user_activity
 from werkzeug.security import generate_password_hash, check_password_hash
 import sys
-
-# Import global variable for tracking database changes
-# This will be shared with app.py
-try:
-    from app.app import db_changed
-except ImportError:
-    # Fallback if not available directly
-    db_changed = None
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -78,8 +70,6 @@ class RegisterForm(FlaskForm):
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    global db_changed  # Access the global variable
-
     if 'user_id' in session:
         return redirect(url_for('main.home'))
 
@@ -111,9 +101,8 @@ def register():
                 )
                 conn.commit()
 
-                # Explicitly mark database as changed
-                if db_changed is not None:
-                    db_changed = True
+                # Mark as significant database change (user registration)
+                g.significant_db_change = True
 
                 flash('Registration successful! Your account is pending activation. Please contact the administrator.', 'info')
                 return redirect(url_for('auth.pending_activation'))

@@ -120,37 +120,60 @@ class SyncManager:
         self._last_hourly_upload_epoch = max(self._last_hourly_upload_epoch, now)
 
     def on_request_end(self, app, db_changed, user_active):
-        """Called after each request. Decides whether to upload now (debounced) or due to hourly policy."""
+        """
+        Called after each request. Optimized to only upload on significant changes.
+        
+        Sync triggers (in priority order):
+        1. Significant DB changes (quiz completion, user registration, etc.)
+        2. Periodic sync every N hours if there are any changes
+        
+        This avoids syncing on every page view or minor activity.
+        """
         try:
             db_path = self._get_db_path(app)
             current_mtime = self._get_local_mtime(db_path)
             now = time.time()
 
             need_upload = False
+            reason = None
 
-            # Upload if DB changed or file mtime advanced
-            if db_changed or (current_mtime > max(self._last_uploaded_mtime, 0.0)):
+            # Priority 1: Significant database changes (quiz completion, registration, etc.)
+            if db_changed:
                 need_upload = True
+                reason = "significant_db_change"
+                logger.info("Sync triggered by significant database change")
 
-            # Hourly upload on activity
-            if user_active and app.config.get('SYNC_HOURLY_ON_ACTIVITY', True):
-                if now - self._last_hourly_upload_epoch >= self._hourly_interval(app):
+            # Priority 2: Periodic sync if there are any changes (hourly backup)
+            # Only check if file has been modified since last upload
+            elif user_active and app.config.get('SYNC_HOURLY_ON_ACTIVITY', True):
+                file_modified = current_mtime > max(self._last_uploaded_mtime, 0.0)
+                time_for_hourly = (now - self._last_hourly_upload_epoch) >= self._hourly_interval(app)
+                
+                if file_modified and time_for_hourly:
                     need_upload = True
+                    reason = "periodic_backup"
                     self._last_hourly_upload_epoch = now
+                    logger.info("Sync triggered by periodic backup (hourly)")
 
-            # Debounce
-            if not need_upload or (now - self._last_upload_epoch) < self._debounce_seconds(app):
+            # Debounce to prevent rapid successive uploads
+            if not need_upload:
+                return
+                
+            if (now - self._last_upload_epoch) < self._debounce_seconds(app):
+                logger.debug(f"Sync debounced (last upload {now - self._last_upload_epoch:.1f}s ago)")
                 return
 
             def _bg_upload():
                 try:
                     # Ensure app context in background thread
                     with app.app_context():
+                        logger.info(f"Starting background DB upload (reason: {reason})")
                         upload_db_to_bucket()
                     # Update state on success
                     with self._lock:
                         self._last_uploaded_mtime = current_mtime
                         self._last_upload_epoch = time.time()
+                    logger.info("Background DB upload completed successfully")
                 except Exception as e:
                     logger.error(f"Background upload failed: {str(e)}")
 
