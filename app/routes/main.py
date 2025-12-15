@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from app.utils.db import get_content_db_connection
 from app.utils.decorators import login_required
 from app.utils.user_tracking import log_user_activity
+from app.utils.quiz import generate_quiz_id
 import random
 
 main_bp = Blueprint('main', __name__)
@@ -37,7 +38,7 @@ def home():
             session.pop('quiz_id', None)
         
         # Generate a unique quiz ID
-        quiz_id = str(random.randint(10000, 99999))
+        quiz_id = generate_quiz_id()
         session['quiz_id'] = quiz_id
         session['selected_specialities'] = selected_specialities
         session['num_questions'] = num_questions

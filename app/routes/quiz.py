@@ -50,13 +50,16 @@ def display_quiz():
         if undiscovered_only and user_id:
             # Exclude questions the user has already answered, by consulting user DB
             user_conn = get_user_db_connection()
-            answered_ids = user_conn.execute('''
-                SELECT DISTINCT qa.question_id
-                FROM quiz_answers qa
-                JOIN quiz_history qh ON qa.quiz_history_id = qh.id
-                WHERE qh.user_id = ?
-            ''', (user_id,)).fetchall()
-            user_conn.close()
+            try:
+                answered_ids = user_conn.execute('''
+                    SELECT DISTINCT qa.question_id
+                    FROM quiz_answers qa
+                    JOIN quiz_history qh ON qa.quiz_history_id = qh.id
+                    WHERE qh.user_id = ?
+                ''', (user_id,)).fetchall()
+            finally:
+                user_conn.close()
+            
             answered_set = {row['question_id'] for row in answered_ids}
             questions = content_conn.execute(
 				f'SELECT id, question_text_ru, question_text_en, hint, explanation, speciality FROM questions WHERE speciality IN ({placeholders})',
@@ -220,14 +223,15 @@ def display_quiz():
             # Update spaced repetition for correctly answered review question
             mark_question_reviewed(user_id, quiz_data[current]['id'], True)
         
-        # Get chapter IDs for this question for analytics
         if user_id:
-            conn = get_db_connection()
-            chapters = conn.execute(
-                'SELECT chapter_id FROM question_chapters WHERE question_id = ?', 
-                (quiz_data[current]['id'],)
-            ).fetchall()
-            conn.close()
+            conn = get_content_db_connection()
+            try:
+                chapters = conn.execute(
+                    'SELECT chapter_id FROM question_chapters WHERE question_id = ?', 
+                    (quiz_data[current]['id'],)
+                ).fetchall()
+            finally:
+                conn.close()
             
             # Update performance for each chapter
             for chapter in chapters:

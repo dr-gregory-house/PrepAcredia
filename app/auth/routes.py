@@ -5,6 +5,7 @@ from wtforms.validators import DataRequired, Email, Length, EqualTo
 from app.utils.db import get_user_db_connection
 from app.utils.user_tracking import create_user_session, end_user_session, log_user_activity
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.urls import url_parse
 import sys
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -52,9 +53,9 @@ def login():
                 flash('Login successful!', 'success')
 
                 next_page = request.args.get('next')
-                if next_page and next_page.startswith('/'):  # Prevent open redirect
-                    return redirect(next_page)
-                return redirect(url_for('main.home'))
+                if not next_page or url_parse(next_page).netloc != '':
+                    next_page = url_for('main.home')
+                return redirect(next_page)
             else:
                 flash('Invalid credentials', 'error')
         finally:
